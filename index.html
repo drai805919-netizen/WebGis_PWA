@@ -24,8 +24,9 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 #cross{position:absolute;top:50%;left:50%;z-index:400;width:22px;height:22px;margin:-11px 0 0 -11px;pointer-events:none}
 #cross:before,#cross:after{content:"";position:absolute;background:#c0392b}
 #cross:before{left:10px;top:0;width:2px;height:22px}#cross:after{top:10px;left:0;height:2px;width:22px}
-#bar{position:absolute;bottom:0;left:0;right:0;z-index:500;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:6px 6px calc(env(safe-area-inset-bottom,0px) + 6px);background:rgba(255,255,255,.96)}
-#bar button{border:1px solid var(--bd);background:#fff;border-radius:10px;min-height:46px;font:inherit;font-size:11px;color:var(--fg)}
+#bar{position:absolute;bottom:0;left:0;right:0;z-index:500;display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:6px 6px calc(env(safe-area-inset-bottom,0px) + 6px);background:rgba(255,255,255,.96)}
+#bC{display:none!important}
+#bar button{border:1px solid var(--bd);background:#fff;border-radius:10px;min-height:46px;font:inherit;font-size:10.5px;padding:0 2px;color:var(--fg)}
 #bar button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
 .sheet{position:absolute;left:0;right:0;bottom:124px;z-index:600;max-height:48%;overflow:auto;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.2);padding:12px;display:none;font-size:14px}
 .sheet.show{display:block}
@@ -62,6 +63,12 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 .idrow{display:block;width:100%;text-align:right;padding:9px 10px;border:0;border-top:1px solid #e3e8e5;background:#fff;font:inherit;font-size:13px;color:var(--fg)}.idrow.sel{background:#fde3ef}.idrow small{color:#666}
 #scanSt{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);text-align:center;color:#fff;font-size:12px;direction:ltr}
 .loc-ctl a{display:flex!important;align-items:center;justify-content:center;width:36px!important;height:36px!important;line-height:normal!important;color:var(--pri)}.leaflet-touch .loc-ctl a{width:44px!important;height:44px!important}.loc-ctl a svg{width:26px;height:26px}.loc-ctl a.on{background:#1a73e8;color:#fff}
+.leaflet-popup-content img.pimg{cursor:zoom-in;border:1px solid #cfd9d3}
+#pvTop{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 24px;color:#fff;background:linear-gradient(rgba(0,0,0,.65),transparent);pointer-events:none}
+#pvTop>*{pointer-events:auto}
+#pvPrev,#pvNext{position:absolute;top:50%;z-index:3;width:44px;height:64px;margin-top:-32px;border:0;border-radius:10px;background:rgba(0,0,0,.45);color:#fff;font-size:30px}
+#pvPrev{left:6px}#pvNext{right:6px}
+#tkTypes .btn{border:1px solid #e3c9a8}
 </style>
 </head>
 <body>
@@ -170,10 +177,36 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <div class="row"><button class="btn" id="rtGo">محاسبه مسیر</button><button class="btn g" id="rtSwap">جابه‌جایی</button><button class="btn g" id="rtSave">افزودن به لایه‌ها</button><button class="btn r" id="rtClr">پاک</button></div>
 <div id="rtInfo" style="font-size:14px;margin-top:4px"></div></div>
 
+<div id="pv" style="display:none;position:fixed;inset:0;z-index:2000;background:#000;touch-action:none">
+<div id="pvTop"><button class="btn r" id="pvX">✕ خروج</button><span id="pvCap" style="flex:1;text-align:center;font-size:13px"></span><span id="pvN" style="font-size:12px"></span></div>
+<div id="pvBox" style="position:absolute;inset:0;overflow:hidden;touch-action:none"><img id="pvImg" alt="" draggable="false" style="position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;user-select:none;-webkit-user-drag:none;visibility:hidden"></div>
+<button id="pvPrev" aria-label="قبلی">›</button><button id="pvNext" aria-label="بعدی">‹</button>
+</div>
+
+<div id="sTrack" class="sheet"><h3>برداشت مسیر</h3>
+<div id="tkInfo" style="font-size:13px;margin-bottom:6px"></div>
+<div class="row"><button class="btn" id="tkStart">▶ شروع</button><button class="btn r" id="tkStop" style="display:none">⏸ توقف</button><button class="btn" id="tkResume" style="display:none">▶ ادامه</button><button class="btn g" id="tkFinish" style="display:none">■ پایان</button></div>
+<div id="tkSug" style="display:none;border:1px solid #e67e22;border-radius:10px;padding:8px;margin-top:6px;background:#fff7ee">
+<button class="btn" id="tkObsBtn" style="width:100%;background:#e67e22">⚠ ثبت مانع در این نقطه</button>
+<div id="tkObsForm" style="display:none;margin-top:8px">
+<div id="tkTypes" style="margin-bottom:6px"></div>
+<div class="row"><button class="btn g" id="tkShot">📷 عکس</button><input type="file" id="tkCam" accept="image/*" capture="environment" hidden><img id="tkThumb" class="thumb" alt="" style="display:none"></div>
+<div class="row"><input type="text" id="tkNote" placeholder="یادداشت (اختیاری)" style="direction:rtl"></div>
+<div class="row" style="margin-bottom:0"><button class="btn" id="tkObsSave">ثبت مانع</button><button class="btn g" id="tkObsCancel">انصراف</button></div></div></div>
+<div style="font-size:11px;color:#666;margin-top:6px">نقاط به‌تدریج ذخیره می‌شوند و صفحه هنگام ثبت روشن می‌ماند. نتیجه یک لایه‌ی خطی با طول و نشانگرهای مانع است.</div></div>
+
+<div id="sWork" class="sheet"><h3>ثبت کار</h3>
+<div class="row"><input type="text" id="wType" placeholder="نوع کار (مثلاً لوله‌گذاری)" style="direction:rtl"></div>
+<div class="row"><select id="wTrk" style="direction:rtl"></select><button class="btn g" id="wTake">📏 برداشت طول از «برداشت مسیر»</button></div>
+<div class="row"><input type="text" id="wLen" inputmode="decimal" placeholder="متراژ (متر)" dir="ltr"><input type="text" id="wNote" placeholder="توضیحات (اختیاری)" style="direction:rtl"></div>
+<div class="row" style="margin-bottom:0"><button class="btn" id="wSave">ثبت کار</button></div>
+<div style="font-size:11px;color:#666;margin-top:6px">با «برداشت طول» متراژ آخرین برداشت مسیر (یا برداشت انتخاب‌شده) خودکار وارد می‌شود و هندسه‌ی مسیر همراه ثبت می‌شود.</div></div>
+
 <div id="sBackup" class="sheet"><h3>پشتیبان‌گیری و بازیابی</h3>
 <div id="bkInfo" style="font-size:13px;margin-bottom:6px"></div>
 <label style="display:block;margin-bottom:8px;font-size:13px"><input type="checkbox" id="bkShare"> انتخاب محل ذخیره (اشتراک‌گذاری)</label>
 <div class="row"><button class="btn" id="bkMake">گرفتن نسخه پشتیبان (همه لایه‌ها و عکس‌ها)</button></div>
+<div class="row"><button class="btn g" id="bkGc" style="font-size:12px">پاکسازی عکس‌های بی‌مصرف از مخزن عکس</button></div>
 <div class="row"><select id="bkMode" style="direction:rtl"><option value="merge">بازیابی: افزودن به لایه‌های فعلی (امن)</option><option value="replace">بازیابی: جایگزینی کامل</option></select><button class="btn g" id="bkRestore">انتخاب فایل پشتیبان</button></div>
 <input type="file" id="bkFile" accept=".json,application/json,text/plain" hidden>
 <div style="font-size:12px;color:#666">پشتیبان شامل همه لایه‌ها، استایل‌ها، نشانگرها، عکس‌ها و تنظیمات است. قبل از پاک کردن داده مرورگر یا تعویض گوشی نسخه پشتیبان بگیرید.</div></div>
@@ -191,6 +224,8 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <button id="bS">ذخیره</button>
 <button id="bE">ویرایش</button>
 <button id="bB">پشتیبان</button>
+<button id="bT">برداشت مسیر</button>
+<button id="bW">ثبت کار</button>
 </div>
 <input type="file" id="file" accept=".geojson,.json,.kml,.kmz,.gpx,.gpkg,application/geopackage+sqlite3,application/octet-stream" multiple hidden>
 
@@ -332,7 +367,7 @@ function updCoord(){const c=map.getCenter();$('coord').textContent=fmtPt(c.lat,c
 map.on('move',updCoord);updCoord();
 
 /* ---------- Sheets ---------- */
-const sheets=['sLayers','sGo','sCount','sMark','sRule','sSave','sEdit','sSearch','sRoute','sBackup','sSnap','sBase','sId'];
+const sheets=['sLayers','sGo','sCount','sMark','sRule','sSave','sEdit','sSearch','sRoute','sBackup','sSnap','sBase','sId','sTrack','sWork'];
 function openSheet(id){
  const was=$(id).classList.contains('show')||(id==='sMark'&&mkMode);
  sheets.forEach(s=>$(s).classList.remove('show'));
@@ -345,6 +380,8 @@ function openSheet(id){
  if(id==='sSnap'&&!was)snapInit();
  if(id==='sLayers'&&!was)bsRender();
  if(id==='sBase'&&!was)bsForm();
+ if(id==='sTrack'&&!was)tkUI();
+ if(id==='sWork'&&!was)wkInit();
  $('cross').style.display=(mkMode||ruler||ed.active||rt.active||(idm.active&&idm.phase==='draw'))?'none':''}
 $('bL').onclick=()=>openSheet('sLayers');
 $('bG').onclick=()=>openSheet('sGo');
@@ -451,7 +488,8 @@ const ICONS={circle:['دایره','<circle cx="12" cy="12" r="8"/>'],pin:['سن�
 function mkIcon(k,c){const i=ICONS[k]||ICONS.circle;
  return L.divIcon({className:'',html:`<svg viewBox="0 0 24 24" width="26" height="26" fill="${c}" stroke="#fff" stroke-width="1.5" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))">${i[1]}</svg>`,iconSize:[26,26],iconAnchor:i[2]?[13,25]:[13,13],popupAnchor:[0,-12]})}
 const DB={db:null,
- open(){return new Promise((r,j)=>{const q=indexedDB.open('webgis',1);q.onupgradeneeded=()=>q.result.createObjectStore('layers',{keyPath:'id'});q.onsuccess=()=>{DB.db=q.result;r()};q.onerror=()=>j(q.error)})},
+ open(){return new Promise((r,j)=>{const q=indexedDB.open('webgis',2);q.onupgradeneeded=()=>{const d=q.result;if(!d.objectStoreNames.contains('layers'))d.createObjectStore('layers',{keyPath:'id'});if(!d.objectStoreNames.contains('photos'))d.createObjectStore('photos',{keyPath:'id'});if(!d.objectStoreNames.contains('tracks'))d.createObjectStore('tracks',{keyPath:'id'});if(!d.objectStoreNames.contains('trkpts'))d.createObjectStore('trkpts',{keyPath:['tid','i']})};q.onsuccess=()=>{DB.db=q.result;r()};q.onerror=()=>j(q.error)})},
+ st(sn,m,f){return new Promise(r=>{try{const q=f(DB.db.transaction(sn,m).objectStore(sn));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  run(m,f){return new Promise(r=>{try{const q=f(DB.db.transaction('layers',m).objectStore('layers'));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  put(o){return DB.run('readwrite',st=>st.put(o))},del(id){return DB.run('readwrite',st=>st.delete(id))},clear(){return DB.run('readwrite',st=>st.clear())},all(){return DB.run('readonly',st=>st.getAll()).then(x=>x||[])}};
 function saveL(L_){DB.put({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res})}
@@ -833,7 +871,7 @@ async function loadFile(f){
   else throw new Error('فرمت پشتیبانی نمی‌شود: '+ext);
   geo=normGeo(geo);checkCoords(geo);addLayer(f.name,geo);
  }catch(err){toast(f.name+': '+err.message,6000)}}
-const isImg=v=>typeof v==='string'&&(/^data:image\/(jpeg|png|webp|gif);base64,/.test(v)||/^https?:\/\/\S+\.(jpe?g|png|webp|gif)(\?\S*)?$/i.test(v));
+const isImg=v=>typeof v==='string'&&(v.startsWith('photo:')||/^data:image\/(jpeg|png|webp|gif);base64,/.test(v)||/^https?:\/\/\S+\.(jpe?g|png|webp|gif)(\?\S*)?$/i.test(v));
 function popupHtml(p){
  const k=Object.keys(p||{}).filter(x=>!isImg(p[x]));
  if(!k.length)return'<i>بدون اطلاعات توصیفی</i>';
@@ -879,16 +917,20 @@ function popEl(L_,f){
  const d=document.createElement('div'),p=f.properties||{};
  const mk=(t,c,fn)=>{const b=document.createElement('button');b.className='btn '+c;b.textContent=t;b.style.cssText='margin:6px 0 0 4px';b.onclick=fn;d.appendChild(b);return b};
  d.innerHTML=popupHtml(p);
- Object.keys(p).filter(k=>isImg(p[k])).forEach(k=>{const i=document.createElement('img');i.src=p[k];i.alt=k;d.appendChild(i)});
+ const imgs=Object.keys(p).filter(k=>isImg(p[k])).map(k=>p[k]);
+ imgs.forEach((v,ix)=>{const i=document.createElement('img');i.alt='عکس';i.className='pimg';i.title='برای بزرگ‌نمایی لمس کنید';
+  if(PH.isRef(v)){i.style.minHeight='40px';PH.src(v).then(u=>{if(u)i.src=u;else i.alt='عکس در مخزن پیدا نشد'})}else i.src=v;
+  i.onclick=()=>pvOpen(imgs,ix,String(p['نام']||L_.name));d.appendChild(i)});
+ if(imgs.length)d.insertAdjacentHTML('beforeend','<div style="font-size:11px;color:#888">برای نمایش تمام‌صفحه روی عکس بزنید</div>');
  d.insertAdjacentHTML('beforeend',coordHtml(f));
  {const c=featC(f);if(c)mk('کپی مختصات','g',async()=>toast(await copyText(cpText(c[1],c[0]))?'📋 کپی شد':'کپی ممکن نشد'))}
  if(f.geometry&&f.geometry.type==='LineString')mk(L_===editL?'ویرایش خط':'ویرایش (کپی در «ویرایش‌ها»)','',()=>{map.closePopup();startEdit(L_,f)});
  if(L_.user||(f.geometry&&f.geometry.type==='Point')){
   const pc=document.createElement('input'),pg=document.createElement('input');
   pc.type=pg.type='file';pc.accept=pg.accept='image/*';pc.setAttribute('capture','environment');pc.hidden=pg.hidden=true;d.appendChild(pc);d.appendChild(pg);
-  const onPh=async inp=>{if(!inp.files[0])return;try{const ph=await photoData(inp.files[0]),fx=await userFix(true);if(!fx)return;f.properties=f.properties||{};f.properties['عکس']=ph;applyStamp(f,fx,'ویرایش');rebuild(L_);reopen(L_,f);toast('عکس ذخیره شد')}catch(e){toast(e.message)}finally{inp.value=''}};
+  const onPh=async inp=>{if(!inp.files[0])return;try{const ph=await photoData(inp.files[0]),fx=await userFix(true);if(!fx)return;f.properties=f.properties||{};f.properties['عکس']=await PH.put(ph);applyStamp(f,fx,'ویرایش');rebuild(L_);reopen(L_,f);toast('عکس ذخیره شد')}catch(e){toast(e.message)}finally{inp.value=''}};
   pc.onchange=()=>onPh(pc);pg.onchange=()=>onPh(pg);
-  mk(p['عکس']?'📷 تغییر عکس: دوربین':'📷 عکس: دوربین','g',()=>shootPhoto(async d=>{const fx=await userFix(true);if(!fx)return;f.properties=f.properties||{};f.properties['عکس']=d;applyStamp(f,fx,'ویرایش');rebuild(L_);reopen(L_,f);toast('عکس ذخیره شد')},pc));
+  mk(p['عکس']?'📷 تغییر عکس: دوربین':'📷 عکس: دوربین','g',()=>shootPhoto(async d=>{const fx=await userFix(true);if(!fx)return;f.properties=f.properties||{};f.properties['عکس']=await PH.put(d);applyStamp(f,fx,'ویرایش');rebuild(L_);reopen(L_,f);toast('عکس ذخیره شد')},pc));
   mk(p['عکس']?'تغییر عکس: گالری':'عکس: گالری','g',()=>pg.click());
   if(p['عکس'])mk('حذف عکس','r',async()=>{const fx=await userFix(true);if(!fx)return;delete f.properties['عکس'];applyStamp(f,fx,'ویرایش');rebuild(L_);reopen(L_,f)});
   mk('ویرایش مشخصات','',()=>{editingF.add(f);reopen(L_,f)})}
@@ -909,7 +951,7 @@ function mkLayer(name,geo,user,sv){
 function addLayer(name,geo){
  const L_=mkLayer(name,geo,false);saveL(L_);
  try{map.fitBounds(L_.lyr.getBounds(),{padding:[30,30]})}catch(e){}
- renderList();toast(`«${name}» بارگذاری شد: ${geo.features.length} عارضه`)}
+ renderList();PH.migGeo(geo).then(n=>{if(n)saveL(L_)}).catch(()=>{});toast(`«${name}» بارگذاری شد: ${geo.features.length} عارضه`)}
 function stats(geo){let p=0,l=0,a=0;turf.flattenEach(geo,f=>{const t=f.geometry.type;if(t==='Point')p++;else if(t==='LineString')l++;else a++});return{p,l,a}}
 function renderList(){
  const el=$('layList');
@@ -1005,7 +1047,7 @@ function fLabel(f){const p=f.properties||{};
  for(const k in p){if(UKEYS.includes(k)||/^(تاریخ|زمان)/.test(k))continue;const v=p[k];if(typeof v==='string'&&v.trim()&&v.length<=60&&!isImg(v))return v}
  return geoFa(f.geometry)}
 function copyFeat(f,extra){const pr={},p=f.properties||{};
- for(const k in p){if(typeof p[k]==='string'&&DATA_IMG.test(p[k]))continue;pr[k]=p[k]}
+ for(const k in p){if(typeof p[k]==='string'&&(DATA_IMG.test(p[k])||p[k].startsWith('photo:')))continue;pr[k]=p[k]}
  Object.assign(pr,extra||{});return{type:'Feature',properties:pr,geometry:JSON.parse(JSON.stringify(f.geometry))}}
 function mkResLayer(name,feats){
  const L_=mkLayer(name,{type:'FeatureCollection',features:feats},false,{id:++lid,color:'#e91e63',icon:'circle',on:false,res:true});
@@ -1188,7 +1230,7 @@ async function cRegister(poly,area,found,tot){
 
 /* ---------- Export helpers: CSV ---------- */
 function csvOf(sel){
- const cols=[],seen=new Set(),isP=v=>typeof v==='string'&&DATA_IMG.test(v);
+ const cols=[],seen=new Set(),isP=v=>typeof v==='string'&&(DATA_IMG.test(v)||v.startsWith('photo:'));
  sel.forEach(L_=>L_.geo.features.forEach(f=>{const p=f.properties||{};for(const k in p)if(!seen.has(k)){seen.add(k);cols.push(k)}}));
  const q=v=>{v=v===null||v===undefined?'':typeof v==='object'?JSON.stringify(v):String(v);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
  const out=[['لایه','نوع هندسه','طول (مرکز)','عرض (مرکز)'].concat(cols).map(q).join(',')];
@@ -1208,7 +1250,7 @@ async function addMarker(lat,lon){
  if(addBusy)return;addBusy=true;
  let fx;try{fx=await userFix(true)}finally{addBusy=false}
  if(!fx)return;
- const props={'نام':name};const d=$('mDesc').value.trim();if(d)props['توضیحات']=d;const j=jalali();if(j)props['تاریخ شمسی']=j;props['زمان']=greg();if(mPhoto)props['عکس']=mPhoto;
+ const props={'نام':name};const d=$('mDesc').value.trim();if(d)props['توضیحات']=d;const j=jalali();if(j)props['تاریخ شمسی']=j;props['زمان']=greg();if(mPhoto)props['عکس']=await PH.put(mPhoto);
  const f={type:'Feature',properties:props,geometry:{type:'Point',coordinates:[+lon.toFixed(7),+lat.toFixed(7)]}};
  applyStamp(f,fx,'ایجاد');
  if(!userL||!layers.includes(userL))userL=mkLayer('نشانگرهای من',{type:'FeatureCollection',features:[]},true);
@@ -1312,7 +1354,7 @@ function dl(name,obj){
  const fn=safeName(name).replace(/\.(geojson|json|kml|kmz|gpx)$/i,'')+'.geojson';
  return saveBlob(fn,new Blob([JSON.stringify(obj,null,1)],{type:'application/geo+json'}),['text/plain','application/geo+json','application/json'],$('svShare').checked)}
 const DATA_IMG=/^data:image\/(jpeg|png|webp|gif);base64,/;
-const photoCount=L_=>{let n=0;L_.geo.features.forEach(f=>{const p=f.properties||{};for(const k in p)if(typeof p[k]==='string'&&DATA_IMG.test(p[k]))n++});return n};
+const photoCount=L_=>{let n=0;L_.geo.features.forEach(f=>{const p=f.properties||{};for(const k in p)if(typeof p[k]==='string'&&(DATA_IMG.test(p[k])||p[k].startsWith('photo:')))n++});return n};
 const svSel=new Set(),svSeen=new Set();
 function svUpd(){
  const n=layers.filter(l=>svSel.has(l.id)).length;
@@ -1392,18 +1434,19 @@ $('svGo').onclick=async()=>{
  if(!sel.some(l=>l.geo.features.length))return toast('لایه‌های انتخابی خالی هستند');
  const fmt=$('svFmt').value,sh=$('svShare').checked,b=$('svGo');b.disabled=true;
  try{
+  const selI=await Promise.all(sel.map(async L_=>({id:L_.id,name:L_.name,geo:await PH.inlineGeo(L_.geo)})));
   if(fmt==='geojson'){
-   if(sel.length===1)await dl(sel[0].name,{type:'FeatureCollection',features:sel[0].geo.features});
-   else{const fs=[];sel.forEach(L_=>L_.geo.features.forEach(f=>fs.push({type:'Feature',properties:Object.assign({},f.properties,{'لایه':L_.name}),geometry:f.geometry})));
+   if(selI.length===1)await dl(selI[0].name,{type:'FeatureCollection',features:selI[0].geo.features});
+   else{const fs=[];selI.forEach(L_=>L_.geo.features.forEach(f=>fs.push({type:'Feature',properties:Object.assign({},f.properties,{'لایه':L_.name}),geometry:f.geometry})));
     await dl('webgis-selected-'+stampNow(),{type:'FeatureCollection',features:fs})}}
   else if(fmt==='zip'){
    const zip=new JSZip(),used=new Set();
-   sel.forEach(L_=>{let n=safeName(L_.name),k=n,i=1;while(used.has(k))k=n+'_'+(++i);used.add(k);
+   selI.forEach(L_=>{let n=safeName(L_.name),k=n,i=1;while(used.has(k))k=n+'_'+(++i);used.add(k);
     zip.file(k+'.geojson',JSON.stringify({type:'FeatureCollection',features:L_.geo.features}))});
    await saveBlob('webgis-layers-'+stampNow()+'.zip',await zip.generateAsync({type:'blob',compression:'DEFLATE'}),['application/zip','application/octet-stream'],sh)}
   else if(fmt==='gpkg'){
    toast('در حال ساخت GeoPackage ...',2500);await new Promise(r=>setTimeout(r,50));
-   const u8=gpkgWrite(sel.map(L_=>({name:L_.name,geo:L_.geo})));
+   const u8=gpkgWrite(selI.map(L_=>({name:L_.name,geo:L_.geo})));
    await saveBlob('webgis-'+stampNow()+'.gpkg',new Blob([u8],{type:'application/geopackage+sqlite3'}),['application/geopackage+sqlite3','application/octet-stream'],sh);
    toast(`GeoPackage: ${sel.length} لایه، ${(u8.length/1048576).toFixed(2)} مگابایت`,5000)}
   else if(fmt==='csv'){
@@ -1411,7 +1454,7 @@ $('svGo').onclick=async()=>{
    await saveBlob('webgis-'+stampNow()+'.csv',new Blob([csv],{type:'text/csv;charset=utf-8'}),['text/csv','text/plain'],sh)}
   else{
    toast('در حال ساخت بسته QGIS ...',2500);
-   const r=await buildQgis(sel);
+   const r=await buildQgis(selI);
    await saveBlob('webgis-qgis-'+stampNow()+'.zip',r.blob,['application/zip','application/octet-stream'],sh);
    toast(`بسته QGIS: ${r.n} لایه، ${r.pn} عکس`,5000)}
  }catch(e){toast('خطا در ساخت خروجی: '+e.message,7000)}
@@ -1523,7 +1566,7 @@ function attrExtras(d,L_,f){
   mk('جابه‌جایی نقطه','',()=>startMove(L_,f));
   const pc=document.createElement('input'),pg=document.createElement('input');
   pc.type=pg.type='file';pc.accept=pg.accept='image/*';pc.setAttribute('capture','environment');pc.hidden=pg.hidden=true;d.appendChild(pc);d.appendChild(pg);
-  const save=async d2=>{const fx=await userFix(true);if(!fx)return;f.properties=f.properties||{};f.properties['عکس']=d2;applyStamp(f,fx,'ویرایش');rebuild(L_);reopen(L_,f);toast('عکس ذخیره شد')};
+  const save=async d2=>{const fx=await userFix(true);if(!fx)return;f.properties=f.properties||{};f.properties['عکس']=await PH.put(d2);applyStamp(f,fx,'ویرایش');rebuild(L_);reopen(L_,f);toast('عکس ذخیره شد')};
   const onF=async i=>{if(!i.files[0])return;try{await save(await photoData(i.files[0]))}catch(e){toast(e.message)}finally{i.value=''}};
   pc.onchange=()=>onF(pc);pg.onchange=()=>onF(pg);
   mk('📷 عکس','g',()=>shootPhoto(save,pc));mk('🖼 گالری','g',()=>pg.click())}
@@ -1948,6 +1991,7 @@ async function rtCalc(){
 async function bkInfo(){
  let h=`لایه‌ها: <b>${layers.length}</b>`;
  try{const e=await navigator.storage.estimate();h+=` | فضای مصرفی مرورگر: <b>${(e.usage/1048576).toFixed(1)} MB</b>`}catch(_){}
+ try{const ps=await PH.stats(),u=PH.usedIds();h+=`<br>مخزن عکس: <b>${ps.n}</b> عکس (${(ps.bytes/1048576).toFixed(1)} MB)`+(ps.n>u.size?` — <span style="color:#a5281b">${ps.n-u.size} عکس بی‌مصرف</span>`:'')}catch(_){}
  $('bkInfo').innerHTML=h}
 const bkSer=L_=>({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res});
 $('bkMake').onclick=async()=>{
@@ -1955,9 +1999,11 @@ $('bkMake').onclick=async()=>{
   let all=await DB.all();if(!all.length&&layers.length)all=layers.map(bkSer);
   if(!all.length)return toast('داده‌ای برای پشتیبان‌گیری وجود ندارد');
   const st={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('webgis_'))st[k]=localStorage.getItem(k)}}catch(e){}
-  const o={app:'webgis-pwa',schema:1,created:greg(),created_fa:jalali(),count:all.length,settings:st,layers:all};
+  const refs=new Set();all.forEach(l=>l.geo.features.forEach(f=>{const q=f.properties;if(q)for(const k in q)if(PH.isRef(q[k]))refs.add(q[k])}));
+   const photos=[];for(const r of refs){const d=await PH.dataUrl(r);if(d)photos.push({id:r.slice(6),data:d})}
+   const o={app:'webgis-pwa',schema:2,created:greg(),created_fa:jalali(),count:all.length,settings:st,photos,layers:all};
   await saveBlob('webgis-backup-'+stampNow()+'.json',new Blob([JSON.stringify(o)],{type:'application/json'}),['text/plain','application/json'],$('bkShare').checked);
-  toast('پشتیبان '+all.length+' لایه آماده شد',4000)
+  toast('پشتیبان '+all.length+' لایه و '+photos.length+' عکس آماده شد',4000)
  }catch(e){toast('پشتیبان‌گیری ناموفق: '+e.message,7000)}};
 function removeLayerObj(L_,dbDel){
  const i=layers.indexOf(L_);if(i>=0)layers.splice(i,1);
@@ -1978,6 +2024,7 @@ $('bkFile').onchange=async e=>{
   const replace=$('bkMode').value==='replace';
   const msg=replace?`همه ${layers.length} لایه فعلی حذف و با ${good.length} لایه پشتیبان جایگزین می‌شود. ادامه می‌دهید؟`:`${good.length} لایه به لایه‌های فعلی اضافه می‌شود. ادامه می‌دهید؟`;
   if(!confirm(msg))return;
+  if(Array.isArray(o.photos))for(const q of o.photos){if(q&&q.id&&typeof q.data==='string'&&DATA_IMG.test(q.data)&&!(await PH.rec('photo:'+q.id)))await PH.put(q.data,String(q.id))}
   const used=new Set();let added=0,merged=0;
   if(replace){[...layers].forEach(l=>removeLayerObj(l,false));await DB.clear();
    if(o.settings)try{for(const k in o.settings)if(k.startsWith('webgis_'))localStorage.setItem(k,String(o.settings[k]))}catch(_){}
@@ -1994,16 +2041,265 @@ $('bkFile').onchange=async e=>{
    const sv={id,color:/^#[0-9a-f]{6}$/i.test(l.color)?l.color:'#1f6f5c',icon:ICONS[l.icon]?l.icon:'circle',on:l.on!==false,res:!!l.res};
    const L_=mkLayer(nm,l.geo,user,sv);saveL(L_);added++}
   userL=layers.find(l=>l.user&&l.name==='نشانگرهای من')||null;editL=layers.find(l=>l.user&&l.name==='ویرایش‌ها')||null;
-  renderList();bkInfo();
+  renderList();bkInfo();PH.migAll().catch(()=>{});
   try{const b=L.featureGroup(layers.filter(l=>l.on).map(l=>l.lyr)).getBounds();if(b.isValid())map.fitBounds(b,{padding:[30,30]})}catch(_){}
   toast(`بازیابی شد: ${added} لایه جدید${merged?'، '+merged+' عارضه به لایه‌های کاربر اضافه شد':''}${bad?'، '+bad+' لایه نامعتبر رد شد':''}`,6000)
  }catch(err){toast('بازیابی ناموفق: '+err.message,7000)}};
+
+/* ---------- Photo store: photos live in their own IndexedDB store; features keep only a link ("photo:<id>") ---------- */
+function dataUrlToBlob(d){const i=d.indexOf(','),m=/^data:([^;,]+)/.exec(d),bin=atob(d.slice(i+1)),u=new Uint8Array(bin.length);for(let k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);return new Blob([u],{type:m?m[1]:'image/jpeg'})}
+const blobToDataUrl=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(b)});
+const PH={
+ urls:new Map(),
+ isRef:v=>typeof v==='string'&&v.startsWith('photo:'),
+ newId:()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8),
+ async put(d,idIn){
+  if(PH.isRef(d))return d;
+  const id=idIn||PH.newId(),blob=dataUrlToBlob(d);
+  let ok=await DB.st('photos','readwrite',s=>s.put({id,blob,mime:blob.type,size:blob.size,t:Date.now()}));
+  if(ok===null)ok=await DB.st('photos','readwrite',s=>s.put({id,data:d,mime:blob.type,size:blob.size,t:Date.now()}));
+  if(ok===null)throw new Error('ذخیره عکس در مخزن عکس ممکن نشد (فضای ذخیره‌سازی پر است؟)');
+  return 'photo:'+id},
+ rec(ref){return DB.st('photos','readonly',s=>s.get(String(ref).slice(6)))},
+ async src(ref){
+  if(PH.urls.has(ref))return PH.urls.get(ref);
+  const r=await PH.rec(ref);if(!r)return null;
+  const u=r.blob?URL.createObjectURL(r.blob):r.data;PH.urls.set(ref,u);return u},
+ async dataUrl(ref){const r=await PH.rec(ref);if(!r)return null;return r.blob?await blobToDataUrl(r.blob):r.data},
+ /* copy of a FeatureCollection with links replaced by embedded images (for export) */
+ async inlineGeo(geo){
+  let any=false;
+  const fs=await Promise.all(geo.features.map(async f=>{
+   const p=f.properties;if(!p)return f;let np=null;
+   for(const k in p)if(PH.isRef(p[k])){if(!np)np=Object.assign({},p);np[k]=(await PH.dataUrl(p[k]))||'';any=true}
+   return np?{type:'Feature',properties:np,geometry:f.geometry}:f}));
+  return any?{type:'FeatureCollection',features:fs}:geo},
+ /* move embedded images (data URIs) of a FeatureCollection into the photo store */
+ async migGeo(geo){let n=0;for(const f of geo.features){const p=f.properties;if(!p)continue;for(const k in p)if(typeof p[k]==='string'&&DATA_IMG.test(p[k])){p[k]=await PH.put(p[k]);n++}}return n},
+ async migAll(){let tot=0;for(const L_ of layers){const n=await PH.migGeo(L_.geo);if(n){tot+=n;saveL(L_)}}return tot},
+ usedIds(){
+  const s=new Set();
+  layers.forEach(L_=>L_.geo.features.forEach(f=>{const p=f.properties;if(p)for(const k in p)if(PH.isRef(p[k]))s.add(p[k].slice(6))}));
+  if(typeof TK!=='undefined')TK.obs.forEach(o=>{if(o.photo)s.add(o.photo.slice(6))});
+  return s},
+ stats(){return new Promise(res=>{let n=0,b=0;try{const q=DB.db.transaction('photos').objectStore('photos').openCursor();q.onsuccess=()=>{const c=q.result;if(c){n++;b+=c.value.size||0;c.continue()}else res({n,bytes:b})};q.onerror=()=>res({n,bytes:b})}catch(e){res({n:0,bytes:0})}})},
+ async gc(){
+  const used=PH.usedIds(),keys=(await DB.st('photos','readonly',s=>s.getAllKeys()))||[];let n=0;
+  for(const id of keys)if(!used.has(id)){await DB.st('photos','readwrite',s=>s.delete(id));const u=PH.urls.get('photo:'+id);if(u&&String(u).startsWith('blob:'))URL.revokeObjectURL(u);PH.urls.delete('photo:'+id);n++}
+  return n}};
+$('bkGc').onclick=async()=>{
+ if(!confirm('عکس‌هایی که به هیچ عارضه‌ای وصل نیستند پاک شوند؟ (قابل بازگشت نیست؛ ابتدا پشتیبان بگیرید)'))return;
+ try{const n=await PH.gc();toast(n?n+' عکس بی‌مصرف پاک شد':'عکس بی‌مصرفی وجود نداشت',4000)}catch(e){toast('پاکسازی ممکن نشد: '+e.message,5000)}
+ bkInfo()};
+
+/* ---------- Full-screen photo viewer (stays inside the app; Back button / ✕ returns to the map) ---------- */
+const pv={list:[],i:0,cap:'',open:false,s:1,x:0,y:0,base:1,ptr:new Map(),d0:0,s0:1,lastTap:0};
+function pvApply(){$('pvImg').style.transform=`translate(${pv.x}px,${pv.y}px) scale(${pv.s})`}
+function pvFit(){
+ const im=$('pvImg'),b=$('pvBox'),W=b.clientWidth,H=b.clientHeight,w=im.naturalWidth||1,h=im.naturalHeight||1;
+ pv.base=Math.min(W/w,H/h);pv.s=pv.base;pv.x=(W-w*pv.s)/2;pv.y=(H-h*pv.s)/2;pvApply()}
+async function pvLoad(){
+ const v=pv.list[pv.i],im=$('pvImg');
+ $('pvN').textContent=pv.list.length>1?(pv.i+1)+' / '+pv.list.length:'';
+ $('pvCap').textContent=pv.cap||'';
+ $('pvPrev').style.display=$('pvNext').style.display=pv.list.length>1?'':'none';
+ im.style.visibility='hidden';
+ const src=PH.isRef(v)?await PH.src(v):v;
+ if(!src){toast('عکس در مخزن پیدا نشد',4000);return}
+ im.onload=()=>{pvFit();im.style.visibility='visible'};im.src=src}
+function pvOpen(list,i,cap){
+ if(!list||!list.length)return;
+ pv.list=list;pv.i=i||0;pv.cap=cap||'';pv.open=true;
+ $('pv').style.display='block';
+ try{history.pushState({pv:1},'')}catch(e){}
+ pvLoad()}
+function pvHide(){pv.open=false;$('pv').style.display='none';$('pvImg').removeAttribute('src');pv.ptr.clear()}
+function pvClose(){
+ if(!pv.open)return;
+ if(history.state&&history.state.pv){history.back()}else pvHide()}
+addEventListener('popstate',()=>{if(pv.open)pvHide()});
+document.addEventListener('keydown',e=>{if(pv.open&&e.key==='Escape')pvClose()});
+$('pvX').onclick=pvClose;
+$('pvPrev').onclick=()=>{pv.i=(pv.i-1+pv.list.length)%pv.list.length;pvLoad()};
+$('pvNext').onclick=()=>{pv.i=(pv.i+1)%pv.list.length;pvLoad()};
+{const box=$('pvBox'),dist=()=>{const a=[...pv.ptr.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)};
+ const zoomAt=(cx,cy,ns)=>{ns=Math.max(pv.base*.9,Math.min(pv.base*8,ns));const k=ns/pv.s;pv.x=cx-(cx-pv.x)*k;pv.y=cy-(cy-pv.y)*k;pv.s=ns;pvApply()};
+ const rel=e=>{const r=box.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
+ box.addEventListener('pointerdown',e=>{box.setPointerCapture(e.pointerId);pv.ptr.set(e.pointerId,{x:e.clientX,y:e.clientY,px:e.clientX,py:e.clientY});
+  if(pv.ptr.size===2){pv.d0=dist();pv.s0=pv.s}
+  const t=Date.now();if(pv.ptr.size===1&&t-pv.lastTap<300){const p=rel(e);zoomAt(p.x,p.y,pv.s>pv.base*1.2?pv.base:pv.base*2.5);pv.lastTap=0}else pv.lastTap=t});
+ box.addEventListener('pointermove',e=>{
+  const p=pv.ptr.get(e.pointerId);if(!p)return;
+  const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+  if(pv.ptr.size===2){const a=[...pv.ptr.values()],r=box.getBoundingClientRect();zoomAt((a[0].x+a[1].x)/2-r.left,(a[0].y+a[1].y)/2-r.top,pv.s0*dist()/pv.d0)}
+  else if(pv.ptr.size===1&&pv.s>pv.base*1.02){pv.x+=dx;pv.y+=dy;pvApply()}});
+ const up=e=>{pv.ptr.delete(e.pointerId);if(pv.ptr.size===1){const a=[...pv.ptr.values()][0];a.px=a.x;a.py=a.y}};
+ box.addEventListener('pointerup',up);box.addEventListener('pointercancel',up);
+ box.addEventListener('wheel',e=>{e.preventDefault();const p=rel(e);zoomAt(p.x,p.y,pv.s*(e.deltaY<0?1.2:1/1.2))},{passive:false});
+ addEventListener('resize',()=>{if(pv.open)pvFit()})}
+$('mThumb').onclick=()=>{if(typeof mPhoto!=='undefined'&&mPhoto)pvOpen([mPhoto],0,'عکس نشانگر')};
+
+/* ---------- Tracking ("برداشت مسیر"): start / stop / resume / finish — incremental point saving + screen wake lock only ---------- */
+const TK={st:'idle',id:null,name:'',pts:[],obs:[],len:0,t0:0,seq:0,watch:null,raw:null,stopPos:null,wl:null,sel:null,photo:null,weak:false};
+const tkG=L.layerGroup().addTo(map),tkLine=L.polyline([],{color:'#e67e22',weight:5,opacity:.9}).addTo(tkG);
+const TK_ACC=30,TK_STEP=4;
+const TK_TYPES=['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'];
+const tkMetaPut=()=>DB.st('tracks','readwrite',s=>s.put({id:TK.id,name:TK.name,st:TK.st,t0:TK.t0,len:TK.len,obs:TK.obs}));
+const tkPtDel=id=>DB.st('trkpts','readwrite',s=>s.delete(IDBKeyRange.bound([id,0],[id,Infinity])));
+const tkMetaDel=id=>DB.st('tracks','readwrite',s=>s.delete(id));
+async function tkLock(){
+ try{if('wakeLock' in navigator){TK.wl=await navigator.wakeLock.request('screen');TK.wl.addEventListener('release',()=>{TK.wl=null;tkUI()})}}catch(e){TK.wl=null}}
+function tkUnlock(){try{if(TK.wl)TK.wl.release()}catch(e){}TK.wl=null}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TK.st==='rec'&&!TK.wl)tkLock().then(tkUI)});
+function tkWatch(){
+ if(TK.watch!==null)return;
+ TK.watch=navigator.geolocation.watchPosition(tkFix,e=>{toast('خطای GPS در برداشت مسیر: '+(e.code===1?'اجازه موقعیت داده نشده':'موقعیت در دسترس نیست'),5000)},{enableHighAccuracy:true,maximumAge:1000,timeout:20000})}
+function tkUnwatch(){if(TK.watch!==null){navigator.geolocation.clearWatch(TK.watch);TK.watch=null}}
+function tkFix(p){
+ const c=p.coords;TK.raw={lng:c.longitude,lat:c.latitude,acc:c.accuracy,t:Date.now()};
+ if(TK.st!=='rec')return;
+ TK.weak=c.accuracy>TK_ACC;
+ if(TK.weak){tkUI();return}
+ const q=[c.longitude,c.latitude],l0=TK.pts[TK.pts.length-1];
+ if(l0){const d=hav(l0[0],l0[1],q[0],q[1]);if(d<Math.max(TK_STEP,Math.min(c.accuracy/2,10))){tkUI();return}TK.len+=d}
+ TK.pts.push(q);tkLine.addLatLng([q[1],q[0]]);
+ DB.st('trkpts','readwrite',s=>s.put({tid:TK.id,i:TK.seq++,x:q[0],y:q[1],t:Date.now(),a:Math.round(c.accuracy)}));
+ if(TK.pts.length%10===0)tkMetaPut();
+ if(!map.getBounds().pad(-.25).contains([q[1],q[0]]))map.panTo([q[1],q[0]]);
+ tkUI()}
+function tkUI(){
+ const s=TK.st;$('bT').classList.toggle('on',s!=='idle');
+ $('tkStart').style.display=s==='idle'?'':'none';$('tkStop').style.display=s==='rec'?'':'none';
+ $('tkResume').style.display=s==='pause'?'':'none';$('tkFinish').style.display=s==='pause'?'':'none';
+ $('tkSug').style.display=s==='pause'?'':'none';
+ if(s!=='pause')$('tkObsForm').style.display='none';
+ let h=s==='idle'?'آماده — «شروع» را بزنید.':`<b>${s==='rec'?'● در حال ثبت':'⏸ متوقف'}</b> | طول: <b>${fmtD(TK.len)}</b> | نقطه: <b>${TK.pts.length}</b> | مانع: <b>${TK.obs.length}</b>`;
+ if(s==='rec'){h+=`<br><span style="font-size:12px;color:#555">${TK.raw?'دقت GPS ±'+Math.round(TK.raw.acc)+' متر':'در انتظار GPS ...'}${TK.weak?' — <b style="color:#c0392b">سیگنال ضعیف (نقطه ثبت نمی‌شود)</b>':''} | قفل بیداری صفحه: ${TK.wl?'فعال':'غیرفعال'}</span>`}
+ $('tkInfo').innerHTML=h}
+async function tkStart(){
+ if(TK.st!=='idle')return;
+ if(!navigator.geolocation||!window.isSecureContext)return toast('برداشت مسیر فقط روی HTTPS با GPS کار می‌کند',6000);
+ TK.id='t'+Date.now().toString(36);TK.name='برداشت مسیر '+jalali();TK.pts=[];TK.obs=[];TK.len=0;TK.seq=0;TK.t0=Date.now();TK.raw=null;
+ tkG.clearLayers();tkLine.setLatLngs([]);tkG.addLayer(tkLine);
+ TK.st='rec';tkWatch();await tkLock();await tkMetaPut();tkUI();toast('برداشت مسیر شروع شد؛ صفحه روشن می‌ماند',3500)}
+function tkStop(){
+ if(TK.st!=='rec')return;
+ TK.stopPos=(TK.raw&&Date.now()-TK.raw.t<25000)?{lng:TK.raw.lng,lat:TK.raw.lat,acc:TK.raw.acc}:(TK.pts.length?{lng:TK.pts[TK.pts.length-1][0],lat:TK.pts[TK.pts.length-1][1],acc:null}:null);
+ tkUnwatch();tkUnlock();TK.st='pause';tkMetaPut();tkUI();
+ toast('متوقف شد — اگر مانعی هست «ثبت مانع» را بزنید',4000)}
+async function tkResume(){
+ if(TK.st!=='pause')return;
+ TK.st='rec';TK.raw=null;tkWatch();await tkLock();tkMetaPut();tkUI();toast('ادامه برداشت مسیر',2000)}
+/* --- obstacle: type + photo + note, at the point where the user stopped --- */
+function tkTypes(){
+ const el=$('tkTypes');el.innerHTML='';
+ TK_TYPES.forEach(t=>{const b=document.createElement('button');b.type='button';b.className='btn g';b.style.cssText='margin:2px;padding:6px 10px;font-size:12px';b.textContent=t;
+  b.onclick=()=>{TK.sel=t;[...el.children].forEach(c=>{c.className='btn '+(c===b?'':'g')})};el.appendChild(b)})}
+function tkObsReset(){TK.sel=null;TK.photo=null;$('tkNote').value='';$('tkThumb').style.display='none';tkTypes();$('tkObsForm').style.display='none'}
+$('tkObsBtn').onclick=()=>{tkObsReset();$('tkObsForm').style.display='block'};
+$('tkObsCancel').onclick=tkObsReset;
+const tkSetPhoto=d=>{TK.photo=d;$('tkThumb').src=d;$('tkThumb').style.display=''};
+$('tkShot').onclick=()=>shootPhoto(tkSetPhoto,$('tkCam'));
+$('tkCam').onchange=async e=>{if(e.target.files[0]){try{tkSetPhoto(await photoData(e.target.files[0]))}catch(x){toast(x.message)}}e.target.value=''};
+$('tkThumb').onclick=()=>{if(TK.photo)pvOpen([TK.photo],0,'عکس مانع')};
+function tkObsMarker(o){
+ L.marker([o.lat,o.lng],{icon:mkIcon('triangle','#e67e22')}).bindTooltip(o.type+(o.note?' — '+o.note:''),{direction:'top'}).addTo(tkG)}
+$('tkObsSave').onclick=async()=>{
+ if(!TK.sel)return toast('نوع مانع را انتخاب کنید');
+ const pos=TK.stopPos;if(!pos)return toast('موقعیت نقطه توقف در دسترس نیست');
+ try{
+  const ob={type:TK.sel,note:$('tkNote').value.trim(),lng:+pos.lng.toFixed(7),lat:+pos.lat.toFixed(7),t:Date.now(),photo:null};
+  if(TK.photo)ob.photo=await PH.put(TK.photo);
+  TK.obs.push(ob);tkObsMarker(ob);await tkMetaPut();tkObsReset();tkUI();toast('مانع «'+ob.type+'» ثبت شد',3000)
+ }catch(e){toast(e.message,5000)}};
+/* --- finish: result = line layer (length) + obstacle markers; stays on the map --- */
+async function tkFinish(){
+ if(TK.st==='idle')return;
+ tkUnwatch();tkUnlock();
+ if(TK.pts.length<2&&!TK.obs.length){
+  if(!confirm('نقطه‌ی کافی ثبت نشده است؛ برداشت مسیر لغو شود؟'))return;
+  await tkPtDel(TK.id);await tkMetaDel(TK.id);tkReset();toast('برداشت مسیر لغو شد');return}
+ const fx=(TK.raw&&Date.now()-TK.raw.t<90000)?{lat:TK.raw.lat,lon:TK.raw.lng,acc:TK.raw.acc,t:TK.raw.t}:await userFix(false);
+ const now=Date.now(),cum=[0];for(let i=1;i<TK.pts.length;i++)cum.push(cum[i-1]+hav(TK.pts[i-1][0],TK.pts[i-1][1],TK.pts[i][0],TK.pts[i][1]));
+ const len=cum.length?cum[cum.length-1]:0,feats=[],stamp=pr=>{pr['تاریخ شمسی']=jalali();pr['زمان']=greg();return pr};
+ if(TK.pts.length>=2){
+  const f={type:'Feature',properties:stamp({'نام':TK.name,'برداشت':'مسیر','طول (متر)':Math.round(len*10)/10,'تعداد نقطه':TK.pts.length,'تعداد مانع':TK.obs.length,'شروع (شمسی)':jalali(new Date(TK.t0)),'پایان (شمسی)':jalali(new Date(now)),'مدت (دقیقه)':Math.round((now-TK.t0)/6000)/10}),geometry:{type:'LineString',coordinates:TK.pts.map(p=>[+p[0].toFixed(7),+p[1].toFixed(7)])}};
+  applyStamp(f,fx,'ایجاد');feats.push(f)}
+ TK.obs.forEach(o=>{
+  let bi=-1,bd=1e18;TK.pts.forEach((p,i)=>{const d=hav(p[0],p[1],o.lng,o.lat);if(d<bd){bd=d;bi=i}});
+  const pr={'نام':'مانع: '+o.type,'برداشت':'مانع','نوع مانع':o.type,'مسیر':TK.name};
+  if(o.note)pr['یادداشت']=o.note;if(o.photo)pr['عکس']=o.photo;if(bi>=0)pr['فاصله از ابتدای مسیر (متر)']=Math.round(cum[bi]*10)/10;
+  pr['ثبت مانع (شمسی)']=jalali(new Date(o.t));stamp(pr);
+  const f={type:'Feature',properties:pr,geometry:{type:'Point',coordinates:[o.lng,o.lat]}};applyStamp(f,fx,'ایجاد');feats.push(f)});
+ const L_=mkLayer(TK.name,{type:'FeatureCollection',features:feats},true,{id:++lid,color:'#e67e22',icon:'triangle',on:true});
+ saveL(L_);renderList();
+ try{map.fitBounds(L_.lyr.getBounds(),{paddingTopLeft:[30,70],paddingBottomRight:[30,Math.round(innerHeight*.5)]})}catch(e){}
+ const id=TK.id,nObs=TK.obs.length;
+ await tkPtDel(id);await tkMetaDel(id);tkReset();
+ toast(`برداشت مسیر پایان یافت: طول ${fmtD(len)}، ${nObs} مانع — لایه‌ی «${L_.name}» روی نقشه ماند`,7000)}
+function tkReset(){
+ TK.st='idle';TK.id=null;TK.pts=[];TK.obs=[];TK.len=0;TK.seq=0;TK.raw=null;TK.stopPos=null;TK.weak=false;
+ tkG.clearLayers();tkLine.setLatLngs([]);tkG.addLayer(tkLine);tkObsReset();tkUI()}
+$('tkStart').onclick=tkStart;$('tkStop').onclick=tkStop;$('tkResume').onclick=tkResume;$('tkFinish').onclick=tkFinish;
+$('bT').onclick=()=>openSheet('sTrack');
+/* unfinished track (app closed / crashed) is restored from the incrementally saved points */
+async function tkRecover(){
+ const ms=(await DB.st('tracks','readonly',s=>s.getAll()))||[],m=ms.find(x=>x.st==='rec'||x.st==='pause');
+ if(!m)return;
+ const pts=await new Promise(res=>{const out=[];let mx=-1;
+  try{const q=DB.db.transaction('trkpts').objectStore('trkpts').openCursor(IDBKeyRange.bound([m.id,0],[m.id,Infinity]));
+   q.onsuccess=()=>{const c=q.result;if(c){out.push([c.value.x,c.value.y]);mx=Math.max(mx,c.value.i);c.continue()}else res({out,mx})};q.onerror=()=>res({out,mx})}catch(e){res({out,mx})}});
+ TK.id=m.id;TK.name=m.name;TK.t0=m.t0;TK.obs=m.obs||[];TK.pts=pts.out;TK.seq=pts.mx+1;TK.len=0;
+ for(let i=1;i<TK.pts.length;i++)TK.len+=hav(TK.pts[i-1][0],TK.pts[i-1][1],TK.pts[i][0],TK.pts[i][1]);
+ TK.st='pause';TK.stopPos=TK.pts.length?{lng:TK.pts[TK.pts.length-1][0],lat:TK.pts[TK.pts.length-1][1],acc:null}:null;
+ tkG.clearLayers();tkLine.setLatLngs(TK.pts.map(p=>[p[1],p[0]]));tkG.addLayer(tkLine);TK.obs.forEach(tkObsMarker);
+ tkMetaPut();tkUI();toast('برداشت مسیر نیمه‌تمام بازیابی شد ('+fmtD(TK.len)+') — در منوی «برداشت مسیر» ادامه یا پایان دهید',9000)}
+
+/* ---------- Work log ("ثبت کار"): one button takes the tracked length as the measured quantity ---------- */
+function wkTracks(){
+ const out=[];
+ layers.forEach(L_=>L_.geo.features.forEach(f=>{const p=f.properties;if(p&&p['برداشت']==='مسیر'&&f.geometry&&f.geometry.type==='LineString')out.push({L_,f,len:+p['طول (متر)']||0,name:p['نام']||L_.name,t:String(p['زمان']||'')})}));
+ return out.sort((a,b)=>b.t.localeCompare(a.t))}
+let wkList=[];
+function wkInit(){
+ wkList=wkTracks();const el=$('wTrk');
+ el.innerHTML=wkList.length?wkList.map((x,i)=>`<option value="${i}">${esc(x.name)} — ${fmtD(x.len)}</option>`).join(''):'<option value="">برداشتی وجود ندارد</option>';
+ $('wTake').disabled=!wkList.length;
+ if(!$('wLen').value&&wkList.length){$('wLen').value='';}}
+$('wTake').onclick=()=>{
+ const x=wkList[+$('wTrk').value];if(!x)return toast('ابتدا یک «برداشت مسیر» انجام دهید');
+ $('wLen').value=(Math.round(x.len*10)/10).toString();$('wLen').dataset.trk=$('wTrk').value;
+ toast('متراژ از برداشت مسیر برداشت شد: '+fmtD(x.len),3000)};
+$('wLen').oninput=()=>{delete $('wLen').dataset.trk};
+$('wSave').onclick=async()=>{
+ const typ=$('wType').value.trim(),len=parseFloat(norm($('wLen').value).replace(',','.'));
+ if(!typ)return toast('نوع کار را وارد کنید');
+ if(!(len>=0))return toast('متراژ را وارد کنید یا «برداشت طول از برداشت مسیر» را بزنید');
+ const fx=await userFix(true);if(!fx)return;
+ const tr=$('wLen').dataset.trk!==undefined?wkList[+$('wLen').dataset.trk]:null;
+ const pr={'نام':typ,'نوع کار':typ,'متراژ (متر)':Math.round(len*10)/10,'تاریخ شمسی':jalali(),'زمان':greg()};
+ const nt=$('wNote').value.trim();if(nt)pr['توضیحات']=nt;if(tr)pr['برداشت مرجع']=tr.name;
+ let geom;
+ if(tr)geom=JSON.parse(JSON.stringify(tr.f.geometry));
+ else if(fx&&!fx.none)geom={type:'Point',coordinates:[+fx.lon.toFixed(7),+fx.lat.toFixed(7)]};
+ else{const c=map.getCenter();geom={type:'Point',coordinates:[+c.lng.toFixed(7),+c.lat.toFixed(7)]}}
+ const f={type:'Feature',properties:pr,geometry:geom};applyStamp(f,fx,'ایجاد');
+ let W=layers.find(l=>l.user&&l.name==='ثبت کار');
+ if(!W)W=mkLayer('ثبت کار',{type:'FeatureCollection',features:[]},true,{id:++lid,color:'#16a085',icon:'flag',on:true});
+ if(!W.on){W.on=true;W.lyr.addTo(map)}
+ W.geo.features.push(f);rebuild(W);
+ $('wType').value='';$('wLen').value='';$('wNote').value='';delete $('wLen').dataset.trk;
+ toast('کار «'+typ+'» با متراژ '+fmtD(len)+' ثبت شد',4000)};
+$('bW').onclick=()=>openSheet('sWork');
+tkUI();
 
 /* ---------- PWA ---------- */
 (async()=>{
  try{await DB.open();const all=(await DB.all()).sort((a,b)=>a.id-b.id);
   all.forEach(o=>{lid=Math.max(lid,o.id);const ch=migDates(o.geo),L_=mkLayer(o.name,o.geo,o.user,o);if(ch)saveL(L_)});
   userL=layers.find(l=>l.user&&l.name==='نشانگرهای من')||null;editL=layers.find(l=>l.user&&l.name==='ویرایش‌ها')||null;renderList();
+  PH.migAll().then(n=>{if(n)toast(n+' عکس به مخزن جداگانه‌ی عکس منتقل شد (حجم لایه‌ها کم شد)',6000)}).catch(()=>{});
+  tkRecover().catch(()=>{});
   if(all.length)toast('لایه‌های ذخیره‌شده بازیابی شد ('+all.length+')');
   if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
  }catch(e){toast('ذخیره‌سازی دائمی در دسترس نیست: '+e.message,6000)}})();

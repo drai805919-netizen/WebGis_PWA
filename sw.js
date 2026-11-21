@@ -1,4 +1,4 @@
-const APP='webgis-app-v8',LIB='webgis-lib-v1',TILE='webgis-tiles-v1',MAXT=600;
+const APP='webgis-app-v9',LIB='webgis-lib-v1',TILE='webgis-tiles-v1',MAXT=600;
 const CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 const B='https://cdnjs.cloudflare.com/ajax/libs/';
 const CDN=[B+'leaflet/1.9.4/leaflet.min.css',B+'leaflet/1.9.4/leaflet.min.js',B+'leaflet/1.9.4/images/layers.png',B+'leaflet/1.9.4/images/layers-2x.png',B+'Turf.js/6.5.0/turf.min.js',B+'jszip/3.10.1/jszip.min.js',B+'jsQR/1.4.0/jsQR.min.js','https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js'];
