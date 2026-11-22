@@ -1,0 +1,11 @@
+{
+  "replaceDefaults": true,
+  "maps": [
+    { "id": "gilan-sat", "name": "نقشه ماهواره‌ای گیلان", "type": "xyz", "url": "tiles/{z}/{x}/{y}.jpg", "tms": true, "minZoom": 1, "maxZoom": 18 },
+    { "id": "gas-lines",     "name": "خط گاز",         "type": "wms", "url": "wms", "layers": "1846", "version": "1.3.0", "format": "image/png", "crs": "4326", "transparent": true, "overlay": true, "on": false, "maxZoom": 20 },
+    { "id": "gas-valve",     "name": "شیر گاز",        "type": "wms", "url": "wms", "layers": "1877", "version": "1.3.0", "format": "image/png", "crs": "4326", "transparent": true, "overlay": true, "on": false, "maxZoom": 20 },
+    { "id": "gas-alamak",    "name": "علمک گاز",       "type": "wms", "url": "wms", "layers": "1856", "version": "1.3.0", "format": "image/png", "crs": "4326", "transparent": true, "overlay": true, "on": false, "maxZoom": 20 },
+    { "id": "gas-customers", "name": "مشترکین جزء",    "type": "wms", "url": "wms", "layers": "1879", "version": "1.3.0", "format": "image/png", "crs": "4326", "transparent": true, "overlay": true, "on": false, "maxZoom": 20 },
+    { "id": "gas-station",   "name": "ایستگاه گاز",    "type": "wms", "url": "wms", "layers": "1865", "version": "1.3.0", "format": "image/png", "crs": "4326", "transparent": true, "overlay": true, "on": false, "maxZoom": 20 }
+  ]
+}

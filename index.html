@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1f6f5c">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="lib/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'">
 <style>
 :root{--bg:#f4f6f3;--fg:#17261f;--pri:#1f6f5c;--pri2:#e8f1ee;--bd:#cfd9d3}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -24,8 +24,8 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 #cross{position:absolute;top:50%;left:50%;z-index:400;width:22px;height:22px;margin:-11px 0 0 -11px;pointer-events:none}
 #cross:before,#cross:after{content:"";position:absolute;background:#c0392b}
 #cross:before{left:10px;top:0;width:2px;height:22px}#cross:after{top:10px;left:0;height:2px;width:22px}
-#bar{position:absolute;bottom:0;left:0;right:0;z-index:500;display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:6px 6px calc(env(safe-area-inset-bottom,0px) + 6px);background:rgba(255,255,255,.96)}
-#bC{display:none!important}
+#bar{position:absolute;bottom:0;left:0;right:0;z-index:500;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:6px 6px calc(env(safe-area-inset-bottom,0px) + 6px);background:rgba(255,255,255,.96)}
+#bC,#bW{display:none!important}
 #bar button{border:1px solid var(--bd);background:#fff;border-radius:10px;min-height:46px;font:inherit;font-size:10.5px;padding:0 2px;color:var(--fg)}
 #bar button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
 .sheet{position:absolute;left:0;right:0;bottom:124px;z-index:600;max-height:48%;overflow:auto;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.2);padding:12px;display:none;font-size:14px}
@@ -69,6 +69,18 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 #pvPrev,#pvNext{position:absolute;top:50%;z-index:3;width:44px;height:64px;margin-top:-32px;border:0;border-radius:10px;background:rgba(0,0,0,.45);color:#fff;font-size:30px}
 #pvPrev{left:6px}#pvNext{right:6px}
 #tkTypes .btn{border:1px solid #e3c9a8}
+#bar button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--pri)}
+#bar button span{font-size:10.5px;color:#333;line-height:1.1}
+.ic{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#moreGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#moreGrid .tile{min-height:78px;border:1px solid var(--bd);border-radius:12px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--pri);font:inherit;font-size:12px;padding:4px}
+#moreGrid .tile .ic{width:30px;height:30px}
+#moreGrid .tile span{color:#333;font-size:12px}
+#bar button.on,#moreGrid .tile.on{background:var(--pri);color:#fff}
+#bar button.on span,#moreGrid .tile.on span{color:#fff}
+#pxBan{position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:560;background:#c0392b;color:#fff;border-radius:10px;padding:8px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.4);max-width:92%;display:none;text-align:center}
+.setsec{font-weight:700;color:#1f6f5c;margin:10px 0 4px;border-bottom:1px solid #e3e8e5;padding-bottom:2px}
+#sSet label{display:block;font-size:13px;margin:6px 0}#sSet input[type=text],#sSet input[type=number],#sSet select,#sSet textarea{width:100%;margin-top:3px;padding:8px;border:1px solid #cfd9d3;border-radius:8px;font:inherit}
 </style>
 </head>
 <body>
@@ -79,6 +91,7 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <div id="sLayers" class="sheet"><h3>لایه‌ها</h3>
 <div style="font-weight:700;margin:2px 0 4px">نقشه‌های پایه</div><div id="bsList"></div>
 <div class="row"><button class="btn" id="bsAdd">+ افزودن نقشه (WMS / XYZ)</button><button class="btn g" id="bsReset" style="font-size:12px">بازنشانی نقشه‌ها</button></div>
+<div class="row"><button class="btn g" id="bsSync" style="font-size:12px">همگام‌سازی نقشه‌ها از سرور (maps.json)</button><button class="btn g" id="bsOff" style="font-size:12px">ذخیره نقشه برای آفلاین</button></div>
 <div style="font-weight:700;margin:8px 0 4px">لایه‌های داده</div><div id="layList"></div><div style="font-size:12px;color:#666">نقشه پایه و روشن/خاموش کردن لایه‌ها از دکمه لایه‌ها (گوشه بالا) هم در دسترس است.</div></div>
 
 <div id="sGo" class="sheet"><h3>مختصات و ناوبری</h3>
@@ -142,6 +155,17 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <div id="sScanned" style="display:none"></div>
 <div id="sInfo" style="font-size:12px;color:#666;margin-bottom:4px"></div><div id="sRes"></div></div>
 
+<div id="sOffline" class="sheet"><h3>ذخیره نقشه برای آفلاین</h3>
+<div style="font-size:12px;color:#555;margin-bottom:4px">ابتدا نقشه را روی منطقه‌ی موردنظر ببرید؛ محدوده = همین نمایش فعلی. نقشه‌هایی که الان روشن هستند ذخیره می‌شوند.</div>
+<div id="ofLayers"></div>
+<div class="row"><label style="font-size:13px">زوم از <input type="number" id="ofZ0" min="0" max="22" style="width:60px"></label><label style="font-size:13px">تا <input type="number" id="ofZ1" min="0" max="22" style="width:60px"></label><label style="font-size:13px"><input type="checkbox" id="ofPad" checked> حاشیه ۲۰٪</label></div>
+<div id="ofEst" style="font-size:13px;margin-bottom:6px"></div>
+<div class="row"><button class="btn g" id="ofCalc">محاسبه</button><button class="btn" id="ofGo">شروع دانلود</button><button class="btn r" id="ofStop" style="display:none">توقف</button></div>
+<progress id="ofBar" value="0" max="1" style="width:100%"></progress><div id="ofTxt" style="font-size:12px;margin-bottom:6px"></div>
+<div id="ofStat" style="font-size:12px;color:#555;margin-bottom:6px"></div>
+<div class="row"><button class="btn r" id="ofClear" style="font-size:12px">پاک کردن نقشه‌های آفلاین</button></div>
+<div style="font-size:11px;color:#666">بیرون از محدوده یا زوم‌های دانلودنشده، نقشه خالی است. برای سرور داخلی بدون محدودیت؛ برای سرویس‌های عمومی حداکثر ۵۰۰ تایل.</div></div>
+
 <div id="sBase" class="sheet"><h3>افزودن نقشه (WMS / XYZ)</h3>
 <div class="row"><select id="bsType" style="direction:rtl"><option value="wms">WMS (سرویس نقشه)</option><option value="xyz">XYZ / Tile</option></select><select id="bsPre" style="direction:rtl"><option value="">پیش‌تنظیم ...</option><option value="gh">Google Hybrid (با نام خیابان‌ها)</option><option value="gs">Google Satellite</option><option value="gr">Google Roads</option><option value="gt">Google Terrain</option><option value="es">Esri Street</option><option value="cl">Carto Light</option><option value="tw">نمونه WMS</option></select></div>
 <div class="row"><input type="text" id="bsName" placeholder="نام نقشه" style="direction:rtl"></div>
@@ -152,7 +176,8 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <div class="row"><select id="bsVer"><option value="1.3.0">WMS 1.3.0</option><option value="1.1.1">WMS 1.1.1</option></select><select id="bsFmt"><option value="image/png">PNG</option><option value="image/jpeg">JPEG</option></select><select id="bsCrs"><option value="3857">EPSG:3857</option><option value="4326">EPSG:4326</option></select></div>
 <label style="display:block;font-size:13px"><input type="checkbox" id="bsTr" checked> پس‌زمینه شفاف</label>
 <label id="bsOverlayRow" style="display:block;font-size:13px;margin-bottom:6px"><input type="checkbox" id="bsOv"> به‌صورت پوشش روی نقشه پایه (Overlay)، نه جایگزین آن</label></div>
-<div class="row"><label style="font-size:13px">حداکثر زوم: <input type="number" id="bsZoom" value="19" min="1" max="24" style="width:70px"></label></div>
+<div class="row"><label style="font-size:13px">حداقل زوم: <input type="number" id="bsMin" value="0" min="0" max="20" style="width:60px"></label><label style="font-size:13px">حداکثر زوم: <input type="number" id="bsZoom" value="19" min="1" max="24" style="width:60px"></label></div>
+<label style="display:block;font-size:13px;margin-bottom:6px"><input type="checkbox" id="bsTms"> TMS (ردیف‌های وارونه — معادل tms:true در Leaflet؛ فقط XYZ)</label>
 <div class="row"><button class="btn" id="bsOk">تأیید و ایجاد نقشه</button><button class="btn r" id="bsCancel">لغو</button></div>
 <div style="font-size:11px;color:#666">برای سرویس شبکه داخلی باید دستگاه به همان شبکه وصل باشد. استفاده از نقشه‌های Google تابع شرایط سرویس Google است.</div></div>
 
@@ -183,8 +208,51 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <button id="pvPrev" aria-label="قبلی">›</button><button id="pvNext" aria-label="بعدی">‹</button>
 </div>
 
+<div id="sMore" class="sheet"><h3>همه‌ی منوها</h3><div id="moreGrid"></div></div>
+
+<div id="pxBan"></div>
+
+<div id="sPrx" class="sheet"><h3>هشدار نزدیکی (بیپ)</h3>
+<div class="row"><label style="font-size:13px">فاصله هشدار (متر): <input type="number" id="pxD" min="1" max="1000" step="1" style="width:80px"></label><button class="btn g" id="pxTest">آزمایش صدا</button></div>
+<div class="row"><button class="btn g" data-d="10">۱۰</button><button class="btn g" data-d="20">۲۰</button><button class="btn g" data-d="50">۵۰</button><button class="btn g" data-d="100">۱۰۰</button><button class="btn g" data-d="200">۲۰۰</button></div>
+<div style="font-weight:700;margin:4px 0">لایه‌های مورد بررسی</div><div id="pxLayers"></div>
+<div class="row"><button class="btn" id="pxStart">▶ شروع هشدار</button><button class="btn r" id="pxStop" style="display:none">■ توقف</button></div>
+<div id="pxInfo" style="font-size:13px"></div>
+<div style="font-size:11px;color:#666;margin-top:6px">نوع صدا، حالت (هنگام ورود / بیپ تندشونده)، ارتعاش و قفل بیداری در «تنظیمات» تعیین می‌شود.</div></div>
+
+<div id="sFix" class="sheet"><h3>اصلاح عوارض (هندسه و توپولوژی)</h3>
+<div class="row"><select id="fxLayer" style="direction:rtl"></select></div>
+<label style="display:block;font-size:13px;margin:4px 0"><input type="checkbox" id="fxCopy" checked> اصلاح روی کپی لایه (اصل دست‌نخورده می‌ماند)</label>
+<label style="display:block;font-size:13px;margin:4px 0"><input type="checkbox" id="fxTg"> انتهای آویزان به خطوط سایر لایه‌های روشن هم وصل شود (فقط بدون کپی)</label>
+<div class="row"><button class="btn" id="fxScanB">بررسی لایه</button><button class="btn g" id="fxUndo" disabled>بازگردانی آخرین اصلاح</button><button class="btn g" id="fxSnapB">چسباندن گروهی نقاط به خط</button></div>
+<div id="fxInfo" style="font-size:13px;margin-bottom:4px"></div><div id="fxRes"></div>
+<div class="row"><button class="btn" id="fxDo" style="display:none">رفع موارد انتخاب‌شده</button></div>
+<div style="font-size:11px;color:#666">فاصله‌ی مجاز اتصال انتهای آویزان و چسباندن نقاط در «تنظیمات» تعیین می‌شود.</div></div>
+
+<div id="sSet" class="sheet"><h3>تنظیمات</h3>
+<div class="setsec">عمومی</div>
+<label>نام یا کد ثبت‌کننده (روی هر عارضه ثبت می‌شود)<input type="text" data-k="user"></label>
+<label>قالب کپی مختصات با لمس نقشه<select data-k="cp"><option value="ll">عرض, طول (استاندارد)</option><option value="xy">طول, عرض</option><option value="url">لینک Google Maps</option></select></label>
+<div class="setsec">برداشت مسیر</div>
+<label>حداکثر خطای GPS برای ثبت نقطه (متر)<input type="number" data-k="tkAcc" min="5" max="200" step="1"></label>
+<label>حداقل فاصله بین نقاط ثبت‌شده (متر)<input type="number" data-k="tkStep" min="1" max="50" step="1"></label>
+<label><input type="checkbox" data-k="tkWake"> قفل بیداری صفحه هنگام برداشت</label>
+<label>انواع مانع (هر خط یک مورد)<textarea data-k="obs" data-t="lines" rows="5"></textarea></label>
+<div class="setsec">اصلاح عوارض</div>
+<label>فاصله‌ی مجاز اتصال انتهای آویزان به خط (متر)<input type="number" data-k="fxEnd" min="0.1" max="20" step="0.1"></label>
+<label>فاصله‌ی مجاز چسباندن گروهی نقاط به خط (متر)<input type="number" data-k="fxPt" min="0.1" max="50" step="0.1"></label>
+<div class="setsec">هشدار نزدیکی</div>
+<label>حالت هشدار<select data-k="prxMode"><option value="enter">یک هشدار هنگام ورود به محدوده</option><option value="park">بیپ تندشونده با نزدیک شدن</option></select></label>
+<label>نوع صدا<select data-k="prxSound"><option value="two">دو بیپ</option><option value="one">یک بیپ بلند</option><option value="low">صدای بم</option></select></label>
+<label>بلندی صدا<input type="range" data-k="prxVol" min="0.1" max="1" step="0.1"></label>
+<label>مدت سکوت برای هر عارضه پس از هشدار (ثانیه)<input type="number" data-k="prxHold" min="5" max="600" step="5"></label>
+<label><input type="checkbox" data-k="prxVib"> ارتعاش</label>
+<label><input type="checkbox" data-k="prxWake"> قفل بیداری صفحه هنگام هشدار</label>
+<div class="row"><button class="btn r" id="setReset" style="font-size:12px">بازنشانی تنظیمات</button></div></div>
+
 <div id="sTrack" class="sheet"><h3>برداشت مسیر</h3>
 <div id="tkInfo" style="font-size:13px;margin-bottom:6px"></div>
+<div id="tkLast" style="display:none;font-size:13px;margin-bottom:6px"><span id="tkLastTxt"></span> <button class="btn g" id="tkCopyLen" style="padding:4px 10px;font-size:12px">کپی متراژ</button></div>
 <div class="row"><button class="btn" id="tkStart">▶ شروع</button><button class="btn r" id="tkStop" style="display:none">⏸ توقف</button><button class="btn" id="tkResume" style="display:none">▶ ادامه</button><button class="btn g" id="tkFinish" style="display:none">■ پایان</button></div>
 <div id="tkSug" style="display:none;border:1px solid #e67e22;border-radius:10px;padding:8px;margin-top:6px;background:#fff7ee">
 <button class="btn" id="tkObsBtn" style="width:100%;background:#e67e22">⚠ ثبت مانع در این نقطه</button>
@@ -225,13 +293,20 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <button id="bE">ویرایش</button>
 <button id="bB">پشتیبان</button>
 <button id="bT">برداشت مسیر</button>
+<button id="bFx"></button>
+<button id="bPx"></button>
+<button id="bSet"></button>
+<button id="bMore"></button>
 <button id="bW">ثبت کار</button>
 </div>
 <input type="file" id="file" accept=".geojson,.json,.kml,.kmz,.gpx,.gpkg,application/geopackage+sqlite3,application/octet-stream" multiple hidden>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="lib/leaflet.min.js"></script>
+<script>window.L||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"><\/script>')</script>
+<script src="lib/turf.min.js"></script>
+<script>window.turf||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"><\/script>')</script>
+<script src="lib/jszip.min.js"></script>
+<script>window.JSZip||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"><\/script>')</script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -278,15 +353,17 @@ const BS_PRE={
  gt:{type:'xyz',name:'Google Terrain',url:'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',maxZoom:20},
  es:{type:'xyz',name:'Esri Street',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',maxZoom:19},
  cl:{type:'xyz',name:'Carto Light',url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',maxZoom:19},
- tw:{type:'wms',name:'نمونه WMS (OSM terrestris)',url:'https://ows.terrestris.de/osm/service',layers:'OSM-WMS',maxZoom:19}};
+ tw:{type:'wms',name:'نمونه WMS (OSM terrestris)',url:'https://ows.terrestris.de/osm/service',layers:'OSM-WMS',maxZoom:19},
+ lt:{type:'xyz',name:'تایل شبکه داخلی (همین سرور /tiles)',url:'tiles/{z}/{x}/{y}.jpg',tms:true,minZoom:1,maxZoom:18},
+ lw:{type:'wms',name:'WMS شبکه داخلی (همین سرور /wms)',url:'wms',layers:'',maxZoom:20}};
 let baseList=[],baseL={};
 const bsLS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 function bsLoad(){try{const a=JSON.parse(bsLS.get('webgis_bases'));if(Array.isArray(a)&&a.some(x=>x&&x.id&&x.url&&!x.overlay))return a.filter(x=>x&&x.id&&x.url&&x.name)}catch(e){}return JSON.parse(JSON.stringify(BASE_DEF))}
 const bsSave=()=>bsLS.set('webgis_bases',JSON.stringify(baseList));
 function bsMake(d){
  let l;
- if(d.type==='wms')l=L.tileLayer.wms(d.url,{layers:d.layers||'',format:d.format||'image/png',transparent:d.transparent!==false,version:d.version||'1.3.0',crs:d.crs==='4326'?L.CRS.EPSG4326:L.CRS.EPSG3857,maxZoom:d.maxZoom||19,attribution:d.attr||'',zIndex:d.overlay?5:1});
- else l=L.tileLayer(d.url,{maxZoom:d.maxZoom||19,attribution:d.attr||'',subdomains:'abc',zIndex:d.overlay?5:1});
+ if(d.type==='wms')l=L.tileLayer.wms(d.url,{minZoom:d.minZoom||0,layers:d.layers||'',format:d.format||'image/png',transparent:d.transparent!==false,version:d.version||'1.3.0',crs:d.crs==='4326'?L.CRS.EPSG4326:L.CRS.EPSG3857,maxZoom:d.maxZoom||19,attribution:d.attr||'',zIndex:d.overlay?5:1});
+ else l=L.tileLayer(d.url,{minZoom:d.minZoom||0,tms:!!d.tms,maxZoom:d.maxZoom||19,attribution:d.attr||'',subdomains:'abc',zIndex:d.overlay?5:1});
  if(!BASE_DEF.some(x=>x.id===d.id)){let n=0,w=false;l.on('tileerror',()=>{if(++n>=6&&!w&&navigator.onLine){w=true;toast('«'+d.name+'» بارگذاری نمی‌شود؛ آدرس، نام لایه، دسترسی شبکه یا HTTPS را بررسی کنید',7000)}});l.on('tileload',()=>{n=0})}
  return l}
 function bsAttach(d){const l=baseL[d.id]=bsMake(d);d.overlay?ctl.addOverlay(l,d.name):ctl.addBaseLayer(l,d.name);return l}
@@ -316,18 +393,19 @@ function bsRender(){
  baseList.forEach(d=>{
   const r=document.createElement('div');r.className='lay';r.style.cssText='display:flex;align-items:center;gap:8px';
   const on=map.hasLayer(baseL[d.id]);
-  r.innerHTML=`<input type="${d.overlay?'checkbox':'radio'}" name="bsAct" ${on?'checked':''} style="width:22px;height:22px;flex:none"><span style="flex:1"><b>${esc(d.name)}</b><br><span style="font-size:11px;color:#666">${d.type==='wms'?'WMS':'XYZ'}${d.overlay?' — پوشش شفاف':''}</span></span><button class="btn r" style="padding:6px 10px;font-size:12px" ${(!d.overlay&&nb<=1)?'disabled title="حداقل یک نقشه پایه"':''}>حذف</button>`;
+  r.innerHTML=`<input type="${d.overlay?'checkbox':'radio'}" name="bsAct" ${on?'checked':''} style="width:22px;height:22px;flex:none"><span style="flex:1"><b>${esc(d.name)}</b><br><span style="font-size:11px;color:#666">${d.type==='wms'?'WMS':'XYZ'}${d.overlay?' — پوشش شفاف':''}${d.tms?' — TMS':''}${d.server?' — از سرور':''}</span></span><button class="btn r" style="padding:6px 10px;font-size:12px" ${(!d.overlay&&nb<=1)?'disabled title="حداقل یک نقشه پایه"':''}>حذف</button>`;
   r.querySelector('input').onchange=e=>{d.overlay?(e.target.checked?map.addLayer(baseL[d.id]):map.removeLayer(baseL[d.id])):bsActivate(d.id);bsRender()};
   r.querySelector('button').onclick=()=>bsDel(d.id);
   el.appendChild(r)})}
 /* --- add-map form --- */
+const bsUrlOk=u=>/^https?:\/\//i.test(u)||(!!u&&!/^[a-z][a-z0-9+.\-]*:/i.test(u));
 function bsForm(){const w=$('bsType').value==='wms';$('bsWms').style.display=w?'':'none';$('bsOverlayRow').style.display=w?'':'none'}
 $('bsType').onchange=bsForm;
-$('bsPre').onchange=()=>{const p=BS_PRE[$('bsPre').value];if(!p)return;$('bsType').value=p.type;$('bsName').value=p.name;$('bsUrl').value=p.url;$('bsLayers').value=p.layers||'';$('bsZoom').value=p.maxZoom||19;bsForm()};
+$('bsPre').onchange=()=>{const p=BS_PRE[$('bsPre').value];if(!p)return;$('bsTms').checked=!!p.tms;$('bsMin').value=p.minZoom||0;$('bsType').value=p.type;$('bsName').value=p.name;$('bsUrl').value=p.url;$('bsLayers').value=p.layers||'';$('bsZoom').value=p.maxZoom||19;bsForm()};
 $('bsAdd').onclick=()=>{openSheet('sBase')};
 $('bsCancel').onclick=()=>{openSheet('sBase')};
 $('bsCaps').onclick=async()=>{
- const u=$('bsUrl').value.trim();if(!/^https?:\/\//i.test(u))return toast('ابتدا آدرس سرویس WMS را وارد کنید');
+ const u=$('bsUrl').value.trim();if(!bsUrlOk(u))return toast('ابتدا آدرس سرویس WMS را وارد کنید');
  $('bsCapList').textContent='در حال دریافت ...';
  try{
   const r=await fetch(u+(u.includes('?')?'&':'?')+'service=WMS&request=GetCapabilities');if(!r.ok)throw new Error('HTTP '+r.status);
@@ -343,11 +421,12 @@ $('bsCaps').onclick=async()=>{
 $('bsOk').onclick=()=>{
  const type=$('bsType').value,name=$('bsName').value.trim(),url=$('bsUrl').value.trim(),layersTxt=$('bsLayers').value.trim();
  if(!name)return toast('نام نقشه را وارد کنید');
- if(!/^https?:\/\//i.test(url))return toast('آدرس باید با http:// یا https:// شروع شود');
+ if(!bsUrlOk(url))return toast('آدرس باید با http:// یا https:// شروع شود (یا نسبی مثل wms و tiles/{z}/{x}/{y}.jpg)');
  if(location.protocol==='https:'&&/^http:\/\//i.test(url))return toast('این برنامه روی HTTPS است و مرورگر آدرس HTTP را مسدود می‌کند؛ برای سرویس داخلی از HTTPS استفاده کنید یا برنامه را روی همان شبکه با HTTP میزبانی کنید',9000);
  if(type==='xyz'&&!(/\{z\}/.test(url)&&/\{x\}/.test(url)&&/\{-?y\}/.test(url)))return toast('آدرس XYZ باید شامل {z} و {x} و {y} باشد');
  if(type==='wms'&&!layersTxt)return toast('نام لایه (Layers) را وارد کنید یا «دریافت لیست لایه‌ها» را بزنید');
- const d={id:'c'+Date.now().toString(36),name,type,url,maxZoom:Math.max(1,Math.min(24,+$('bsZoom').value||19))};
+ const d={id:'c'+Date.now().toString(36),name,type,url,maxZoom:Math.max(1,Math.min(24,+$('bsZoom').value||19)),minZoom:Math.max(0,Math.min(20,+$('bsMin').value||0))};
+ if(type==='xyz')d.tms=$('bsTms').checked;
  if(type==='wms'){d.layers=layersTxt;d.version=$('bsVer').value;d.format=$('bsFmt').value;d.crs=$('bsCrs').value;d.transparent=$('bsTr').checked;d.overlay=$('bsOv').checked;if(d.overlay)d.on=true}
  d.attr=/google/i.test(url)?'Map data © Google':'';
  baseList.push(d);bsAttach(d);bsSave();
@@ -355,6 +434,17 @@ $('bsOk').onclick=()=>{
  openSheet('sBase');toast('نقشه «'+name+'» ایجاد و فعال شد',4000)};
 $('bsReset').onclick=()=>{if(!confirm('فهرست نقشه‌های پایه به حالت اولیه برگردد؟ نقشه‌های افزوده‌شده حذف می‌شوند.'))return;bsLS.set('webgis_bases',JSON.stringify(BASE_DEF));bsLS.set('webgis_base_active','osm');bsReload();bsRender();toast('بازنشانی شد')};
 bsReload();
+async function bsFetchServer(){try{const r=await fetch('maps.json',{cache:'no-store'});if(!r.ok)return null;const j=await r.json(),a=Array.isArray(j)?j:j.maps;if(!Array.isArray(a))return null;return{replace:!!j.replaceDefaults,maps:a.filter(x=>x&&x.id&&x.name&&x.url&&(x.type==='xyz'||x.type==='wms')).map(x=>Object.assign({},x,{server:true}))}}catch(e){return null}}
+async function bsSync(first){
+ const s=await bsFetchServer();
+ if(!s||!s.maps.length){if(!first)toast('فایل maps.json از سرور خوانده نشد',4000);return}
+ let list=(first&&s.replace)?[]:baseList.map(x=>Object.assign({},x));let add=0,upd=0;
+ s.maps.forEach(m=>{const i=list.findIndex(x=>x.id===m.id);if(i>=0){m.on=list[i].on!==undefined?list[i].on:m.on;list[i]=m;upd++}else{list.push(m);add++}});
+ if(!list.some(x=>!x.overlay))list.unshift(JSON.parse(JSON.stringify(BASE_DEF[0])));
+ baseList=list;bsSave();bsReload();bsRender();
+ if(!first)toast(`همگام‌سازی شد: ${add} نقشه جدید، ${upd} به‌روزرسانی`,4000)}
+$('bsSync').onclick=()=>bsSync(false);
+if(!bsLS.get('webgis_bases'))bsSync(true);
 
 
 function updNet(){const o=navigator.onLine;$('net').textContent=o?'آنلاین':'آفلاین';$('net').className='pill'+(o?'':' off')}
@@ -367,7 +457,7 @@ function updCoord(){const c=map.getCenter();$('coord').textContent=fmtPt(c.lat,c
 map.on('move',updCoord);updCoord();
 
 /* ---------- Sheets ---------- */
-const sheets=['sLayers','sGo','sCount','sMark','sRule','sSave','sEdit','sSearch','sRoute','sBackup','sSnap','sBase','sId','sTrack','sWork'];
+const sheets=['sLayers','sGo','sCount','sMark','sRule','sSave','sEdit','sSearch','sRoute','sBackup','sSnap','sBase','sId','sTrack','sWork','sOffline','sMore','sFix','sSet','sPrx'];
 function openSheet(id){
  const was=$(id).classList.contains('show')||(id==='sMark'&&mkMode);
  sheets.forEach(s=>$(s).classList.remove('show'));
@@ -380,8 +470,12 @@ function openSheet(id){
  if(id==='sSnap'&&!was)snapInit();
  if(id==='sLayers'&&!was)bsRender();
  if(id==='sBase'&&!was)bsForm();
+ if(id==='sOffline'&&!was)ofInit();
  if(id==='sTrack'&&!was)tkUI();
  if(id==='sWork'&&!was)wkInit();
+ if(id==='sSet'&&!was)setLoad();
+ if(id==='sFix'&&!was)fxInit();
+ if(id==='sPrx'&&!was){pxLayersUI();pxUI()}
  $('cross').style.display=(mkMode||ruler||ed.active||rt.active||(idm.active&&idm.phase==='draw'))?'none':''}
 $('bL').onclick=()=>openSheet('sLayers');
 $('bG').onclick=()=>openSheet('sGo');
@@ -1014,7 +1108,7 @@ function migVal(k,v){
 function migDates(geo){let n=0;((geo&&geo.features)||[]).forEach(f=>{const p=f&&f.properties;if(!p)return;DATE_KEYS.forEach(k=>{if(k in p){const nv=migVal(k,p[k]);if(nv!==p[k]){p[k]=nv;n++}}})});return n}
 
 /* ---------- Registering user's GPS position on every create / final edit (audit fields, not user-editable) ---------- */
-const UK={lat:'عرض کاربر',lon:'طول کاربر',acc:'دقت GPS کاربر (متر)',dist:'فاصله کاربر تا عارضه (متر)',t:'زمان ثبت موقعیت کاربر',k:'نوع ثبت',st:'وضعیت موقعیت کاربر'};
+const UK={lat:'عرض کاربر',lon:'طول کاربر',acc:'دقت GPS کاربر (متر)',dist:'فاصله کاربر تا عارضه (متر)',t:'زمان ثبت موقعیت کاربر',k:'نوع ثبت',st:'وضعیت موقعیت کاربر',u:'ثبت‌کننده'};
 const UKEYS=Object.values(UK);
 function getFixNow(){return new Promise(res=>{
  if(myFix&&Date.now()-myFix.t<15000)return res(myFix);
@@ -1031,9 +1125,9 @@ async function userFix(ask){
  if(ask===false)return{none:true};
  return confirm('موقعیت GPS شما دریافت نشد. موقعیت ثبت‌کننده برای صحت‌سنجی لازم است.\n\nOK = ادامه بدون موقعیت (در داده «دریافت نشد» ثبت می‌شود)\nCancel = انصراف تا GPS روشن شود')?{none:true}:null}
 function applyStamp(f,fx,kind){
- const p=f.properties=f.properties||{};
+ const p=f.properties=f.properties||{},pu=p[UK.u];
  UKEYS.forEach(k=>{delete p[k]});
- p[UK.k]=kind;p[UK.t]=greg();
+ p[UK.k]=kind;p[UK.t]=greg();if(S.user)p[UK.u]=S.user;else if(pu)p[UK.u]=pu;
  if(fx&&!fx.none){
   p[UK.lat]=+fx.lat.toFixed(7);p[UK.lon]=+fx.lon.toFixed(7);p[UK.acc]=Math.round(fx.acc*10)/10;
   const d=userDist(fx,f.geometry);if(d!=null)p[UK.dist]=Math.round(d*10)/10;
@@ -1614,7 +1708,7 @@ function snapInit(){
   ln=layers.filter(l=>l.geo.features.some(f=>f.geometry&&/Line|Polygon/.test(f.geometry.type)));
  $('snPt').innerHTML=pl.map(l=>`<option value="${l.id}">نقطه‌ها: ${esc(l.name)}</option>`).join('')||'<option value="">لایه نقطه‌ای وجود ندارد</option>';
  $('snLn').innerHTML=ln.map(l=>`<option value="${l.id}">خط/مرز: ${esc(l.name)}</option>`).join('')||'<option value="">لایه خطی وجود ندارد</option>';
- snPlan=null;snPrev.clearLayers();$('snApply').disabled=true;$('snInfo').textContent='دو لایه را انتخاب و «بررسی» را بزنید.'}
+ snPlan=null;snPrev.clearLayers();$('snApply').disabled=true;$('snInfo').textContent='دو لایه را انتخاب و «بررسی» را بزنید.';$('snTol').value=S.fxPt}
 $('eFix').onclick=()=>openSheet('sSnap');
 $('snRun').onclick=async()=>{
  const P=layers.find(l=>String(l.id)===$('snPt').value),Ln=layers.find(l=>String(l.id)===$('snLn').value);
@@ -1765,7 +1859,8 @@ function scanSearch(v,fmt){
  else if(!res.length)toast('کد «'+v+'» خوانده شد، اما در لایه‌های فعال پیدا نشد (کد در کادر جستجو کپی شده است)',6000)}
 
 /* ---------- Scanner: native BarcodeDetector + ZXing (linear + 2D) + jsQR ---------- */
-const ZX_URL='https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js',JQ_URL='https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
+const ZX_URLS=['lib/zxing.min.js','https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js'],JQ_URLS=['lib/jsQR.min.js','https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js'];
+async function loadAny(a,ok){let e;for(const u of a){try{await loadScript(u);if(ok())return}catch(x){e=x}}throw e||new Error('load failed')}
 const NATIVE_FMT=['qr_code','code_128','code_39','code_93','ean_13','ean_8','upc_a','upc_e','itf','codabar','data_matrix','pdf417','aztec'];
 const SC={ready:false,det:null,zr:null,zh:null,jq:false,stream:null,timer:null,frames:0,tick:0,cv:null,eng:''};
 const _lp={};
@@ -1781,8 +1876,8 @@ async function initScanner(){
  if(SC.ready)return;
  const eng=[];
  if('BarcodeDetector' in window){try{const sup=await BarcodeDetector.getSupportedFormats(),f=NATIVE_FMT.filter(x=>sup.includes(x));if(f.length){SC.det=new BarcodeDetector({formats:f});eng.push('Native')}}catch(e){}}
- try{await loadScript(ZX_URL);if(window.ZXing){setupZX();eng.push('ZXing')}}catch(e){}
- try{await loadScript(JQ_URL);if(window.jsQR){SC.jq=true;eng.push('jsQR')}}catch(e){}
+ try{await loadAny(ZX_URLS,()=>window.ZXing);setupZX();eng.push('ZXing')}catch(e){}
+ try{await loadAny(JQ_URLS,()=>window.jsQR);SC.jq=true;eng.push('jsQR')}catch(e){}
  if(!eng.length)throw new Error('موتور اسکن بارگذاری نشد؛ بار اول اینترنت لازم است (بعد از آن آفلاین هم کار می‌کند)');
  SC.eng=eng.join('+');SC.ready=true}
 function zxRead(d,w,h){
@@ -2046,6 +2141,369 @@ $('bkFile').onchange=async e=>{
   toast(`بازیابی شد: ${added} لایه جدید${merged?'، '+merged+' عارضه به لایه‌های کاربر اضافه شد':''}${bad?'، '+bad+' لایه نامعتبر رد شد':''}`,6000)
  }catch(err){toast('بازیابی ناموفق: '+err.message,7000)}};
 
+/* ---------- Geometry / topology scan + fix engine (pure functions, no map access) ---------- */
+const FX_TYPES={
+ range:{t:'مختصات خارج از بازه / جابه‌جایی طول و عرض',fix:true},
+ dupv:{t:'رأس تکراری پشت‌سرهم',fix:true},
+ short:{t:'خط یا چندضلعی با رأس ناکافی',fix:false},
+ open:{t:'حلقه‌ی چندضلعی باز',fix:true},
+ orient:{t:'جهت حلقه‌ی چندضلعی (RFC 7946)',fix:true},
+ kink:{t:'چندضلعی خودتقاطع (پاپیونی)',fix:true},
+ dangle:{t:'انتهای آویزان (نزدیک خط دیگر ولی وصل نیست)',fix:true},
+ cross:{t:'تقاطع خطوط بدون Node',fix:true},
+ dupline:{t:'خط تکراری',fix:true},
+ overlap:{t:'هم‌پوشانی چندضلعی‌ها (فقط گزارش)',fix:false}};
+const fxKM=111320;
+const fxK=lat=>Math.max(.05,Math.cos(lat*Math.PI/180));
+const fxD=(a,b)=>Math.hypot((b[0]-a[0])*fxK((a[1]+b[1])/2)*fxKM,(b[1]-a[1])*fxKM);
+function fxSegInter(a,b,c,d){
+ const r0=b[0]-a[0],r1=b[1]-a[1],s0=d[0]-c[0],s1=d[1]-c[1],den=r0*s1-r1*s0;
+ if(Math.abs(den)<1e-20)return null;
+ const t=((c[0]-a[0])*s1-(c[1]-a[1])*s0)/den,u=((c[0]-a[0])*r1-(c[1]-a[1])*r0)/den;
+ return(t>1e-9&&t<1-1e-9&&u>1e-9&&u<1-1e-9)?[a[0]+t*r0,a[1]+t*r1]:null}
+function fxNearSeg(p,a,b){ /* nearest point of segment ab to p (meters, local planar) */
+ const k=fxK(p[1]),ax=(a[0]-p[0])*k*fxKM,ay=(a[1]-p[1])*fxKM,bx=(b[0]-p[0])*k*fxKM,by=(b[1]-p[1])*fxKM,dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;
+ let t=l2?(-(ax*dx+ay*dy))/l2:0;t=t<0?0:t>1?1:t;
+ const x=ax+dx*t,y=ay+dy*t;return{d:Math.hypot(x,y),t,ll:[p[0]+x/(k*fxKM),p[1]+y/fxKM]}}
+const fxSame=(a,b)=>Math.abs(a[0]-b[0])<1e-9&&Math.abs(a[1]-b[1])<1e-9;
+function fxLines(g,o){ /* coordinate arrays of line parts (references, so fixes can edit in place) */
+ if(!g)return o;
+ if(g.type==='LineString')o.push(g.coordinates);else if(g.type==='MultiLineString')g.coordinates.forEach(c=>o.push(c));
+ else if(g.type==='GeometryCollection')g.geometries.forEach(x=>fxLines(x,o));return o}
+function fxRings(g,o){
+ if(!g)return o;
+ if(g.type==='Polygon')g.coordinates.forEach((r,i)=>o.push({r,hole:i>0,poly:g.coordinates}));
+ else if(g.type==='MultiPolygon')g.coordinates.forEach(p=>p.forEach((r,i)=>o.push({r,hole:i>0,poly:p})));
+ else if(g.type==='GeometryCollection')g.geometries.forEach(x=>fxRings(x,o));return o}
+function fxAllCoords(g,fn){ /* visit every coordinate pair array (reference) */
+ if(!g)return;const w=c=>{if(typeof c[0]==='number')fn(c);else c.forEach(w)};
+ if(g.type==='GeometryCollection')g.geometries.forEach(x=>fxAllCoords(x,fn));else if(g.coordinates)w(g.coordinates)}
+const fxArea=r=>{let s=0;for(let i=1;i<r.length;i++)s+=(r[i-1][0]*r[i][1]-r[i][0]*r[i-1][1]);return s/2};
+function fxCenter(f){let sx=0,sy=0,n=0;fxAllCoords(f.geometry,c=>{sx+=c[0];sy+=c[1];n++});return n?[sx/n,sy/n]:[0,0]}
+/* ---- scan ---- */
+function fxScan(geo,opt){
+ opt=Object.assign({endTol:1,types:null,targets:[],overlap:true},opt||{});
+ const want=t=>!opt.types||opt.types.includes(t),out=[],add=(type,f,ll,extra)=>out.push(Object.assign({type,f,ll:ll||fxCenter(f)},extra||{}));
+ geo.features.forEach(f=>{
+  const g=f.geometry;if(!g)return;
+  /* range / swapped */
+  if(want('range')){let bad=null;fxAllCoords(g,c=>{if(!bad&&(!isFinite(c[0])||!isFinite(c[1])||Math.abs(c[0])>180||Math.abs(c[1])>90))bad=c});if(bad)add('range',f,[0,0],{c:bad})}
+  /* duplicate vertices */
+  if(want('dupv')){let n=0;fxLines(g,[]).forEach(c=>{for(let i=1;i<c.length;i++)if(fxSame(c[i-1],c[i]))n++});fxRings(g,[]).forEach(o=>{for(let i=1;i<o.r.length;i++)if(fxSame(o.r[i-1],o.r[i]))n++});if(n)add('dupv',f,null,{n})}
+  /* too few vertices */
+  if(want('short')){
+   fxLines(g,[]).forEach(c=>{const d=c.filter((v,i)=>!i||!fxSame(c[i-1],v));if(d.length<2)add('short',f,c[0]||null)});
+   fxRings(g,[]).forEach(o=>{if(!o.hole){const d=o.r.filter((v,i)=>!i||!fxSame(o.r[i-1],v));if(d.length<4)add('short',f,o.r[0]||null)}})}
+  /* open ring / orientation */
+  fxRings(g,[]).forEach(o=>{
+   const r=o.r;if(r.length<3)return;
+   const closed=fxSame(r[0],r[r.length-1]);
+   if(!closed&&want('open'))add('open',f,r[0]);
+   if(closed&&r.length>=4&&want('orient')){const a=fxArea(r);if(a!==0&&((!o.hole&&a<0)||(o.hole&&a>0)))add('orient',f,r[0])}});
+  /* self-intersecting polygon */
+  if(want('kink')&&typeof turf!=='undefined'&&turf.kinks){
+   if(g.type==='Polygon'||g.type==='MultiPolygon'){try{const k=turf.kinks(f);if(k.features.length)add('kink',f,k.features[0].geometry.coordinates,{n:k.features.length})}catch(e){}}}
+ });
+ /* line topology: dangling ends / crossings / duplicates (same layer + optional targets) */
+ const needLine=want('dangle')||want('cross')||want('dupline');
+ if(needLine){
+  const segs=[],parts=[];
+  const addFC=(fc,own)=>fc.features.forEach(f=>fxLines(f.geometry,[]).forEach(c=>{if(c.length<2)return;const p={f,c,own,i:parts.length};parts.push(p);for(let i=1;i<c.length;i++)segs.push({a:c[i-1],b:c[i],p,i:i-1})}));
+  addFC(geo,true);opt.targets.forEach(t=>addFC(t,false));
+  if(parts.length){
+   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;segs.forEach(s=>{[s.a,s.b].forEach(v=>{if(v[0]<x0)x0=v[0];if(v[0]>x1)x1=v[0];if(v[1]<y0)y0=v[1];if(v[1]>y1)y1=v[1]})});
+   const cell=Math.max((x1-x0)/300,(y1-y0)/300,1e-5),grid=new Map(),key=(i,j)=>i+','+j;
+   segs.forEach((s,si)=>{const ax=Math.min(s.a[0],s.b[0]),bx=Math.max(s.a[0],s.b[0]),ay=Math.min(s.a[1],s.b[1]),by=Math.max(s.a[1],s.b[1]);
+    for(let i=Math.floor((ax-x0)/cell);i<=Math.floor((bx-x0)/cell);i++)for(let j=Math.floor((ay-y0)/cell);j<=Math.floor((by-y0)/cell);j++){const k=key(i,j);if(!grid.has(k))grid.set(k,[]);grid.get(k).push(si)}});
+   /* dangling ends */
+   if(want('dangle'))parts.forEach(p=>{
+    if(!p.own)return;
+    [0,p.c.length-1].forEach(ei=>{
+     const e=p.c[ei];
+     const ci=Math.floor((e[0]-x0)/cell),cj=Math.floor((e[1]-y0)/cell);let best=null,joined=false;
+     const seen=new Set();
+     for(let i=ci-1;i<=ci+1;i++)for(let j=cj-1;j<=cj+1;j++)(grid.get(key(i,j))||[]).forEach(si=>{
+      if(seen.has(si))return;seen.add(si);const s=segs[si];if(s.p===p&&(s.i===ei||s.i===ei-1))return;
+      const r=fxNearSeg(e,s.a,s.b);
+      if(r.d<=0.02){joined=true;return}              /* already touches a vertex / lies on a line */
+      if(r.d<=opt.endTol&&(!best||r.d<best.d))best={d:r.d,ll:r.ll,s}});
+     if(!joined&&best)add('dangle',p.f,e,{part:p,ei,to:best.ll,d:best.d,target:best.s.p})})});
+   /* crossings without node + duplicate lines */
+   if(want('cross')||want('dupline')){
+    const doneC=new Set();
+    if(want('cross'))segs.forEach((s,si)=>{
+     if(!s.p.own)return;
+     const ax=Math.min(s.a[0],s.b[0]),bx=Math.max(s.a[0],s.b[0]),ay=Math.min(s.a[1],s.b[1]),by=Math.max(s.a[1],s.b[1]),seen=new Set();
+     for(let i=Math.floor((ax-x0)/cell);i<=Math.floor((bx-x0)/cell);i++)for(let j=Math.floor((ay-y0)/cell);j<=Math.floor((by-y0)/cell);j++)(grid.get(key(i,j))||[]).forEach(ti=>{
+      if(ti<=si||seen.has(ti))return;seen.add(ti);const t=segs[ti];if(t.p===s.p&&Math.abs(t.i-s.i)<2)return;
+      const x=fxSegInter(s.a,s.b,t.a,t.b);if(!x)return;
+      const k=si+':'+ti;if(doneC.has(k))return;doneC.add(k);
+      add('cross',s.p.f,x,{x,pa:s.p,pb:t.p})})});
+    if(want('dupline')){
+     const sig=new Map();
+     parts.forEach(p=>{if(!p.own)return;const a=p.c.map(v=>v[0].toFixed(7)+','+v[1].toFixed(7)).join(';'),b=p.c.slice().reverse().map(v=>v[0].toFixed(7)+','+v[1].toFixed(7)).join(';'),k=a<b?a:b;
+      if(sig.has(k)&&sig.get(k).f!==p.f)add('dupline',p.f,p.c[0],{of:sig.get(k).f});else sig.set(k,p)})}}}}
+ /* polygon overlaps (small layers only; report only) */
+ if(want('overlap')&&opt.overlap&&typeof turf!=='undefined'&&turf.intersect){
+  const polys=geo.features.filter(f=>f.geometry&&/Polygon/.test(f.geometry.type));
+  if(polys.length>1&&polys.length<=250){
+   for(let i=0;i<polys.length;i++)for(let j=i+1;j<polys.length;j++){
+    try{const x=turf.intersect(polys[i],polys[j]);if(x&&turf.area(x)>0.5)add('overlap',polys[i],turf.centroid(x).geometry.coordinates,{other:polys[j],area:turf.area(x)})}catch(e){}}}}
+ return out}
+/* ---- fix: edits geometries in place; returns {fixed, touched:Set(of FeatureCollections), removed:[features]} ---- */
+function fxApply(geo,issues,types,opt){
+ opt=Object.assign({targetsFC:[]},opt||{});
+ const ok=new Set(types),res={fixed:0,notes:[],touched:new Set()};
+ const byType=t=>issues.filter(x=>x.type===t&&ok.has(t));
+ /* 1. range / swapped */
+ byType('range').forEach(x=>{const f=x.f;let any=false;fxAllCoords(f.geometry,c=>{if(Math.abs(c[0])<=90&&Math.abs(c[1])>90&&Math.abs(c[1])<=180){const t=c[0];c[0]=c[1];c[1]=t;any=true}});if(any){res.fixed++;res.touched.add(geo)}});
+ /* 2. duplicate vertices (dedupe in place) */
+ const dd=c=>{for(let i=c.length-1;i>0;i--)if(fxSame(c[i-1],c[i]))c.splice(i,1)};
+ byType('dupv').forEach(x=>{fxLines(x.f.geometry,[]).forEach(dd);fxRings(x.f.geometry,[]).forEach(o=>{dd(o.r);if(o.r.length>1&&!fxSame(o.r[0],o.r[o.r.length-1]))o.r.push([o.r[0][0],o.r[0][1]])});res.fixed++;res.touched.add(geo)});
+ /* 3. open rings */
+ byType('open').forEach(x=>{fxRings(x.f.geometry,[]).forEach(o=>{if(o.r.length>=3&&!fxSame(o.r[0],o.r[o.r.length-1]))o.r.push([o.r[0][0],o.r[0][1]])});res.fixed++;res.touched.add(geo)});
+ /* 4. orientation */
+ byType('orient').forEach(x=>{fxRings(x.f.geometry,[]).forEach(o=>{if(o.r.length<4||!fxSame(o.r[0],o.r[o.r.length-1]))return;const a=fxArea(o.r);if((!o.hole&&a<0)||(o.hole&&a>0))o.r.reverse()});res.fixed++;res.touched.add(geo)});
+ /* 5. kinks -> unkink (Polygon becomes MultiPolygon when needed) */
+ if(ok.has('kink')&&typeof turf!=='undefined'&&turf.unkinkPolygon){
+  const done=new Set();
+  byType('kink').forEach(x=>{if(done.has(x.f))return;done.add(x.f);
+   try{const u=turf.unkinkPolygon(x.f);if(u.features.length>1){x.f.geometry={type:'MultiPolygon',coordinates:u.features.map(p=>p.geometry.coordinates)};res.fixed++;res.touched.add(geo)}}catch(e){}})}
+ /* 6. dangling ends -> snap to the line + create node */
+ byType('dangle').forEach(x=>{
+  const c=x.part.c,e=x.ei===0?0:c.length-1,to=[+x.to[0].toFixed(7),+x.to[1].toFixed(7)];
+  c[e][0]=to[0];c[e][1]=to[1];
+  fxNode(x.target.c,to);
+  res.fixed++;res.touched.add(geo);if(!x.target.own)res.touched.add('other')});
+ /* 7. crossings -> node in both lines */
+ byType('cross').forEach(x=>{
+  const p=[+x.x[0].toFixed(7),+x.x[1].toFixed(7)];
+  const a=fxNode(x.pa.c,p),b=fxNode(x.pb.c,p);if(a||b){res.fixed++;res.touched.add(geo)}});
+ /* 8. duplicate lines -> remove the later feature (only when every part is a duplicate) */
+ const rm=new Set();byType('dupline').forEach(x=>rm.add(x.f));
+ if(rm.size){geo.features=geo.features.filter(f=>!rm.has(f));res.fixed+=rm.size;res.touched.add(geo);res.removed=[...rm]}
+ return res}
+/* insert vertex p into polyline c at the segment it lies on (if no vertex there). returns true if inserted */
+function fxNode(c,p){
+ let best=null;
+ for(let i=1;i<c.length;i++){const r=fxNearSeg(p,c[i-1],c[i]);if(!best||r.d<best.d)best={d:r.d,i,t:r.t}}
+ if(!best||best.d>0.5)return false;
+ if(fxD(c[best.i-1],p)<=0.03||fxD(c[best.i],p)<=0.03)return false;
+ c.splice(best.i,0,[p[0],p[1]]);return true}
+
+/* ---------- Settings (user-defined options; other menus only operate) ---------- */
+const SET_DEF={user:'',cp:'ll',obs:['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'],
+ tkAcc:30,tkStep:4,tkWake:true,fxEnd:1,fxPt:2,
+ prxDist:30,prxMode:'enter',prxSound:'two',prxVol:.8,prxVib:true,prxHold:60,prxWake:true};
+const S=(()=>{let o={};try{o=JSON.parse(localStorage.getItem('webgis_settings'))||{}}catch(e){}return Object.assign({},SET_DEF,o,{obs:Array.isArray(o.obs)&&o.obs.length?o.obs:SET_DEF.obs})})();
+const setSave=()=>{try{localStorage.setItem('webgis_settings',JSON.stringify(S))}catch(e){}};
+function setLoad(){
+ document.querySelectorAll('#sSet [data-k]').forEach(el=>{
+  const k=el.dataset.k,v=k==='cp'?$('cpFmt').value:S[k];
+  if(el.type==='checkbox')el.checked=!!v;else if(el.dataset.t==='lines')el.value=(v||[]).join('\n');else el.value=v})}
+document.querySelectorAll('#sSet [data-k]').forEach(el=>{
+ el.onchange=()=>{
+  const k=el.dataset.k;let v;
+  if(el.type==='checkbox')v=el.checked;
+  else if(el.dataset.t==='lines'){v=el.value.split('\n').map(s=>s.trim()).filter(Boolean);if(!v.length)v=SET_DEF.obs.slice()}
+  else if(el.type==='number'||el.type==='range'){v=parseFloat(norm(el.value).replace(',','.'));const mn=parseFloat(el.min),mx=parseFloat(el.max);if(!isFinite(v)){setLoad();return}if(isFinite(mn))v=Math.max(mn,v);if(isFinite(mx))v=Math.min(mx,v)}
+  else v=el.value.trim();
+  if(k==='cp'){$('cpFmt').value=v;if($('cpFmt').onchange)$('cpFmt').onchange()}
+  S[k]=v;setSave();setLoad();
+  if(k==='prxDist'&&$('pxD'))$('pxD').value=v;
+  if(k==='prxSound'||k==='prxVol')pxBeep('two')}});
+$('setReset').onclick=()=>{if(!confirm('همه تنظیمات به حالت پیش‌فرض برگردد؟'))return;Object.assign(S,SET_DEF,{obs:SET_DEF.obs.slice()});setSave();setLoad();toast('تنظیمات بازنشانی شد')};
+
+/* ---------- Proximity alert: beep when the user gets within a chosen distance of a feature ---------- */
+const PX={on:false,watch:null,fix:null,near:null,timer:null,wl:null,ac:null,hold:new Map(),sel:new Set(),bb:new WeakMap()};
+const pxG=L.layerGroup().addTo(map);let pxCircle=null;
+const PX_DIRS=['شمال','شمال‌شرق','شرق','جنوب‌شرق','جنوب','جنوب‌غرب','غرب','شمال‌غرب'];
+const pxDir=(dx,dy)=>Math.hypot(dx,dy)<1?'':PX_DIRS[Math.round(((Math.atan2(dx,dy)*180/Math.PI+360)%360)/45)%8];
+function pxAudio(){try{if(!PX.ac)PX.ac=new(window.AudioContext||window.webkitAudioContext)();if(PX.ac.state==='suspended')PX.ac.resume();return PX.ac}catch(e){return null}}
+function pxTone(ac,t,f,dur,vol,type){const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+dur+.02)}
+/* kind: 'one' | 'two' | 'park' (short tick) | 'enter' (attention) */
+function pxBeep(kind){
+ const ac=pxAudio();if(!ac)return;const v=Math.max(.05,Math.min(1,S.prxVol)),t=ac.currentTime+.02,sd=S.prxSound;
+ if(kind==='enter'){[0,.2,.4].forEach((d,i)=>pxTone(ac,t+d,1200+i*200,.15,v,'square'));return}
+ if(kind==='park'){pxTone(ac,t,sd==='low'?520:1000,.09,v,sd==='low'?'triangle':'square');return}
+ if(sd==='one'){pxTone(ac,t,1000,.25,v)}
+ else if(sd==='low'){pxTone(ac,t,520,.35,v,'triangle')}
+ else{pxTone(ac,t,900,.12,v);pxTone(ac,t+.17,1300,.12,v)}}
+function pxVib(p){try{if(S.prxVib&&navigator.vibrate)navigator.vibrate(p)}catch(e){}}
+function pxBB(g){
+ const c=g.coordinates;let r=PX.bb.get(g);
+ if(!r||r.ref!==c){const b=[1e9,1e9,-1e9,-1e9];fxAllCoords(g,v=>{if(v[0]<b[0])b[0]=v[0];if(v[1]<b[1])b[1]=v[1];if(v[0]>b[2])b[2]=v[0];if(v[1]>b[3])b[3]=v[1]});r={ref:c,b};PX.bb.set(g,r)}
+ return r.b}
+/* distance (m) from fix to a feature + nearest point; polygon containing the user = 0 */
+function pxDist(f,cx,cy){
+ const k=fxK(cy),P=(x,y)=>[(x-cx)*k*fxKM,(y-cy)*fxKM];let best=null;
+ const upd=(d,x,y)=>{if(!best||d<best.d)best={d,x,y}};
+ const parts={pts:[],lines:[],polys:[]};
+ const walk=g=>{if(!g)return;switch(g.type){case'Point':parts.pts.push(g.coordinates);break;case'MultiPoint':g.coordinates.forEach(c=>parts.pts.push(c));break;case'LineString':parts.lines.push(g.coordinates);break;case'MultiLineString':g.coordinates.forEach(c=>parts.lines.push(c));break;case'Polygon':parts.polys.push(g.coordinates);break;case'MultiPolygon':g.coordinates.forEach(p=>parts.polys.push(p));break;case'GeometryCollection':g.geometries.forEach(walk)}};
+ walk(f.geometry);
+ parts.pts.forEach(c=>{const q=P(c[0],c[1]);upd(Math.hypot(q[0],q[1]),q[0],q[1])});
+ const seg=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l2=dx*dx+dy*dy;let t=l2?(-(a[0]*dx+a[1]*dy))/l2:0;t=t<0?0:t>1?1:t;const x=a[0]+dx*t,y=a[1]+dy*t;upd(Math.hypot(x,y),x,y)};
+ parts.lines.forEach(c=>{let p0=null;c.forEach(v=>{const q=P(v[0],v[1]);if(p0)seg(p0,q);else upd(Math.hypot(q[0],q[1]),q[0],q[1]);p0=q})});
+ parts.polys.forEach(poly=>{
+  const rings=poly.map(r=>r.map(v=>P(v[0],v[1])));
+  const inR=(r)=>{let c=false;for(let i=0,j=r.length-1;i<r.length;j=i++){if(((r[i][1]>0)!==(r[j][1]>0))&&(0<(r[j][0]-r[i][0])*(0-r[i][1])/(r[j][1]-r[i][1])+r[i][0]))c=!c}return c};
+  if(inR(rings[0])&&!rings.slice(1).some(inR)){upd(0,0,0);return}
+  rings.forEach(r=>{for(let i=1;i<r.length;i++)seg(r[i-1],r[i])})});
+ if(!best)return null;
+ return{d:best.d,dir:pxDir(best.x,best.y),ll:[cx+best.x/(k*fxKM),cy+best.y/fxKM]}}
+const pxName=f=>{const p=f.properties||{};for(const k of['نام','name','Name','عنوان','title','کد','code','id','ID'])if(p[k]!=null&&String(p[k]).trim()!==''&&!isImg(p[k]))return String(p[k]).slice(0,40);return geoFa(f.geometry)};
+function pxLayersUI(){
+ const el=$('pxLayers');el.innerHTML='';
+ if(!layers.length){el.innerHTML='<div style="color:#a5281b;font-size:13px">لایه‌ای بارگذاری نشده است.</div>';return}
+ layers.forEach(L_=>{
+  if(!PX.on&&!PX.sel.has(L_.id)&&L_.on&&!L_.res)PX.sel.add(L_.id);
+  const lb=document.createElement('label');lb.style.cssText='display:flex;gap:8px;align-items:center;font-size:13px;margin:3px 0';
+  lb.innerHTML=`<input type="checkbox" style="width:20px;height:20px;flex:none" ${PX.sel.has(L_.id)?'checked':''}><span>${esc(L_.name)}</span><span style="color:#888;font-size:11px">(${L_.geo.features.length})</span>`;
+  lb.querySelector('input').onchange=e=>{e.target.checked?PX.sel.add(L_.id):PX.sel.delete(L_.id)};
+  el.appendChild(lb)})}
+function pxUI(){
+ $('pxStart').style.display=PX.on?'none':'';$('pxStop').style.display=PX.on?'':'none';$('bPx').classList.toggle('on',PX.on);
+ let h='';
+ if(!PX.on)h='آماده — لایه‌ها و فاصله را انتخاب و «شروع هشدار» را بزنید.';
+ else{
+  h=PX.fix?`GPS ±${Math.round(PX.fix.acc)} متر`+(PX.fix.acc>S_D()?' — <b style="color:#c0392b">دقت از فاصله هشدار کمتر است</b>':''):'در انتظار GPS ...';
+  h+=PX.near?`<br><b style="color:#c0392b">نزدیک‌ترین: ${esc(PX.near.L_.name)} — ${esc(pxName(PX.near.f))} — ${PX.near.d<1?'همین‌جا':Math.round(PX.near.d)+' متر '+PX.near.dir}</b>`:'<br>عارضه‌ای در محدوده‌ی هشدار نیست.';
+  h+=`<br><span style="font-size:11px;color:#666">قفل بیداری صفحه: ${PX.wl?'فعال':'غیرفعال'} | حالت: ${S.prxMode==='park'?'بیپ تندشونده':'هشدار هنگام ورود'}</span>`}
+ $('pxInfo').innerHTML=h;
+ const ban=$('pxBan');
+ if(PX.on&&PX.near){ban.style.display='block';ban.innerHTML=`⚠ ${esc(PX.near.L_.name)} — <b>${esc(pxName(PX.near.f))}</b> — ${PX.near.d<1?'همین‌جا':Math.round(PX.near.d)+' متر '+PX.near.dir}`}
+ else ban.style.display='none'}
+const S_D=()=>Math.max(1,parseFloat($('pxD').value)||S.prxDist);
+function pxFix(p){
+ const c=p.coords;PX.fix={lng:c.longitude,lat:c.latitude,acc:c.accuracy,t:Date.now()};
+ if(typeof myFix!=='undefined')myFix={lat:c.latitude,lon:c.longitude,acc:c.accuracy,t:Date.now()};
+ const D=S_D(),cx=c.longitude,cy=c.latitude,k=fxK(cy),dLat=D/fxKM,dLng=D/(fxKM*k);let best=null;
+ layers.forEach(L_=>{
+  if(!PX.sel.has(L_.id)||!L_.on)return;
+  L_.geo.features.forEach(f=>{
+   const g=f.geometry;if(!g)return;const b=pxBB(g);
+   if(b[2]<cx-dLng||b[0]>cx+dLng||b[3]<cy-dLat||b[1]>cy+dLat)return;
+   const r=pxDist(f,cx,cy);if(r&&r.d<=D&&(!best||r.d<best.d))best={L_,f,d:r.d,dir:r.dir,ll:r.ll}})});
+ const prev=PX.near;PX.near=best;
+ if(pxCircle)pxCircle.setLatLng([cy,cx]).setRadius(D);else pxCircle=L.circle([cy,cx],{radius:D,color:'#e74c3c',weight:1.5,fillOpacity:.05,interactive:false}).addTo(pxG);
+ pxG.eachLayer(l=>{if(l._pxHL)pxG.removeLayer(l)});
+ if(best){
+  const h=best.f.geometry.type.indexOf('Point')>=0?L.circleMarker([best.ll[1],best.ll[0]],{radius:16,color:'#f1c40f',weight:4,fillOpacity:.2,interactive:false}):L.geoJSON(best.f,{style:()=>({color:'#f1c40f',weight:7,opacity:.9,fillOpacity:.15}),interactive:false});
+  h._pxHL=true;h.addTo(pxG);
+  const now=Date.now(),last=PX.hold.get(best.f)||0,isNew=!prev||prev.f!==best.f;
+  if(isNew&&now-last>S.prxHold*1000){PX.hold.set(best.f,now);pxBeep('enter');pxVib([250,100,250]);toast('⚠ نزدیک «'+pxName(best.f)+'» ('+(best.d<1?'همین‌جا':Math.round(best.d)+' متر')+')',4000)}}
+ pxUI()}
+function pxLoop(){
+ clearTimeout(PX.timer);
+ if(!PX.on)return;
+ let wait=400;
+ if(S.prxMode==='park'&&PX.near){pxBeep('park');pxVib(40);wait=Math.max(140,Math.min(1800,160+(PX.near.d/S_D())*1640))}
+ PX.timer=setTimeout(pxLoop,wait)}
+async function pxLock(){try{if(S.prxWake&&'wakeLock' in navigator){PX.wl=await navigator.wakeLock.request('screen');PX.wl.addEventListener('release',()=>{PX.wl=null;pxUI()})}}catch(e){PX.wl=null}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&PX.on&&!PX.wl)pxLock().then(pxUI)});
+async function pxStart(){
+ if(PX.on)return;
+ if(!navigator.geolocation||!window.isSecureContext)return toast('هشدار نزدیکی فقط روی HTTPS با GPS کار می‌کند',6000);
+ if(!PX.sel.size)return toast('حداقل یک لایه را انتخاب کنید');
+ S.prxDist=S_D();setSave();pxAudio();pxBeep('one');
+ PX.on=true;PX.near=null;PX.hold.clear();
+ PX.watch=navigator.geolocation.watchPosition(pxFix,e=>toast('خطای GPS: '+(e.code===1?'اجازه موقعیت داده نشده':'موقعیت در دسترس نیست'),5000),{enableHighAccuracy:true,maximumAge:500,timeout:20000});
+ await pxLock();pxLoop();pxUI();toast('هشدار نزدیکی فعال شد؛ صفحه روشن بماند',3500)}
+function pxStop(){
+ PX.on=false;if(PX.watch!==null){navigator.geolocation.clearWatch(PX.watch);PX.watch=null}
+ clearTimeout(PX.timer);try{if(PX.wl)PX.wl.release()}catch(e){}PX.wl=null;PX.near=null;
+ pxG.clearLayers();pxCircle=null;pxUI()}
+$('pxStart').onclick=pxStart;$('pxStop').onclick=pxStop;
+$('pxTest').onclick=()=>{pxAudio();pxBeep('two');pxVib(120)};
+$('pxD').onchange=()=>{const v=S_D();$('pxD').value=v;S.prxDist=v;setSave()};
+document.querySelectorAll('#sPrx [data-d]').forEach(b=>b.onclick=()=>{$('pxD').value=b.dataset.d;$('pxD').onchange()});
+$('pxBan').onclick=()=>{const n=PX.near;if(!n)return;try{map.fitBounds(L.latLngBounds([[n.ll[1],n.ll[0]],[PX.fix.lat,PX.fix.lng]]),{paddingTopLeft:[40,70],paddingBottomRight:[40,90],maxZoom:20})}catch(e){}if(n.L_.on)setTimeout(()=>reopen(n.L_,n.f),400)};
+$('pxD').value=S.prxDist;
+pxUI();
+
+/* ---------- Fix features (geometry + topology) ---------- */
+const fxHL=L.layerGroup().addTo(map);let fxS=null,fxUndoD=null;
+function fxInit(){
+ const el=$('fxLayer');el.innerHTML=layers.length?layers.map(l=>`<option value="${l.id}">${esc(l.name)} (${l.geo.features.length})</option>`).join(''):'<option value="">لایه‌ای نیست</option>';
+ fxS=null;fxHL.clearLayers();$('fxRes').innerHTML='';$('fxInfo').textContent='لایه را انتخاب و «بررسی» را بزنید.';$('fxDo').style.display='none';
+ $('fxCopy').onchange=()=>{$('fxTg').disabled=$('fxCopy').checked;if($('fxCopy').checked)$('fxTg').checked=false};$('fxCopy').onchange()}
+const fxLay=()=>layers.find(l=>String(l.id)===$('fxLayer').value);
+function fxTargets(L_){return layers.filter(l=>l!==L_&&l.on).map(l=>({L_:l,geo:l.geo}))}
+$('fxScanB').onclick=async()=>{
+ const L_=fxLay();if(!L_)return toast('یک لایه انتخاب کنید');
+ $('fxInfo').textContent='در حال بررسی ...';await new Promise(r=>setTimeout(r,30));
+ const tg=$('fxTg').checked?fxTargets(L_):[];
+ const issues=fxScan(L_.geo,{endTol:S.fxEnd,targets:tg.map(x=>x.geo)});
+ fxS={L_,issues,tg};fxRender()};
+function fxRender(){
+ const R=fxS,el=$('fxRes');fxHL.clearLayers();el.innerHTML='';
+ const by={};R.issues.forEach(i=>(by[i.type]=by[i.type]||[]).push(i));
+ const keys=Object.keys(by);
+ $('fxInfo').innerHTML=keys.length?`<b>${R.issues.length}</b> مورد در <b>${keys.length}</b> نوع خطا — لایه‌ی «${esc(R.L_.name)}»`:'<span style="color:#27ae60"><b>✔ خطایی پیدا نشد.</b></span>';
+ $('fxDo').style.display=keys.some(k=>FX_TYPES[k].fix)?'':'none';
+ keys.forEach(k=>{
+  const row=document.createElement('div');row.className='lay';row.style.cssText='display:flex;gap:8px;align-items:center';
+  const can=FX_TYPES[k].fix,def=can&&k!=='dupline'&&k!=='kink';
+  row.innerHTML=`<input type="checkbox" data-t="${k}" ${can?'':'disabled'} ${def?'checked':''} style="width:20px;height:20px;flex:none"><span style="flex:1;font-size:13px"><b>${esc(FX_TYPES[k].t)}</b><br><span style="font-size:11px;color:#666">${can?(k==='dupline'?'رفع = حذف خط تکراری (با تأیید)':k==='kink'?'رفع = شکستن به چندضلعی‌های معتبر':'قابل رفع خودکار'):'فقط گزارش'}</span></span><span style="background:#c0392b;color:#fff;border-radius:12px;padding:1px 10px">${by[k].length}</span><button class="btn g" style="padding:4px 10px;font-size:12px">نمایش</button>`;
+  row.querySelector('button').onclick=()=>{
+   fxHL.clearLayers();const pts=[];
+   by[k].slice(0,400).forEach((i,n)=>{const ll=[i.ll[1],i.ll[0]];if(!isFinite(ll[0])||!isFinite(ll[1]))return;pts.push(ll);L.circleMarker(ll,{radius:10,color:'#c0392b',weight:3,fillColor:'#f1c40f',fillOpacity:.5,interactive:false}).addTo(fxHL)});
+   if(pts.length)try{map.fitBounds(L.latLngBounds(pts),{paddingTopLeft:[40,70],paddingBottomRight:[40,Math.round(innerHeight*.5)],maxZoom:19})}catch(e){}};
+  el.appendChild(row)})}
+$('fxDo').onclick=async()=>{
+ const R=fxS;if(!R)return;
+ const types=[...$('fxRes').querySelectorAll('input[data-t]:checked')].map(i=>i.dataset.t);
+ if(!types.length)return toast('حداقل یک نوع خطا را برای رفع تیک بزنید');
+ const copy=$('fxCopy').checked;
+ if(types.includes('dupline')&&!confirm('خطوط تکراری حذف می‌شوند. ادامه می‌دهید؟'))return;
+ if(!copy&&!confirm('اصلاح مستقیماً روی خود لایه انجام می‌شود (با امکان «بازگردانی آخرین اصلاح»). ادامه؟'))return;
+ const L0=R.L_;let geo,L_=L0,tg=R.tg;
+ if(copy){geo=JSON.parse(JSON.stringify(L0.geo));tg=[]}
+ else{geo=L0.geo;fxUndoD={L_:L0,json:JSON.stringify(L0.geo),others:R.tg.map(x=>({L_:x.L_,json:JSON.stringify(x.geo)}))}}
+ const issues=copy?fxScan(geo,{endTol:S.fxEnd,types,targets:[]}):R.issues;
+ const res=fxApply(geo,issues,types,{});
+ if(copy){
+  const N=mkLayer(L0.name+' (اصلاح‌شده)',geo,true,{id:++lid,color:L0.color||'#8e44ad',icon:L0.icon||'circle',on:true});saveL(N);renderList();
+  toast(`${res.fixed} مورد اصلاح شد — لایه‌ی «${N.name}» ساخته شد`,6000)}
+ else{
+  rebuild(L0);R.tg.forEach(x=>rebuild(x.L_));$('fxUndo').disabled=false;
+  toast(`${res.fixed} مورد اصلاح شد — «بازگردانی آخرین اصلاح» در دسترس است`,6000)}
+ fxHL.clearLayers();$('fxRes').innerHTML='';$('fxInfo').textContent='انجام شد؛ برای اطمینان دوباره «بررسی» را بزنید.';$('fxDo').style.display='none';fxS=null};
+$('fxUndo').onclick=()=>{
+ const u=fxUndoD;if(!u)return toast('چیزی برای بازگردانی نیست');
+ u.L_.geo=JSON.parse(u.json);rebuild(u.L_);u.others.forEach(o=>{o.L_.geo=JSON.parse(o.json);rebuild(o.L_)});
+ fxUndoD=null;$('fxUndo').disabled=true;toast('آخرین اصلاح بازگردانی شد')};
+$('fxSnapB').onclick=()=>openSheet('sSnap');
+
+/* ---------- Menu icons + "More" panel ---------- */
+const UI_IC={
+ bL:'<path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/>',
+ bMk:'<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>',
+ bI:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="7.8" r=".6" fill="currentColor"/>',
+ bT:'<circle cx="6" cy="18.5" r="2.3"/><circle cx="18" cy="5.5" r="2.3"/><path d="M8.3 18.5H14a3.5 3.5 0 0 0 0-7h-4a3.5 3.5 0 0 1 0-7h5.5"/>',
+ bMore:'<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>',
+ bF:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>',
+ bG:'<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+ bR:'<path d="m3 17 14-14 4 4L7 21l-4-4Z"/><path d="m8 12 2 2M11 9l2 2M14 6l2 2"/>',
+ bE:'<path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
+ bFx:'<path d="M14.7 6.3a4 4 0 0 0 5 5L21 12.6 12.6 21a2.1 2.1 0 0 1-3-3L18 9.6"/><path d="M14.7 6.3 11 10"/><path d="M5 5l3 3M3 9l3-3M9 3 6 6"/>',
+ bS:'<path d="M5 3h11l3 3v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',
+ bB:'<ellipse cx="12" cy="5.5" rx="8" ry="2.8"/><path d="M4 5.5v6c0 1.5 3.6 2.8 8 2.8s8-1.3 8-2.8v-6"/><path d="M4 11.5v6c0 1.5 3.6 2.8 8 2.8s8-1.3 8-2.8v-6"/>',
+ bPx:'<path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15L6 17Z"/><path d="M10 21h4"/><path d="M3 8a10 10 0 0 1 2-3M21 8a10 10 0 0 0-2-3"/>',
+ bSet:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'};
+const UI_LB={bL:'لایه‌ها',bMk:'نشانگر',bI:'شناسایی',bT:'برداشت مسیر',bMore:'بیشتر',bF:'باز کردن فایل',bG:'مختصات',bR:'خط‌کش',bE:'ویرایش',bFx:'اصلاح عوارض',bS:'ذخیره',bB:'پشتیبان',bPx:'هشدار نزدیکی',bSet:'تنظیمات'};
+function uiBuild(){
+ const grid=$('moreGrid'),bar=$('bar');
+ Object.keys(UI_LB).forEach(id=>{
+  const b=$(id);if(!b)return;
+  b.innerHTML=`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${UI_IC[id]}</svg><span>${UI_LB[id]}</span>`});
+ ['bF','bG','bR','bE','bFx','bS','bB','bPx','bSet'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
+ ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
+ bar.appendChild($('bMore'))}
+$('bMore').onclick=()=>openSheet('sMore');
+$('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');
+uiBuild();
+
 /* ---------- Photo store: photos live in their own IndexedDB store; features keep only a link ("photo:<id>") ---------- */
 function dataUrlToBlob(d){const i=d.indexOf(','),m=/^data:([^;,]+)/.exec(d),bin=atob(d.slice(i+1)),u=new Uint8Array(bin.length);for(let k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);return new Blob([u],{type:m?m[1]:'image/jpeg'})}
 const blobToDataUrl=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(b)});
@@ -2142,13 +2600,11 @@ $('mThumb').onclick=()=>{if(typeof mPhoto!=='undefined'&&mPhoto)pvOpen([mPhoto],
 /* ---------- Tracking ("برداشت مسیر"): start / stop / resume / finish — incremental point saving + screen wake lock only ---------- */
 const TK={st:'idle',id:null,name:'',pts:[],obs:[],len:0,t0:0,seq:0,watch:null,raw:null,stopPos:null,wl:null,sel:null,photo:null,weak:false};
 const tkG=L.layerGroup().addTo(map),tkLine=L.polyline([],{color:'#e67e22',weight:5,opacity:.9}).addTo(tkG);
-const TK_ACC=30,TK_STEP=4;
-const TK_TYPES=['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'];
 const tkMetaPut=()=>DB.st('tracks','readwrite',s=>s.put({id:TK.id,name:TK.name,st:TK.st,t0:TK.t0,len:TK.len,obs:TK.obs}));
 const tkPtDel=id=>DB.st('trkpts','readwrite',s=>s.delete(IDBKeyRange.bound([id,0],[id,Infinity])));
 const tkMetaDel=id=>DB.st('tracks','readwrite',s=>s.delete(id));
 async function tkLock(){
- try{if('wakeLock' in navigator){TK.wl=await navigator.wakeLock.request('screen');TK.wl.addEventListener('release',()=>{TK.wl=null;tkUI()})}}catch(e){TK.wl=null}}
+ try{if(S.tkWake&&'wakeLock' in navigator){TK.wl=await navigator.wakeLock.request('screen');TK.wl.addEventListener('release',()=>{TK.wl=null;tkUI()})}}catch(e){TK.wl=null}}
 function tkUnlock(){try{if(TK.wl)TK.wl.release()}catch(e){}TK.wl=null}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TK.st==='rec'&&!TK.wl)tkLock().then(tkUI)});
 function tkWatch(){
@@ -2158,10 +2614,10 @@ function tkUnwatch(){if(TK.watch!==null){navigator.geolocation.clearWatch(TK.wat
 function tkFix(p){
  const c=p.coords;TK.raw={lng:c.longitude,lat:c.latitude,acc:c.accuracy,t:Date.now()};
  if(TK.st!=='rec')return;
- TK.weak=c.accuracy>TK_ACC;
+ TK.weak=c.accuracy>S.tkAcc;
  if(TK.weak){tkUI();return}
  const q=[c.longitude,c.latitude],l0=TK.pts[TK.pts.length-1];
- if(l0){const d=hav(l0[0],l0[1],q[0],q[1]);if(d<Math.max(TK_STEP,Math.min(c.accuracy/2,10))){tkUI();return}TK.len+=d}
+ if(l0){const d=hav(l0[0],l0[1],q[0],q[1]);if(d<Math.max(S.tkStep,Math.min(c.accuracy/2,10))){tkUI();return}TK.len+=d}
  TK.pts.push(q);tkLine.addLatLng([q[1],q[0]]);
  DB.st('trkpts','readwrite',s=>s.put({tid:TK.id,i:TK.seq++,x:q[0],y:q[1],t:Date.now(),a:Math.round(c.accuracy)}));
  if(TK.pts.length%10===0)tkMetaPut();
@@ -2175,7 +2631,9 @@ function tkUI(){
  if(s!=='pause')$('tkObsForm').style.display='none';
  let h=s==='idle'?'آماده — «شروع» را بزنید.':`<b>${s==='rec'?'● در حال ثبت':'⏸ متوقف'}</b> | طول: <b>${fmtD(TK.len)}</b> | نقطه: <b>${TK.pts.length}</b> | مانع: <b>${TK.obs.length}</b>`;
  if(s==='rec'){h+=`<br><span style="font-size:12px;color:#555">${TK.raw?'دقت GPS ±'+Math.round(TK.raw.acc)+' متر':'در انتظار GPS ...'}${TK.weak?' — <b style="color:#c0392b">سیگنال ضعیف (نقطه ثبت نمی‌شود)</b>':''} | قفل بیداری صفحه: ${TK.wl?'فعال':'غیرفعال'}</span>`}
- $('tkInfo').innerHTML=h}
+ $('tkInfo').innerHTML=h;
+ const lt=wkTracks()[0],le=$('tkLast');if(s==='idle'&&lt){le.style.display='';$('tkLastTxt').textContent='آخرین برداشت: '+lt.name+' — '+fmtD(lt.len)}else le.style.display='none'}
+$('tkCopyLen').onclick=async()=>{const lt=wkTracks()[0];if(lt)toast(await copyText(String(Math.round(lt.len*10)/10))?'متراژ کپی شد: '+fmtD(lt.len):'کپی ممکن نشد',3000)};
 async function tkStart(){
  if(TK.st!=='idle')return;
  if(!navigator.geolocation||!window.isSecureContext)return toast('برداشت مسیر فقط روی HTTPS با GPS کار می‌کند',6000);
@@ -2193,7 +2651,7 @@ async function tkResume(){
 /* --- obstacle: type + photo + note, at the point where the user stopped --- */
 function tkTypes(){
  const el=$('tkTypes');el.innerHTML='';
- TK_TYPES.forEach(t=>{const b=document.createElement('button');b.type='button';b.className='btn g';b.style.cssText='margin:2px;padding:6px 10px;font-size:12px';b.textContent=t;
+ S.obs.forEach(t=>{const b=document.createElement('button');b.type='button';b.className='btn g';b.style.cssText='margin:2px;padding:6px 10px;font-size:12px';b.textContent=t;
   b.onclick=()=>{TK.sel=t;[...el.children].forEach(c=>{c.className='btn '+(c===b?'':'g')})};el.appendChild(b)})}
 function tkObsReset(){TK.sel=null;TK.photo=null;$('tkNote').value='';$('tkThumb').style.display='none';tkTypes();$('tkObsForm').style.display='none'}
 $('tkObsBtn').onclick=()=>{tkObsReset();$('tkObsForm').style.display='block'};
@@ -2292,6 +2750,78 @@ $('wSave').onclick=async()=>{
  toast('کار «'+typ+'» با متراژ '+fmtD(len)+' ثبت شد',4000)};
 $('bW').onclick=()=>openSheet('sWork');
 tkUI();
+
+/* ---------- Offline map packs (download tiles of the current view into Cache Storage) ---------- */
+const OFF_CACHE='webgis-offline-v1',PUB_HOST=/(openstreetmap\.org|arcgisonline\.com|opentopomap\.org|google\.com|googleapis\.com|gstatic\.com|cartocdn\.com)/i;
+let ofStopF=false,ofBusy=false;
+const ofVisible=()=>baseList.filter(d=>baseL[d.id]&&map.hasLayer(baseL[d.id]));
+const ofAbs=u=>{try{return new URL(u,location.href)}catch(e){return null}};
+const ofPublic=d=>d.type==='xyz'||d.type==='wms'?PUB_HOST.test((ofAbs(d.url)||{}).hostname||''):false;
+function tileUrlFor(d,l,x,y,z){
+ if(d.type==='wms'){const c=L.point(x,y);c.z=z;return new URL(l.getTileUrl(c),location.href).href}
+ const n=Math.pow(2,z),yy=d.tms?n-1-y:y,s='abc'[Math.abs(x+y)%3];
+ return new URL(d.url.replace(/\{s\}/g,s).replace(/\{x\}/g,x).replace(/\{-y\}/g,n-1-y).replace(/\{y\}/g,yy).replace(/\{z\}/g,z).replace(/\{r\}/g,''),location.href).href}
+function ofRange(l,b,z){
+ const ts=(l.getTileSize&&l.getTileSize().x)||256,n=Math.pow(2,z),nw=map.project(b.getNorthWest(),z),se=map.project(b.getSouthEast(),z),cl=v=>Math.max(0,Math.min(n-1,v));
+ return{x0:cl(Math.floor(nw.x/ts)),x1:cl(Math.floor(se.x/ts)),y0:cl(Math.floor(nw.y/ts)),y1:cl(Math.floor(se.y/ts))}}
+async function ofStat(){
+ let h='';
+ try{const k=await caches.open(OFF_CACHE),n=(await k.keys()).length;h=`تایل‌های ذخیره‌شده برای آفلاین: <b>${n.toLocaleString('fa-IR')}</b>`}catch(e){h='Cache Storage در دسترس نیست (HTTPS لازم است)'}
+ try{const e=await navigator.storage.estimate();h+=` | کل فضای مصرفی: <b>${(e.usage/1048576).toFixed(0)} MB</b> از ${(e.quota/1048576).toFixed(0)} MB`}catch(_){}
+ $('ofStat').innerHTML=h}
+function ofInit(){
+ const v=ofVisible(),el=$('ofLayers');el.innerHTML=v.length?'':'<div style="color:#a5281b;font-size:13px">هیچ نقشه‌ای روی نقشه روشن نیست.</div>';
+ v.forEach(d=>{const lb=document.createElement('label');lb.style.cssText='display:block;font-size:13px;margin:2px 0';lb.innerHTML=`<input type="checkbox" data-id="${esc(d.id)}" checked> ${esc(d.name)} <span style="color:#888;font-size:11px">(${d.type==='wms'?'WMS':'XYZ'}${ofPublic(d)?' — سرویس عمومی':''})</span>`;el.appendChild(lb)});
+ const z=Math.round(map.getZoom()),mx=Math.max(...v.map(d=>d.maxZoom||19),19);
+ $('ofZ0').value=z;$('ofZ1').value=Math.min(z+3,mx);$('ofEst').textContent='';$('ofTxt').textContent='';$('ofBar').value=0;ofStat()}
+function ofSel(){return[...$('ofLayers').querySelectorAll('input:checked')].map(i=>baseList.find(d=>d.id===i.dataset.id)).filter(d=>d&&baseL[d.id])}
+function ofPlan(){
+ const sel=ofSel();if(!sel.length)return null;
+ let z0=Math.round(+$('ofZ0').value),z1=Math.round(+$('ofZ1').value);
+ if(!(z0>=0&&z1>=z0))return{err:'بازه‌ی زوم نامعتبر است'};
+ let b=map.getBounds();if($('ofPad').checked)b=b.pad(.2);
+ const items=[];let total=0,pub=false;
+ sel.forEach(d=>{const l=baseL[d.id],a=Math.max(z0,d.minZoom||0),e=Math.min(z1,d.maxZoom||19);let n=0;
+  for(let z=a;z<=e;z++){const r=ofRange(l,b,z);n+=(r.x1-r.x0+1)*(r.y1-r.y0+1)}
+  items.push({d,l,a,e,n,b});total+=n;if(ofPublic(d))pub=true});
+ const cap=pub?500:40000;
+ return{items,total,cap,pub,err:total>cap?(pub?`برای سرویس‌های عمومی (OSM/Esri/Google/…) دانلود انبوه طبق شرایط استفاده مجاز نیست؛ حداکثر ${cap} تایل. از سرور تایل داخلی استفاده کنید.`:`تعداد تایل (${total.toLocaleString('fa-IR')}) از سقف ${cap.toLocaleString('fa-IR')} بیشتر است؛ بازه‌ی زوم یا محدوده را کوچک‌تر کنید.`):null}}
+$('ofCalc').onclick=()=>{
+ const p=ofPlan();if(!p)return toast('یک نقشه را انتخاب کنید');
+ if(p.err&&!p.items){$('ofEst').innerHTML='<span style="color:#a5281b">'+p.err+'</span>';return}
+ $('ofEst').innerHTML=`تعداد تایل: <b>${p.total.toLocaleString('fa-IR')}</b> | حجم تقریبی: <b>${(p.total*30/1024).toFixed(0)} MB</b> (حدود ۳۰ KB هر تایل)`+(p.err?`<br><span style="color:#a5281b">${p.err}</span>`:'')};
+$('ofGo').onclick=async()=>{
+ if(ofBusy)return;const p=ofPlan();if(!p)return toast('یک نقشه را انتخاب کنید');
+ if(p.err){$('ofEst').innerHTML='<span style="color:#a5281b">'+p.err+'</span>';return}
+ if(!('caches' in window))return toast('Cache Storage در دسترس نیست؛ برنامه باید روی HTTPS (یا localhost) باز شود',7000);
+ if(!confirm(`${p.total.toLocaleString('fa-IR')} تایل (حدود ${(p.total*30/1024).toFixed(0)} MB) دانلود و ذخیره شود؟`))return;
+ const urls=[];
+ p.items.forEach(it=>{for(let z=it.a;z<=it.e;z++){const r=ofRange(it.l,it.b,z);for(let x=r.x0;x<=r.x1;x++)for(let y=r.y0;y<=r.y1;y++)urls.push(tileUrlFor(it.d,it.l,x,y,z))}});
+ ofBusy=true;ofStopF=false;$('ofGo').style.display='none';$('ofStop').style.display='';$('ofBar').max=urls.length;$('ofBar').value=0;
+ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
+ const cache=await caches.open(OFF_CACHE);let i=0,done=0,fail=0,skip=0,bytes=0,quota=false;
+ const upd=()=>{$('ofBar').value=done;$('ofTxt').textContent=`${done.toLocaleString('fa-IR')} / ${urls.length.toLocaleString('fa-IR')} | ${(bytes/1048576).toFixed(1)} MB | رد شده: ${skip} | ناموفق: ${fail}`};
+ const worker=async()=>{
+  while(!ofStopF&&i<urls.length){
+   const u=urls[i++];
+   try{
+    if(await cache.match(u))skip++;
+    else{let ok=false;
+     for(let a=0;a<2&&!ok&&!ofStopF;a++){
+      try{const r=await fetch(u,{cache:'no-store',mode:new URL(u).origin===location.origin?'same-origin':'cors'}),ct=r.headers.get('content-type')||'';
+       if(r.ok&&/^image\//i.test(ct)){const bl=await r.blob();await cache.put(u,new Response(bl,{headers:{'Content-Type':ct}}));bytes+=bl.size;ok=true}else if(r.ok)break}
+      catch(e){if(e&&e.name==='QuotaExceededError'){quota=true;ofStopF=true}}}
+     if(!ok)fail++}}
+   catch(e){fail++}
+   done++;if(done%8===0||done===urls.length)upd();
+   if(done>=16&&fail>=done-skip&&fail>0){ofStopF=true}}};
+ await Promise.all(Array.from({length:6},worker));upd();
+ ofBusy=false;$('ofGo').style.display='';$('ofStop').style.display='none';ofStat();
+ const allFail=fail>0&&fail>=done-skip;
+ toast(quota?'فضای ذخیره‌سازی پر شد؛ دانلود متوقف شد':allFail?'دانلود ناموفق بود: سرور تایل در دسترس نیست یا CORS مجاز نیست (از پروکسی همین سرور /tiles و /wms استفاده کنید)':ofStopF&&done<urls.length?'دانلود متوقف شد':`ذخیره شد: ${(done-fail).toLocaleString('fa-IR')} تایل`,8000)};
+$('ofStop').onclick=()=>{ofStopF=true};
+$('ofClear').onclick=async()=>{if(ofBusy)return toast('ابتدا دانلود را متوقف کنید');if(!confirm('همه نقشه‌های ذخیره‌شده برای آفلاین پاک شود؟'))return;try{await caches.delete(OFF_CACHE);toast('پاک شد')}catch(e){toast('پاک کردن ممکن نشد')}ofStat()};
+$('bsOff').onclick=()=>openSheet('sOffline');
 
 /* ---------- PWA ---------- */
 (async()=>{
