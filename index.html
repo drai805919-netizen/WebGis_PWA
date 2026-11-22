@@ -151,7 +151,7 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <div id="sSearch" class="sheet"><h3>جستجو در لایه‌های فعال</h3>
 <div class="row"><select id="sLay" style="direction:rtl"></select></div>
 <div class="row"><select id="sCol" style="direction:rtl"></select><select id="sMode" style="direction:rtl"><option value="c">شامل (Contains)</option><option value="e">دقیقاً برابر</option><option value="s">شروع با</option></select></div>
-<div class="row"><input type="text" id="sQ" placeholder="متن یا شماره..." style="direction:rtl"><button class="btn" id="sDo">جستجو</button><button class="btn g" id="sScanBtn">اسکن</button></div>
+<div class="row"><input type="text" id="sQ" placeholder="متن یا شماره..." style="direction:rtl"><button class="btn" id="sDo">جستجو</button><button class="btn g" id="sScanBtn">اسکن</button><button class="btn r" id="sClr">پاک کردن</button></div>
 <div id="sScanned" style="display:none"></div>
 <div id="sInfo" style="font-size:12px;color:#666;margin-bottom:4px"></div><div id="sRes"></div></div>
 
@@ -198,6 +198,8 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 
 <div id="sRoute" class="sheet"><h3>مسیریابی (کوتاه‌ترین مسیر)</h3>
 <div class="row"><button class="btn" id="rtA">① مبدأ</button><button class="btn g" id="rtB">② مقصد</button><button class="btn g" id="rtMe">مبدأ = موقعیت من</button></div>
+<div class="row"><button class="btn g" id="rtAS">🔍 مبدأ: از نتیجه جستجو</button><button class="btn g" id="rtBS">🔍 مقصد: از نتیجه جستجو</button></div>
+<div id="rtPick" style="display:none;max-height:190px;overflow:auto;border:1px solid #cfd9d3;border-radius:8px;padding:4px;margin-bottom:6px"></div>
 <div class="row"><select id="rtMode" style="direction:rtl"><option value="auto">خودکار (آنلاین ← شبکه لایه‌ها ← خط مستقیم)</option><option value="car">آنلاین — خودرو</option><option value="bike">آنلاین — دوچرخه</option><option value="foot">آنلاین — پیاده</option><option value="net">آفلاین — روی لایه‌های خطی فعال</option><option value="line">خط مستقیم (فاصله هوایی)</option></select></div>
 <div class="row"><button class="btn" id="rtGo">محاسبه مسیر</button><button class="btn g" id="rtSwap">جابه‌جایی</button><button class="btn g" id="rtSave">افزودن به لایه‌ها</button><button class="btn r" id="rtClr">پاک</button></div>
 <div id="rtInfo" style="font-size:14px;margin-top:4px"></div></div>
@@ -217,7 +219,7 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <div class="row"><button class="btn g" data-d="10">۱۰</button><button class="btn g" data-d="20">۲۰</button><button class="btn g" data-d="50">۵۰</button><button class="btn g" data-d="100">۱۰۰</button><button class="btn g" data-d="200">۲۰۰</button></div>
 <div style="font-weight:700;margin:4px 0">لایه‌های مورد بررسی</div><div id="pxLayers"></div>
 <div class="row"><button class="btn" id="pxStart">▶ شروع هشدار</button><button class="btn r" id="pxStop" style="display:none">■ توقف</button></div>
-<div id="pxInfo" style="font-size:13px"></div>
+<div id="pxInfo" style="font-size:13px"></div><div id="pxList" style="margin-top:6px"></div>
 <div style="font-size:11px;color:#666;margin-top:6px">نوع صدا، حالت (هنگام ورود / بیپ تندشونده)، ارتعاش و قفل بیداری در «تنظیمات» تعیین می‌شود.</div></div>
 
 <div id="sFix" class="sheet"><h3>اصلاح عوارض (هندسه و توپولوژی)</h3>
@@ -1818,12 +1820,15 @@ function doSearch(q,mode,col){
    if(mode==='e'?nv===nq:mode==='s'?nv.startsWith(nq):nv.includes(nq)){hit=k;break}}
   if(hit){out.push({L_,f,k:hit});if(out.length>=200)break outer}}}
  return out}
+let lastRes=[];
 function renderResults(res,note){
- const el=$('sRes');el.innerHTML='';
+ lastRes=res;const el=$('sRes');el.innerHTML='';
  $('sInfo').textContent=`${res.length}${res.length>=200?'+':''} نتیجه در ${selLayers().length} لایه`+(note?' — '+note:'');
  res.forEach(r=>{const p=r.f.properties||{},t=p['نام']||p.name||p.Name||p[r.k],d=document.createElement('div');
   d.className='lay';d.style.cursor='pointer';
   d.innerHTML=`<b>${esc(t)}</b><div style="font-size:12px">${esc(r.L_.name)} | ${esc(r.k)}: ${esc(String(p[r.k]).slice(0,80))}</div>`;
+  const rb=document.createElement('button');rb.className='btn g';rb.style.cssText='margin-top:4px;padding:4px 10px;font-size:12px';rb.textContent='🧭 مسیر تا اینجا';
+  rb.onclick=ev=>{ev.stopPropagation();rtFromFeature('B',r.f,true)};d.appendChild(rb);
   d.onclick=()=>goF(r.L_,r.f);el.appendChild(d)})}
 function goF(L_,f){
  let lyr=null;L_.lyr.eachLayer(l=>{if(l.feature===f)lyr=l});
@@ -1992,6 +1997,30 @@ function rtClear(){
 $('rtBtn').onclick=()=>openSheet('sRoute');
 $('rtA').onclick=()=>{rt.pick='A';rtMsg();toast('مبدأ را روی نقشه انتخاب کنید',2500)};
 $('rtB').onclick=()=>{rt.pick='B';rtMsg();toast('مقصد را روی نقشه انتخاب کنید',2500)};
+function clearSearch(quiet){
+ lastRes=[];$('sQ').value='';$('sRes').innerHTML='';$('sInfo').textContent='';
+ const sc=$('sScanned');if(sc){sc.style.display='none';sc.innerHTML=''}
+ $('rtPick').style.display='none';
+ if(!quiet)toast('اطلاعات جستجو پاک شد',2500)}
+$('sClr').onclick=()=>clearSearch();
+function rtFromFeature(w,f,openRoute){
+ const c=featC(f);if(!c)return toast('موقعیت این عارضه مشخص نیست');
+ rtSet(w,L.latLng(c[1],c[0]));
+ if(openRoute){
+  if(w==='B'&&!rt.A&&myPos)rtSet('A',L.latLng(myPos[0],myPos[1]));
+  openSheet('sRoute');
+  if(!rt.A)toast('مقصد ثبت شد؛ مبدأ را روی نقشه بزنید یا «مبدأ = موقعیت من» را بزنید',5000)}}
+function rtPickList(w){
+ const box=$('rtPick');
+ if(!lastRes.length){box.style.display='none';rt.pick=w;rtMsg();return toast('جستجویی انجام نشده است؛ '+(w==='A'?'مبدأ':'مقصد')+' را روی نقشه انتخاب کنید',5000)}
+ box.style.display='';box.innerHTML=`<div style="font-size:12px;color:#555;margin:2px 0 4px">${w==='A'?'مبدأ':'مقصد'} را از نتیجه‌ی آخرین جستجو انتخاب کنید:</div>`;
+ lastRes.slice(0,60).forEach(r=>{
+  const p=r.f.properties||{},t=p['نام']||p.name||p.Name||p[r.k]||'بدون نام',d=document.createElement('div');
+  d.className='lay';d.style.cssText='cursor:pointer;margin:3px 0';
+  d.innerHTML=`<b>${esc(t)}</b><div style="font-size:12px">${esc(r.L_.name)}${/Point/.test(r.f.geometry.type)?'':' — (مرکز عارضه)'}</div>`;
+  d.onclick=()=>{box.style.display='none';rtFromFeature(w,r.f,false)};box.appendChild(d)});
+ const x=document.createElement('button');x.className='btn r';x.style.cssText='padding:4px 10px;font-size:12px;margin:4px';x.textContent='بستن فهرست';x.onclick=()=>{box.style.display='none'};box.appendChild(x)}
+$('rtAS').onclick=()=>rtPickList('A');$('rtBS').onclick=()=>rtPickList('B');
 $('rtMe').onclick=()=>{if(!myPos)return toast('ابتدا «موقعیت من» را فعال کنید');rtSet('A',L.latLng(myPos[0],myPos[1]))};
 $('rtGo').onclick=()=>rtCalc();
 $('rtClr').onclick=rtClear;
@@ -2361,37 +2390,61 @@ function pxLayersUI(){
   lb.innerHTML=`<input type="checkbox" style="width:20px;height:20px;flex:none" ${PX.sel.has(L_.id)?'checked':''}><span>${esc(L_.name)}</span><span style="color:#888;font-size:11px">(${L_.geo.features.length})</span>`;
   lb.querySelector('input').onchange=e=>{e.target.checked?PX.sel.add(L_.id):PX.sel.delete(L_.id)};
   el.appendChild(lb)})}
+function pxGo(n){
+ if(!n||!PX.fix)return;
+ try{map.fitBounds(L.latLngBounds([[n.ll[1],n.ll[0]],[PX.fix.lat,PX.fix.lng]]),{paddingTopLeft:[40,70],paddingBottomRight:[40,Math.round(innerHeight*.5)],maxZoom:20})}catch(e){}
+ if(n.L_.on)setTimeout(()=>reopen(n.L_,n.f),450)}
 function pxUI(){
  $('pxStart').style.display=PX.on?'none':'';$('pxStop').style.display=PX.on?'':'none';$('bPx').classList.toggle('on',PX.on);
+ const lst=PX.list||[],n=lst.length,dd=n?(x=>x.d<1?'همین‌جا':Math.round(x.d)+' متر '+x.dir):null;
  let h='';
  if(!PX.on)h='آماده — لایه‌ها و فاصله را انتخاب و «شروع هشدار» را بزنید.';
  else{
   h=PX.fix?`GPS ±${Math.round(PX.fix.acc)} متر`+(PX.fix.acc>S_D()?' — <b style="color:#c0392b">دقت از فاصله هشدار کمتر است</b>':''):'در انتظار GPS ...';
-  h+=PX.near?`<br><b style="color:#c0392b">نزدیک‌ترین: ${esc(PX.near.L_.name)} — ${esc(pxName(PX.near.f))} — ${PX.near.d<1?'همین‌جا':Math.round(PX.near.d)+' متر '+PX.near.dir}</b>`:'<br>عارضه‌ای در محدوده‌ی هشدار نیست.';
-  h+=`<br><span style="font-size:11px;color:#666">قفل بیداری صفحه: ${PX.wl?'فعال':'غیرفعال'} | حالت: ${S.prxMode==='park'?'بیپ تندشونده':'هشدار هنگام ورود'}</span>`}
+  h+=n?`<br><b style="color:#e91e63">● ${n} عارضه در محدوده‌ی ${S_D()} متری</b> — نزدیک‌ترین: ${esc(lst[0].L_.name)} — ${esc(pxName(lst[0].f))} — ${dd(lst[0])}`:'<br>عارضه‌ای در محدوده‌ی هشدار نیست.';
+  h+=`<br><span style="font-size:11px;color:#666"><span style="color:#e91e63">●</span> در محدوده | <span style="color:#f1c40f">◯</span> نزدیک‌ترین | قفل بیداری صفحه: ${PX.wl?'فعال':'غیرفعال'} | حالت: ${S.prxMode==='park'?'بیپ تندشونده':'هشدار هنگام ورود'}</span>`}
  $('pxInfo').innerHTML=h;
+ const el=$('pxList');el.innerHTML='';
+ if(PX.on&&n){
+  lst.slice(0,25).forEach((x,i)=>{
+   const r=document.createElement('div');r.className='lay';r.style.cssText='display:flex;align-items:center;gap:8px';
+   r.innerHTML=`<span style="color:${i===0?'#f1c40f':'#e91e63'};font-size:20px;flex:none">${i===0?'◉':'●'}</span><span style="flex:1;font-size:13px"><b>${esc(pxName(x.f))}</b><br><span style="font-size:11px;color:#555">${esc(x.L_.name)} | ${dd(x)}</span></span><button class="btn g" style="padding:4px 10px;font-size:12px">نمایش</button>`;
+   r.querySelector('button').onclick=()=>pxGo(x);el.appendChild(r)});
+  if(n>25){const m=document.createElement('div');m.style.cssText='font-size:11px;color:#888';m.textContent='… '+(n-25)+' عارضه‌ی دیگر (دورتر)';el.appendChild(m)}}
  const ban=$('pxBan');
- if(PX.on&&PX.near){ban.style.display='block';ban.innerHTML=`⚠ ${esc(PX.near.L_.name)} — <b>${esc(pxName(PX.near.f))}</b> — ${PX.near.d<1?'همین‌جا':Math.round(PX.near.d)+' متر '+PX.near.dir}`}
+ if(PX.on&&n){ban.style.display='block';ban.innerHTML=`⚠ ${n>1?n+' عارضه در محدوده — نزدیک‌ترین: ':''}${esc(lst[0].L_.name)} — <b>${esc(pxName(lst[0].f))}</b> — ${dd(lst[0])}`}
  else ban.style.display='none'}
 const S_D=()=>Math.max(1,parseFloat($('pxD').value)||S.prxDist);
+function pxDraw(list,best){
+ pxG.eachLayer(l=>{if(l._pxHL)pxG.removeLayer(l)});
+ const add=h=>{h._pxHL=true;h.addTo(pxG)};
+ if(best){ /* nearest: yellow ring / wide yellow underlay */
+  if(/Point/.test(best.f.geometry.type))add(L.circleMarker([best.ll[1],best.ll[0]],{radius:21,color:'#f1c40f',weight:4,fill:false,interactive:false}));
+  else add(L.geoJSON(best.f,{style:()=>({color:'#f1c40f',weight:11,opacity:.6,fillOpacity:0}),interactive:false}))}
+ list.forEach(x=>{ /* every feature inside the distance: magenta */
+  if(/Point/.test(x.f.geometry.type))add(L.circleMarker([x.ll[1],x.ll[0]],{radius:13,color:'#ffffff',weight:2,fillColor:'#e91e63',fillOpacity:.9,interactive:false}));
+  else add(L.geoJSON(x.f,{style:()=>({color:'#e91e63',weight:6,opacity:.95,fillOpacity:.2}),interactive:false}))})}
 function pxFix(p){
  const c=p.coords;PX.fix={lng:c.longitude,lat:c.latitude,acc:c.accuracy,t:Date.now()};
  if(typeof myFix!=='undefined')myFix={lat:c.latitude,lon:c.longitude,acc:c.accuracy,t:Date.now()};
- const D=S_D(),cx=c.longitude,cy=c.latitude,k=fxK(cy),dLat=D/fxKM,dLng=D/(fxKM*k);let best=null;
+ const D=S_D(),cx=c.longitude,cy=c.latitude,k=fxK(cy),dLat=D/fxKM,dLng=D/(fxKM*k),found=[];
  layers.forEach(L_=>{
   if(!PX.sel.has(L_.id)||!L_.on)return;
   L_.geo.features.forEach(f=>{
    const g=f.geometry;if(!g)return;const b=pxBB(g);
    if(b[2]<cx-dLng||b[0]>cx+dLng||b[3]<cy-dLat||b[1]>cy+dLat)return;
-   const r=pxDist(f,cx,cy);if(r&&r.d<=D&&(!best||r.d<best.d))best={L_,f,d:r.d,dir:r.dir,ll:r.ll}})});
- const prev=PX.near;PX.near=best;
- if(pxCircle)pxCircle.setLatLng([cy,cx]).setRadius(D);else pxCircle=L.circle([cy,cx],{radius:D,color:'#e74c3c',weight:1.5,fillOpacity:.05,interactive:false}).addTo(pxG);
- pxG.eachLayer(l=>{if(l._pxHL)pxG.removeLayer(l)});
- if(best){
-  const h=best.f.geometry.type.indexOf('Point')>=0?L.circleMarker([best.ll[1],best.ll[0]],{radius:16,color:'#f1c40f',weight:4,fillOpacity:.2,interactive:false}):L.geoJSON(best.f,{style:()=>({color:'#f1c40f',weight:7,opacity:.9,fillOpacity:.15}),interactive:false});
-  h._pxHL=true;h.addTo(pxG);
-  const now=Date.now(),last=PX.hold.get(best.f)||0,isNew=!prev||prev.f!==best.f;
-  if(isNew&&now-last>S.prxHold*1000){PX.hold.set(best.f,now);pxBeep('enter');pxVib([250,100,250]);toast('⚠ نزدیک «'+pxName(best.f)+'» ('+(best.d<1?'همین‌جا':Math.round(best.d)+' متر')+')',4000)}}
+   const r=pxDist(f,cx,cy);if(r&&r.d<=D)found.push({L_,f,d:r.d,dir:r.dir,ll:r.ll})})});
+ found.sort((a,b)=>a.d-b.d);
+ const prevSet=PX.set||new Set(),best=found[0]||null,cur=new Set(found.map(x=>x.f));
+ PX.near=best;PX.list=found;PX.set=cur;
+ if(pxCircle)pxCircle.setLatLng([cy,cx]).setRadius(D);else pxCircle=L.circle([cy,cx],{radius:D,color:'#e91e63',weight:1.5,fillOpacity:.05,interactive:false}).addTo(pxG);
+ /* redraw highlights only when the set of features or the nearest one changes */
+ const same=PX.hlSet&&PX.hlSet.size===cur.size&&[...cur].every(f=>PX.hlSet.has(f))&&PX.hlBest===(best&&best.f);
+ if(!same){PX.hlSet=cur;PX.hlBest=best&&best.f;pxDraw(found.slice(0,150),best)}
+ /* alert for any feature that just entered the distance (not again within the quiet period) */
+ const now=Date.now();let first=null;
+ found.forEach(x=>{if(!prevSet.has(x.f)){const last=PX.hold.get(x.f)||0;if(now-last>S.prxHold*1000){PX.hold.set(x.f,now);if(!first)first=x}}});
+ if(first){pxBeep('enter');pxVib([250,100,250]);toast('⚠ نزدیک «'+pxName(first.f)+'» ('+(first.d<1?'همین‌جا':Math.round(first.d)+' متر')+')'+(found.length>1?' و '+(found.length-1)+' عارضه‌ی دیگر':''),4500)}
  pxUI()}
 function pxLoop(){
  clearTimeout(PX.timer);
@@ -2412,12 +2465,12 @@ async function pxStart(){
 function pxStop(){
  PX.on=false;if(PX.watch!==null){navigator.geolocation.clearWatch(PX.watch);PX.watch=null}
  clearTimeout(PX.timer);try{if(PX.wl)PX.wl.release()}catch(e){}PX.wl=null;PX.near=null;
- pxG.clearLayers();pxCircle=null;pxUI()}
+ pxG.clearLayers();pxCircle=null;PX.list=[];PX.set=null;PX.hlSet=null;PX.hlBest=null;pxUI()}
 $('pxStart').onclick=pxStart;$('pxStop').onclick=pxStop;
 $('pxTest').onclick=()=>{pxAudio();pxBeep('two');pxVib(120)};
 $('pxD').onchange=()=>{const v=S_D();$('pxD').value=v;S.prxDist=v;setSave()};
 document.querySelectorAll('#sPrx [data-d]').forEach(b=>b.onclick=()=>{$('pxD').value=b.dataset.d;$('pxD').onchange()});
-$('pxBan').onclick=()=>{const n=PX.near;if(!n)return;try{map.fitBounds(L.latLngBounds([[n.ll[1],n.ll[0]],[PX.fix.lat,PX.fix.lng]]),{paddingTopLeft:[40,70],paddingBottomRight:[40,90],maxZoom:20})}catch(e){}if(n.L_.on)setTimeout(()=>reopen(n.L_,n.f),400)};
+$('pxBan').onclick=()=>pxGo(PX.near);
 $('pxD').value=S.prxDist;
 pxUI();
 
@@ -2480,7 +2533,7 @@ const UI_IC={
  bL:'<path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/>',
  bMk:'<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>',
  bI:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="7.8" r=".6" fill="currentColor"/>',
- bT:'<circle cx="6" cy="18.5" r="2.3"/><circle cx="18" cy="5.5" r="2.3"/><path d="M8.3 18.5H14a3.5 3.5 0 0 0 0-7h-4a3.5 3.5 0 0 1 0-7h5.5"/>',
+ bT:'<circle cx="5" cy="18.5" r="1.8"/><path d="M7 17.6c3.2-.8 3.8-3.6 6.6-4.2 1.4-.3 2.4-.2 3.4-.4" stroke-dasharray="2 2.4"/><path d="M18 21V4.5"/><path d="M18 4.5h3.8l-1.5 2.7 1.5 2.7H18"/>',
  bMore:'<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>',
  bF:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>',
  bG:'<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
