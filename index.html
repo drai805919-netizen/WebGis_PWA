@@ -81,11 +81,66 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 #pxBan{position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:560;background:#c0392b;color:#fff;border-radius:10px;padding:8px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.4);max-width:92%;display:none;text-align:center}
 .setsec{font-weight:700;color:#1f6f5c;margin:10px 0 4px;border-bottom:1px solid #e3e8e5;padding-bottom:2px}
 #sSet label{display:block;font-size:13px;margin:6px 0}#sSet input[type=text],#sSet input[type=number],#sSet select,#sSet textarea{width:100%;margin-top:3px;padding:8px;border:1px solid #cfd9d3;border-radius:8px;font:inherit}
+:root{--pri:#1a73e8;--pri2:#e8f0fe;--bd:#dadce0;--dk:#2a2d36}
+/* map controls: round dark buttons (Neshan style) */
+.leaflet-control-layers{background:var(--dk)!important;border:0!important;border-radius:50%!important;box-shadow:0 2px 8px rgba(0,0,0,.45)!important}
+.leaflet-control-layers-toggle{width:46px!important;height:46px!important;background-size:24px!important;background-position:center!important;background-repeat:no-repeat!important;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3 3 8l9 5 9-5-9-5Z'/><path d='m3 12 9 5 9-5'/><path d='m3 16 9 5 9-5'/></svg>")!important}
+.leaflet-control-layers-expanded{border-radius:14px!important;background:#fff!important;padding:8px 12px!important}
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle{display:none!important}
+.loc-ctl{border:0!important;background:transparent!important;box-shadow:none!important}
+.loc-ctl a{width:46px!important;height:46px!important;border-radius:50%!important;background:var(--dk)!important;color:#fff!important;border:0!important;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+.loc-ctl a#rtBtn{background:#5b9bff!important;color:#0b1b33!important}
+.loc-ctl a#rtBtn.on{background:#c0392b!important;color:#fff!important}
+.loc-ctl a.on{background:#1a73e8!important}
+/* top search pill */
+#tSearch{width:auto!important;min-width:140px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:20px;background:#f1f3f4;color:#5f6368;font-size:12px;border:0}
+/* bottom navigation: dark bar with icons */
+#bar{background:var(--dk)!important;gap:0!important;padding:4px 4px calc(env(safe-area-inset-bottom,0px) + 4px)!important;border-top:1px solid #3a3d46}
+#bar button{border:0!important;background:transparent!important;border-radius:0!important;min-height:54px!important;color:#9aa0aa!important}
+#bar button span{color:inherit!important;font-size:11px!important}
+#bar button.on{background:transparent!important;color:#8ab4f8!important}
+/* sheets: panels (over the map) and pages (full screen) with a header + back arrow */
+.sheet.panel{bottom:calc(env(safe-area-inset-bottom,0px) + 66px);border-radius:18px 18px 0 0;padding:6px 12px 12px;max-height:56%}
+.sheet.panel:before{content:"";display:block;width:42px;height:4px;border-radius:2px;background:#d0d4d9;margin:0 auto 4px}
+.sheet.page{position:fixed!important;left:0;right:0;top:0;bottom:0!important;max-height:none!important;border-radius:0!important;padding:0 0 28px!important;z-index:800;background:#fff;box-shadow:none!important;overflow:auto}
+.sheet.page>:not(.shd){margin-left:14px;margin-right:14px}
+.shd{display:flex;align-items:center;gap:12px;direction:rtl;position:sticky;top:0;z-index:3;background:#fff;padding:8px 0 8px}
+.sheet.page .shd{margin:0!important;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px;border-bottom:1px solid #eceff1;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.shd .back{width:40px;height:40px;border-radius:50%;border:0;background:transparent;color:#3c4043;display:flex;align-items:center;justify-content:center;flex:none;padding:0}
+.shd .back:active{background:#eceff1}
+.shd .ttl{font-size:18px;font-weight:700;color:#202124}
+.sheet.panel .shd .ttl{font-size:16px}
+/* "Others" page as a list with chevrons */
+#moreGrid{display:block!important}
+#moreGrid .tile{display:flex!important;flex-direction:row!important;align-items:center;gap:16px;width:100%;min-height:64px;border:0!important;border-bottom:1px solid #eceff1!important;background:#fff!important;padding:0 6px!important;border-radius:0!important;position:relative;text-align:right;justify-content:flex-start}
+#moreGrid .tile .ic{width:26px!important;height:26px!important;color:#1a73e8!important}
+#moreGrid .tile span{color:#202124!important;font-size:16px!important}
+#moreGrid .tile:after{content:"";position:absolute;left:10px;top:50%;width:9px;height:9px;margin-top:-5px;border-left:2px solid #9aa0a6;border-bottom:2px solid #9aa0a6;transform:rotate(45deg)}
+/* settings rows + switches */
+#sSet label{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 2px;border-bottom:1px solid #eceff1;margin:0;font-size:15px}
+#sSet label input[type=number],#sSet label select{width:130px;margin:0}
+#sSet label:has(textarea),#sSet label:has(input[type=text]){flex-direction:column;align-items:stretch;gap:6px}
+#sSet label:has(>input[type=checkbox]){flex-direction:row-reverse}
+#sSet input[type=checkbox]{appearance:none;-webkit-appearance:none;width:44px;height:26px;border-radius:13px;background:#c8ccd0;position:relative;flex:none;transition:.2s;margin:0}
+#sSet input[type=checkbox]:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+#sSet input[type=checkbox]:checked{background:#1a73e8}
+#sSet input[type=checkbox]:checked:after{left:21px}
+#sSet input[type=range]{width:150px}
+.setsec{color:#1a73e8!important;border-bottom:0!important;margin:16px 0 0!important;font-size:14px}
+/* pick-on-map mode */
+#pick{position:absolute;inset:0;z-index:850;pointer-events:none;display:none}
+#pick>*{pointer-events:auto}
+#pickTop{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:14px;direction:rtl;padding:calc(env(safe-area-inset-top,0px) + 14px) 14px 16px;background:var(--dk);color:#fff;border-radius:0 0 24px 24px;font-size:17px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+#pickBack{width:40px;height:40px;border-radius:50%;border:0;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;padding:0;flex:none}
+#pickPin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);width:46px;height:56px;pointer-events:none;filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))}
+#pickDot{position:absolute;left:50%;top:50%;width:10px;height:4px;margin:-2px 0 0 -5px;border-radius:50%;background:rgba(0,0,0,.35);pointer-events:none}
+#pickMe{position:absolute;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);width:54px;height:54px;border-radius:50%;border:0;background:var(--dk);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+#pickOk{position:absolute;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);height:58px;border-radius:29px;border:0;background:#5b9bff;color:#0b1b33;font:inherit;font-size:19px;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.35)}
 </style>
 </head>
 <body>
 <div id="map"></div><div id="cross"></div>
-<div id="top"><button class="ib" id="tSearch" aria-label="جستجو"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button><span id="net" class="pill">آنلاین</span><span id="gps" class="pill off">GPS خاموش</span><button id="inst" class="pill" hidden>نصب برنامه</button><span id="zm" class="pill">زوم</span><span id="coord">—</span></div>
+<div id="top"><button class="ib" id="tSearch" aria-label="جستجو"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>جستجو در لایه‌ها</span></button><span id="net" class="pill">آنلاین</span><span id="gps" class="pill off">GPS خاموش</span><button id="inst" class="pill" hidden>نصب برنامه</button><span id="zm" class="pill">زوم</span><span id="coord">—</span></div>
 <div id="toast"></div>
 
 <div id="sLayers" class="sheet"><h3>لایه‌ها</h3>
@@ -114,7 +169,7 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <div id="idHint" style="font-size:12px;color:#555;margin-bottom:4px"></div>
 <div id="idSt" style="font-size:13px;margin:2px 0"></div>
 <label style="display:block;font-size:12px;margin:2px 0"><input type="checkbox" id="idOn"> فقط لایه‌های روشن (نمایش‌داده‌شده)</label>
-<div class="row"><button class="btn" id="idRun">شناسایی عوارض</button><button class="btn g" id="idMe">نقطه = موقعیت من</button><button class="btn g" id="idUndo">برگشت</button><button class="btn r" id="idClr">پاک</button></div>
+<div class="row"><button class="btn" id="idRun">شناسایی عوارض</button><button class="btn g" id="idPick">انتخاب از نقشه</button><button class="btn g" id="idMe">نقطه = موقعیت من</button><button class="btn g" id="idUndo">برگشت</button><button class="btn r" id="idClr">پاک</button></div>
 <div id="idRes"></div></div>
 
 <div id="sMark" class="sheet"><h3>نشانگر جدید</h3>
@@ -282,6 +337,13 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <div style="font-size:12px;color:#666">پشتیبان شامل همه لایه‌ها، استایل‌ها، نشانگرها، عکس‌ها و تنظیمات است. قبل از پاک کردن داده مرورگر یا تعویض گوشی نسخه پشتیبان بگیرید.</div></div>
 
 <button id="rtBtn" aria-label="مسیریابی"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></svg></button>
+
+<div id="pick">
+<div id="pickTop"><button id="pickBack" aria-label="برگشت"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></svg></button><span id="pickTitle">برای انتخاب، نقشه را تکان دهید</span></div>
+<svg id="pickPin" viewBox="0 0 46 56"><path d="M23 54C23 54 5 33 5 21a18 18 0 0 1 36 0c0 12-18 33-18 33Z" fill="#ef5a5a"/><circle cx="23" cy="21" r="7" fill="#b33636"/></svg><div id="pickDot"></div>
+<button id="pickMe" aria-label="موقعیت من"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+<button id="pickOk">انتخاب</button>
+</div>
 
 <div id="bar">
 <button id="bL">لایه‌ها</button>
@@ -460,8 +522,9 @@ map.on('move',updCoord);updCoord();
 
 /* ---------- Sheets ---------- */
 const sheets=['sLayers','sGo','sCount','sMark','sRule','sSave','sEdit','sSearch','sRoute','sBackup','sSnap','sBase','sId','sTrack','sWork','sOffline','sMore','sFix','sSet','sPrx'];
-function openSheet(id){
+function openSheet(id,from){
  const was=$(id).classList.contains('show')||(id==='sMark'&&mkMode);
+ if(!was)NAVP[id]=from||NAV_PD[id]||null;
  sheets.forEach(s=>$(s).classList.remove('show'));
  setMk(false);
  if(!was){if(id==='sMark')setMk(true);else $(id).classList.add('show')}
@@ -1381,7 +1444,7 @@ $('camShot').onclick=()=>{const v=$('camV');if(!v.videoWidth)return toast('دو�
  c.width=Math.round(v.videoWidth*k);c.height=Math.round(v.videoHeight*k);c.getContext('2d').drawImage(v,0,0,c.width,c.height);camClose(c.toDataURL('image/jpeg',.72))};
 async function shootPhoto(cb,fb){const r=await camOpen();if(r===false){if(fb)fb.click();return}if(r)cb(r)}
 function rmPend(){if(pend){map.removeLayer(pend);pend=null}}
-function setMk(on){mkMode=on;$('bMk').classList.toggle('on',on);if(!on)rmPend();else toast('روی نقشه در محل موردنظر ضربه بزنید',5000)}
+function setMk(on){mkMode=on;$('bMk').classList.toggle('on',on);if(!on)rmPend()}
 function updPend(){if(!pend)return;const p=pend.getLatLng(),u=UTM.fwd(p.lat,p.lng);
  $('mInfo').innerHTML=`طول: <b dir="ltr">${p.lng.toFixed(6)}</b> | عرض: <b dir="ltr">${p.lat.toFixed(6)}</b><br>UTM (زون 39N): <b dir="ltr">${u.E.toFixed(0)} / ${u.N.toFixed(0)}</b>`}
 function placePend(ll){
@@ -1711,7 +1774,7 @@ function snapInit(){
  $('snPt').innerHTML=pl.map(l=>`<option value="${l.id}">نقطه‌ها: ${esc(l.name)}</option>`).join('')||'<option value="">لایه نقطه‌ای وجود ندارد</option>';
  $('snLn').innerHTML=ln.map(l=>`<option value="${l.id}">خط/مرز: ${esc(l.name)}</option>`).join('')||'<option value="">لایه خطی وجود ندارد</option>';
  snPlan=null;snPrev.clearLayers();$('snApply').disabled=true;$('snInfo').textContent='دو لایه را انتخاب و «بررسی» را بزنید.';$('snTol').value=S.fxPt}
-$('eFix').onclick=()=>openSheet('sSnap');
+$('eFix').onclick=()=>openSheet('sSnap','sEdit');
 $('snRun').onclick=async()=>{
  const P=layers.find(l=>String(l.id)===$('snPt').value),Ln=layers.find(l=>String(l.id)===$('snLn').value);
  if(!P||!Ln)return toast('یک لایه نقطه‌ای و یک لایه خطی انتخاب کنید');
@@ -1948,9 +2011,6 @@ $('scanF').onchange=async e=>{
 map.on('contextmenu',e=>{const u=UTM.fwd(e.latlng.lat,e.latlng.lng);
  L.popup().setLatLng(e.latlng).setContent(`<div style="direction:ltr">${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}<br>UTM 39N: ${u.E.toFixed(0)} / ${u.N.toFixed(0)}</div>`).openOn(map)});
 
-/* ---------- Close (exit) button on every sheet ---------- */
-sheets.forEach(id=>{const b=document.createElement('button');b.className='btn r';b.textContent='✕ خروج از منو';b.style.cssText='float:left;padding:6px 10px;font-size:12px;margin:0 0 4px 0';
- b.onclick=()=>{if($(id).classList.contains('show')||(id==='sMark'&&mkMode))openSheet(id)};$(id).insertBefore(b,$(id).firstChild)});
 /* ---------- Clipboard + tap-to-copy coordinates ---------- */
 async function copyText(t){
  try{await navigator.clipboard.writeText(t);return true}
@@ -1962,7 +2022,7 @@ function cpText(lat,lon){
 $('cpFmt').onchange=()=>lsSet('webgis_cp',$('cpFmt').value);
 let clickMk=null;
 map.on('click',async e=>{
- const idle=!(mkMode||ruler||drawing||ed.active||rt.active||document.querySelector('.sheet.show'));
+ const idle=!(mkMode||ruler||drawing||ed.active||rt.active||document.querySelector('.sheet.show')||PK.active);
  if(!idle)return;
  const t=cpText(e.latlng.lat,e.latlng.lng),ok=await copyText(t);
  {
@@ -2012,7 +2072,7 @@ function rtFromFeature(w,f,openRoute){
   if(!rt.A)toast('مقصد ثبت شد؛ مبدأ را روی نقشه بزنید یا «مبدأ = موقعیت من» را بزنید',5000)}}
 function rtPickList(w){
  const box=$('rtPick');
- if(!lastRes.length){box.style.display='none';rt.pick=w;rtMsg();return toast('جستجویی انجام نشده است؛ '+(w==='A'?'مبدأ':'مقصد')+' را روی نقشه انتخاب کنید',5000)}
+ if(!lastRes.length){box.style.display='none';toast('جستجویی انجام نشده است؛ '+(w==='A'?'مبدأ':'مقصد')+' را با تکان دادن نقشه انتخاب کنید',4000);return rtPickMap(w)}
  box.style.display='';box.innerHTML=`<div style="font-size:12px;color:#555;margin:2px 0 4px">${w==='A'?'مبدأ':'مقصد'} را از نتیجه‌ی آخرین جستجو انتخاب کنید:</div>`;
  lastRes.slice(0,60).forEach(r=>{
   const p=r.f.properties||{},t=p['نام']||p.name||p.Name||p[r.k]||'بدون نام',d=document.createElement('div');
@@ -2526,7 +2586,7 @@ $('fxUndo').onclick=()=>{
  const u=fxUndoD;if(!u)return toast('چیزی برای بازگردانی نیست');
  u.L_.geo=JSON.parse(u.json);rebuild(u.L_);u.others.forEach(o=>{o.L_.geo=JSON.parse(o.json);rebuild(o.L_)});
  fxUndoD=null;$('fxUndo').disabled=true;toast('آخرین اصلاح بازگردانی شد')};
-$('fxSnapB').onclick=()=>openSheet('sSnap');
+$('fxSnapB').onclick=()=>openSheet('sSnap','sFix');
 
 /* ---------- Menu icons + "More" panel ---------- */
 const UI_IC={
@@ -2544,7 +2604,7 @@ const UI_IC={
  bB:'<ellipse cx="12" cy="5.5" rx="8" ry="2.8"/><path d="M4 5.5v6c0 1.5 3.6 2.8 8 2.8s8-1.3 8-2.8v-6"/><path d="M4 11.5v6c0 1.5 3.6 2.8 8 2.8s8-1.3 8-2.8v-6"/>',
  bPx:'<path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15L6 17Z"/><path d="M10 21h4"/><path d="M3 8a10 10 0 0 1 2-3M21 8a10 10 0 0 0-2-3"/>',
  bSet:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'};
-const UI_LB={bL:'لایه‌ها',bMk:'نشانگر',bI:'شناسایی',bT:'برداشت مسیر',bMore:'بیشتر',bF:'باز کردن فایل',bG:'مختصات',bR:'خط‌کش',bE:'ویرایش',bFx:'اصلاح عوارض',bS:'ذخیره',bB:'پشتیبان',bPx:'هشدار نزدیکی',bSet:'تنظیمات'};
+const UI_LB={bL:'لایه‌ها',bMk:'نشانگر',bI:'شناسایی',bT:'برداشت مسیر',bMore:'سایر',bF:'باز کردن فایل',bG:'مختصات',bR:'خط‌کش',bE:'ویرایش',bFx:'اصلاح عوارض',bS:'ذخیره',bB:'پشتیبان',bPx:'هشدار نزدیکی',bSet:'تنظیمات'};
 function uiBuild(){
  const grid=$('moreGrid'),bar=$('bar');
  Object.keys(UI_LB).forEach(id=>{
@@ -2622,13 +2682,12 @@ function pvOpen(list,i,cap){
  if(!list||!list.length)return;
  pv.list=list;pv.i=i||0;pv.cap=cap||'';pv.open=true;
  $('pv').style.display='block';
- try{history.pushState({pv:1},'')}catch(e){}
+ hsPush('pv')
  pvLoad()}
 function pvHide(){pv.open=false;$('pv').style.display='none';$('pvImg').removeAttribute('src');pv.ptr.clear()}
 function pvClose(){
  if(!pv.open)return;
- if(history.state&&history.state.pv){history.back()}else pvHide()}
-addEventListener('popstate',()=>{if(pv.open)pvHide()});
+ pvHide();hsPop('pv')}
 document.addEventListener('keydown',e=>{if(pv.open&&e.key==='Escape')pvClose()});
 $('pvX').onclick=pvClose;
 $('pvPrev').onclick=()=>{pv.i=(pv.i-1+pv.list.length)%pv.list.length;pvLoad()};
@@ -2875,6 +2934,88 @@ $('ofGo').onclick=async()=>{
 $('ofStop').onclick=()=>{ofStopF=true};
 $('ofClear').onclick=async()=>{if(ofBusy)return toast('ابتدا دانلود را متوقف کنید');if(!confirm('همه نقشه‌های ذخیره‌شده برای آفلاین پاک شود؟'))return;try{await caches.delete(OFF_CACHE);toast('پاک شد')}catch(e){toast('پاک کردن ممکن نشد')}ofStat()};
 $('bsOff').onclick=()=>openSheet('sOffline');
+
+/* ---------- Navigation: page / panel headers with back arrow, hardware-back support, "move the map to pick" ---------- */
+const hs={stk:[],ign:0};
+function hsPush(n){try{history.pushState({h:n},'')}catch(e){}hs.stk.push(n)}
+function hsPop(n){const i=hs.stk.lastIndexOf(n);if(i<0)return;hs.stk.splice(i,1);hs.ign++;try{history.back()}catch(e){hs.ign--}}
+addEventListener('popstate',()=>{
+ if(hs.ign>0){hs.ign--;return}
+ const n=hs.stk.pop();
+ if(n==='pv')pvHide();else if(n==='pk')pickEnd(false);else if(n==='nav')navBack()});
+const NAVP={},NAV_PD={sBase:'sLayers',sOffline:'sLayers',sFix:'sMore',sSet:'sMore',sBackup:'sMore',sSave:'sMore',sGo:'sMore',sEdit:'sMore',sRule:'sMore',sPrx:'sMore',sSnap:'sEdit'};
+const PAGES=['sMore','sSet','sLayers','sBackup','sSave','sBase','sOffline','sGo','sFix','sSnap','sSearch','sWork'];
+const SH_TITLE={sRule:'خط‌کش',sEdit:'ویرایش عوارض',sMore:'سایر'};
+const ARROW='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg>';
+const anySheet=()=>sheets.some(s=>$(s).classList.contains('show'));
+function navBack(){
+ const cur=sheets.find(s=>$(s).classList.contains('show'))||(mkMode?'sMark':null);
+ if(!cur)return;
+ const par=NAVP[cur]||null;
+ openSheet(cur);                       /* closes the current page (it is open) */
+ if(par&&!$(par).classList.contains('show'))openSheet(par)}
+function navSync(){
+ if(PK.active||pv.open)return;
+ const open=anySheet()||mkMode;
+ if(open&&!hs.stk.includes('nav'))hsPush('nav');
+ else if(!open&&hs.stk.includes('nav'))hsPop('nav')}
+sheets.forEach(id=>{
+ const el=$(id),h3=el.querySelector(':scope>h3'),t=h3?h3.textContent:(SH_TITLE[id]||'');
+ el.classList.add(PAGES.includes(id)?'page':'panel');
+ const hd=document.createElement('div');hd.className='shd';
+ hd.innerHTML='<button type="button" class="back" aria-label="برگشت">'+ARROW+'</button><span class="ttl"></span>';
+ hd.querySelector('.ttl').textContent=SH_TITLE[id]||t;
+ hd.querySelector('.back').onclick=()=>navBack();
+ if(h3)h3.remove();
+ el.insertBefore(hd,el.firstChild)});
+{const mo=new MutationObserver(navSync);sheets.forEach(s=>mo.observe($(s),{attributes:true,attributeFilter:['class']}))}
+
+/* ---- pick a point by moving the map under a fixed pin (Neshan style) ---- */
+const PK={active:false,cb:null,restore:[]};
+const pkStop=e=>e.stopPropagation();
+function pickMap(o){
+ if(PK.active)return;
+ PK.active=true;PK.cb=o.onPick||null;
+ PK.restore=[...document.querySelectorAll('.sheet.show')].map(e=>e.id);
+ PK.restore.forEach(id=>$(id).classList.remove('show'));
+ PK.mk=mkMode;
+ $('pickTitle').textContent=o.title||'برای انتخاب، نقشه را تکان دهید';
+ $('pickOk').textContent=o.ok||'انتخاب';
+ if(o.init)map.setView(o.init,Math.max(map.getZoom(),16));
+ $('pick').style.display='block';$('bar').style.display='none';$('cross').style.display='none';
+ map.getContainer().addEventListener('click',pkStop,true);map.getContainer().addEventListener('dblclick',pkStop,true);
+ hsPush('pk')}
+function pickEnd(ok){
+ if(!PK.active)return;
+ const ll=map.getCenter(),cb=PK.cb;
+ PK.active=false;PK.cb=null;
+ $('pick').style.display='none';$('bar').style.display='';
+ map.getContainer().removeEventListener('click',pkStop,true);map.getContainer().removeEventListener('dblclick',pkStop,true);
+ hsPop('pk');
+ PK.restore.forEach(id=>$(id).classList.add('show'));
+ $('cross').style.display=(mkMode||ruler||ed.active||rt.active||(idm.active&&idm.phase==='draw'))?'none':'';
+ navSync();
+ if(ok&&cb)cb(ll)}
+$('pickBack').onclick=()=>pickEnd(false);
+$('pickOk').onclick=()=>pickEnd(true);
+$('pickMe').onclick=async()=>{
+ toast('در حال دریافت موقعیت GPS ...',3000);
+ const fx=await getFixNow();
+ if(!fx)return toast('موقعیت GPS در دسترس نیست؛ GPS را روشن کنید',4000);
+ map.setView([fx.lat,fx.lon],Math.max(map.getZoom(),17))};
+
+/* ---- use the picker for single-point selections ---- */
+$('bMk').onclick=()=>{
+ if(mkMode){openSheet('sMark');return}
+ pickMap({title:'محل نشانگر را انتخاب کنید — نقشه را تکان دهید',ok:'انتخاب محل',onPick:ll=>{openSheet('sMark');placePend(ll)}})};
+function rtPickMap(w){
+ pickMap({title:(w==='A'?'مبدأ':'مقصد')+' را انتخاب کنید — نقشه را تکان دهید',ok:w==='A'?'انتخاب مبدأ':'انتخاب مقصد',
+  onPick:ll=>{rtSet(w,ll);const other=w==='A'?'B':'A';if(!rt[other])setTimeout(()=>rtPickMap(other),300)}})}
+$('rtA').onclick=()=>rtPickMap('A');
+$('rtB').onclick=()=>rtPickMap('B');
+$('idPick').onclick=()=>{
+ if(idm.phase!=='draw')return toast('برای رسم جدید «پاک» را بزنید');
+ pickMap({title:(idm.tool==='point'?'مرکز شناسایی':'رأس بعدی')+' را انتخاب کنید — نقشه را تکان دهید',ok:idm.tool==='point'?'انتخاب مرکز':'افزودن رأس',onPick:ll=>idClick(ll)})};
 
 /* ---------- PWA ---------- */
 (async()=>{
