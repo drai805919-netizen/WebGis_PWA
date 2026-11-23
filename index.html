@@ -112,10 +112,10 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 .shd .ttl{font-size:18px;font-weight:700;color:#202124}
 .sheet.panel .shd .ttl{font-size:16px}
 /* "Others" page: icon + name grid (3 rows x 4 columns) */
-#moreGrid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:10px;padding:14px 0 6px}
-#moreGrid .tile{display:flex!important;flex-direction:column!important;align-items:center;justify-content:center;gap:7px;width:100%;min-height:92px;border:1px solid var(--bd)!important;background:var(--sf)!important;border-radius:16px!important;padding:8px 4px!important;text-align:center;position:relative}
-#moreGrid .tile .ic{width:30px!important;height:30px!important;color:var(--pri)!important}
-#moreGrid .tile span{color:var(--fg)!important;font-size:12px!important;line-height:1.35;text-align:center}
+#moreGrid{display:grid!important;grid-template-columns:repeat(4,1fr);gap:8px;padding:6px 0 2px}
+#moreGrid .tile{display:flex!important;flex-direction:column!important;align-items:center;justify-content:center;gap:3px;width:100%;min-height:64px;border:1px solid var(--bd)!important;background:var(--sf)!important;border-radius:12px!important;padding:5px 2px!important;text-align:center;position:relative}
+#moreGrid .tile .ic{width:24px!important;height:24px!important;color:var(--pri)!important}
+#moreGrid .tile span{color:var(--fg)!important;font-size:11px!important;line-height:1.25;text-align:center}
 #moreGrid .tile:active{background:var(--pri2)!important}
 #moreGrid .tile.on{background:var(--pri)!important}#moreGrid .tile.on span,#moreGrid .tile.on .ic{color:#fff!important}
 /* settings rows + switches */
@@ -143,6 +143,9 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 .sheet{padding:12px 20px}.sheet.mini{padding:8px 18px}.sheet.panel{padding:6px 20px 14px}
 .sheet.page>:not(.shd){margin-left:22px;margin-right:22px}.sheet.page .shd{padding-left:18px;padding-right:18px}
 .leaflet-popup-content{margin:12px 16px}
+#sId.idhide{display:none!important}
+#idPk{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:850;display:none;background:var(--sf);color:var(--fg);border-radius:16px;box-shadow:0 4px 18px rgba(0,0,0,.35);padding:12px 18px;font-size:13px}
+#idPk.show{display:block}.idpkrow{display:flex;gap:8px;align-items:center;margin-top:8px}.idpkrow .btn{flex:1;padding:10px 6px}.idpkrow input{flex:1;min-width:0;padding:8px;border:1px solid var(--bd);border-radius:8px;font:inherit;direction:ltr}.idpkrow label{font-size:12px;flex:none}#idPkOk:disabled{opacity:.45}
 #sGuide.show{display:flex!important;flex-direction:column;overflow:hidden!important;padding-bottom:0!important}
 #sGuide>.shd{flex:none}#sGuide>iframe{flex:1;width:100%;min-height:0;border:0;margin:0!important;background:var(--sf)}
 #sSet label select[data-k=theme]{width:175px}
@@ -374,6 +377,7 @@ html[data-theme=dark] .leaflet-control-scale-line{background:rgba(28,31,37,.8);c
 
 <button id="rtBtn" aria-label="مسیریابی"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></svg></button>
 
+<div id="idPk"><div id="idPkMsg"></div><div class="idpkrow"><label id="idPkRL" for="idPkR"></label><input id="idPkR" type="number" step="any" inputmode="decimal"></div><div class="idpkrow"><button class="btn g" id="idPkUndo">برگشت رأس</button><button class="btn r" id="idPkCancel">انصراف</button><button class="btn" id="idPkOk">تأیید</button></div></div>
 <div id="pick">
 <div id="pickTop"><button id="pickBack" aria-label="برگشت"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></svg></button><span id="pickTitle">برای انتخاب، نقشه را تکان دهید</span></div>
 <svg id="pickPin" viewBox="0 0 46 56"><path d="M23 54C23 54 5 33 5 21a18 18 0 0 1 36 0c0 12-18 33-18 33Z" fill="#ef5a5a"/><circle cx="23" cy="21" r="7" fill="#b33636"/></svg><div id="pickDot"></div>
@@ -1275,6 +1279,7 @@ function idReset(){
  if($('cross'))$('cross').style.display=idm.active?'none':''}
 function idRad(){const v=parseFloat(String($('idR').value).replace(',','.'));return isFinite(v)?v:NaN}
 function idInfo(){
+ if(idm.picking)idPkUpd();
  if(idm.phase!=='draw'){return}
  const P=idm.pts;let h='';
  if(idm.tool==='point')h=P[0]?`نقطه مرکز: <b dir="ltr">${P[0].lat.toFixed(6)}, ${P[0].lng.toFixed(6)}</b>`:'هنوز نقطه‌ای انتخاب نشده';
@@ -3008,9 +3013,9 @@ function hsPop(n){const i=hs.stk.lastIndexOf(n);if(i<0)return;hs.stk.splice(i,1)
 addEventListener('popstate',()=>{
  if(hs.ign>0){hs.ign--;return}
  const n=hs.stk.pop();
- if(n==='pv')pvHide();else if(n==='pk')pickEnd(false);else if(n==='nav')navBack()});
+ if(n==='pv')pvHide();else if(n==='pk')pickEnd(false);else if(n==='idpk')idPkEnd(false);else if(n==='nav')navBack()});
 const NAVP={},NAV_PD={sBase:'sLayers',sOffline:'sLayers',sFix:'sMore',sSet:'sMore',sBackup:'sMore',sSave:'sMore',sGo:'sMore',sEdit:'sMore',sRule:'sMore',sPrx:'sMore',sGuide:'sMore',sSnap:'sEdit'};
-const PAGES=['sMore','sGuide','sSet','sLayers','sBackup','sSave','sBase','sOffline','sGo','sFix','sSnap','sSearch','sWork'];
+const PAGES=['sGuide','sSet','sLayers','sBackup','sSave','sBase','sOffline','sGo','sFix','sSnap','sSearch','sWork'];
 const SH_TITLE={sRule:'خط‌کش',sEdit:'ویرایش عوارض',sMore:'سایر'};
 const ARROW='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg>';
 const anySheet=()=>sheets.some(s=>$(s).classList.contains('show'));
@@ -3079,9 +3084,31 @@ function rtPickMap(w){
   onPick:ll=>{rtSet(w,ll);const other=w==='A'?'B':'A';if(!rt[other])setTimeout(()=>rtPickMap(other),300)}})}
 $('rtA').onclick=()=>rtPickMap('A');
 $('rtB').onclick=()=>rtPickMap('B');
-$('idPick').onclick=()=>{
+/* ---- Identify: pick vertices by tapping the map; the form is hidden until "تأیید" (min: point 1, line 2, polygon 3) ---- */
+const ID_MIN={point:1,line:2,poly:3};
+function idPkUpd(){
+ const n=idm.pts.length,t=idm.tool,mn=ID_MIN[t];
+ $('idPkMsg').innerHTML=t==='point'?(n?'نقطه مرکز انتخاب شد؛ برای جابه‌جایی دوباره ضربه بزنید یا نقطه را بکشید.':'روی نقشه ضربه بزنید تا نقطه مرکز مشخص شود.')
+  :`رأس <b>${n}</b> از حداقل <b>${mn}</b> — روی نقشه ضربه بزنید`+(n>=mn?' (رأس بیشتر هم می‌توانید اضافه کنید)':'');
+ $('idPkOk').disabled=n<mn;
+ $('idPkOk').textContent='تأیید'+(n?` (${n} ${t==='point'?'نقطه':'رأس'})`:'');
+ $('idPkRL').textContent=ID_LBL[t];
+ if(document.activeElement!==$('idPkR'))$('idPkR').value=$('idR').value}
+function idPkStart(){
  if(idm.phase!=='draw')return toast('برای رسم جدید «پاک» را بزنید');
- pickMap({title:(idm.tool==='point'?'مرکز شناسایی':'رأس بعدی')+' را انتخاب کنید — نقشه را تکان دهید',ok:idm.tool==='point'?'انتخاب مرکز':'افزودن رأس',onPick:ll=>idClick(ll)})};
+ idm.picking=true;idm.pkSnap=idm.pts.slice();
+ $('sId').classList.add('idhide');$('bar').style.display='none';$('idPk').classList.add('show');
+ hsPush('idpk');idPkUpd();idDraw()}
+function idPkEnd(ok){
+ if(!idm.picking)return;
+ if(!ok){idm.pts=idm.pkSnap||[];idDraw()}
+ idm.picking=false;
+ $('idPk').classList.remove('show');$('sId').classList.remove('idhide');$('bar').style.display='';
+ hsPop('idpk');navSync();idInfo()}
+$('idPick').onclick=idPkStart;
+$('idPkOk').onclick=()=>idPkEnd(true);$('idPkCancel').onclick=()=>idPkEnd(false);
+$('idPkUndo').onclick=()=>{idm.pts.pop();idDraw()};
+$('idPkR').oninput=()=>{$('idR').value=$('idPkR').value;idDraw()};
 
 /* ---------- PWA ---------- */
 (async()=>{
