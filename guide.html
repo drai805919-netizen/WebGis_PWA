@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>راهنمای منوها و نحوه‌ی استفاده — WebGIS PWA</title>
+<style>
+:root{--pri:#1f6f5c;--pri2:#2e8b73;--bg:#f2f6f4;--card:#fff;--bd:#d9e3de;--txt:#1d2b26;--mut:#5f6f68;--warn:#fff4e5;--warnb:#f0b35a;--note:#e8f3ff;--noteb:#8bb9e8;--err:#fdecea;--errb:#e49b94}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:Vazirmatn,"Segoe UI",Tahoma,"Noto Naskh Arabic",Arial,sans-serif;line-height:1.85;font-size:15px}
+header{background:linear-gradient(135deg,#17594a,#2e8b73);color:#fff;padding:34px 18px 28px;text-align:center}
+header h1{margin:0 0 6px;font-size:26px}
+header p{margin:0;opacity:.9;font-size:14px}
+.wrap{max-width:1050px;margin:0 auto;padding:16px}
+nav.toc{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin:-22px auto 20px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+nav.toc b{display:block;margin-bottom:6px;color:var(--pri)}
+nav.toc a{display:inline-block;margin:3px 3px;padding:3px 11px;border-radius:20px;background:#eaf4f0;color:var(--pri);text-decoration:none;font-size:13px}
+nav.toc a:hover{background:var(--pri);color:#fff}
+section{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px 18px;margin:16px 0;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+h2{margin:0 0 4px;font-size:20px;color:var(--pri);display:flex;align-items:center;gap:8px}
+h2 .ic{display:inline-flex;width:34px;height:34px;border-radius:10px;background:#eaf4f0;align-items:center;justify-content:center;font-size:18px;flex:none}
+.sub{color:var(--mut);margin:0 0 10px;font-size:13.5px}
+.tw{overflow-x:auto;border:1px solid var(--bd);border-radius:10px;margin:8px 0}
+table.t{width:100%;border-collapse:collapse;min-width:640px;background:#fff}
+table.t th{background:var(--pri);color:#fff;text-align:right;padding:8px 10px;font-size:13.5px;white-space:nowrap}
+table.t td{padding:8px 10px;border-top:1px solid var(--bd);vertical-align:top;font-size:14px}
+table.t tr:nth-child(even) td{background:#f8fbfa}
+table.t td:first-child{font-weight:700;white-space:nowrap;color:#17594a}
+.badge{display:inline-block;padding:0 9px;border-radius:12px;font-size:12px;font-weight:700;vertical-align:middle}
+.b-on{background:#dff3ea;color:#17694f}.b-off{background:#fde5e2;color:#a5281b}.b-opt{background:#fff1d6;color:#8a5a00}
+.box{border-radius:10px;padding:9px 13px;margin:9px 0;font-size:14px;border:1px solid}
+.box.w{background:var(--warn);border-color:var(--warnb)}.box.n{background:var(--note);border-color:var(--noteb)}.box.e{background:var(--err);border-color:var(--errb)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:8px 0}
+.steps li{counter-increment:s;position:relative;padding:6px 44px 6px 6px;margin:6px 0;background:#f6faf8;border:1px solid var(--bd);border-radius:10px}
+.steps li:before{content:counter(s);position:absolute;right:8px;top:6px;width:28px;height:28px;border-radius:50%;background:var(--pri);color:#fff;text-align:center;line-height:28px;font-weight:700;font-size:14px}
+code,kbd{background:#eef2f0;border-radius:5px;padding:0 6px;font-family:Consolas,monospace;direction:ltr;unicode-bidi:embed;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
+.tile{border:1px solid var(--bd);border-radius:12px;padding:10px;text-align:center;background:#fafdfb}
+.tile i{font-style:normal;font-size:26px;display:block}
+.tile b{display:block;color:var(--pri);margin:2px 0}
+.tile span{font-size:12.5px;color:var(--mut)}
+footer{text-align:center;color:var(--mut);font-size:12.5px;padding:18px}
+@media print{header{background:#17594a!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}nav.toc{display:none}section{break-inside:avoid;box-shadow:none}table.t th{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<header>
+<h1>🗺 راهنمای منوها و نحوه‌ی استفاده</h1>
+<p>WebGIS PWA — سامانه‌ی سبک اطلاعات مکانی موبایلی (آنلاین و آفلاین)</p>
+</header>
+<div class="wrap">
+
+<nav class="toc"><b>فهرست</b>
+<a href="#start">شروع سریع</a><a href="#screen">اجزای صفحه</a><a href="#search">جستجو</a><a href="#layers">لایه‌ها</a><a href="#open">باز کردن فایل</a><a href="#coord">مختصات</a><a href="#identify">شناسایی</a><a href="#marker">نشانگر</a><a href="#ruler">خط‌کش</a><a href="#edit">ویرایش</a><a href="#fix">اصلاح عوارض</a><a href="#save">ذخیره</a><a href="#backup">پشتیبان</a><a href="#track">برداشت مسیر</a><a href="#route">مسیریابی</a><a href="#prox">هشدار نزدیکی</a><a href="#settings">تنظیمات</a><a href="#fields">فیلدهای ثبت‌شده</a><a href="#offline">آنلاین و آفلاین</a><a href="#faq">عیب‌یابی</a><a href="#admin">ضمیمه‌ی مدیر سیستم</a>
+</nav>
+
+<section id="start">
+<h2><span class="ic">🚀</span>شروع سریع</h2>
+<p class="sub">برای اولین استفاده در مقر سازمان، با اینترنت یا شبکه‌ی داخلی:</p>
+<ol class="steps">
+<li>آدرس سامانه را در Chrome گوشی باز کنید (<code>https://آدرس-سرور:3443</code>) و در صورت نمایش «نصب برنامه» آن را نصب کنید.</li>
+<li>اجازه‌ی <b>موقعیت (GPS)</b> و <b>دوربین</b> را بدهید.</li>
+<li>از «لایه‌ها ← همگام‌سازی نقشه‌ها از سرور» نقشه‌ی پایه و لایه‌های WMS سازمان را بگیرید.</li>
+<li>برای کار میدانی بدون اینترنت: نقشه را روی منطقه ببرید و «لایه‌ها ← ذخیره نقشه برای آفلاین» را اجرا کنید.</li>
+<li>در «تنظیمات» نام یا کد ثبت‌کننده را وارد کنید تا روی تمام عوارض ثبت شود.</li>
+</ol>
+<div class="box w"><b>مهم:</b> داده‌های هر گوشی (لایه‌ها، نشانگرها، عکس‌ها) فقط روی همان گوشی ذخیره می‌شود. برای انتقال یا نگهداری، از منوی «پشتیبان» یا «ذخیره» خروجی بگیرید.</div>
+</section>
+
+<section id="screen">
+<h2><span class="ic">📱</span>اجزای صفحه</h2>
+<p class="sub">نوار بالا، کنترل‌های روی نقشه و نوار پایین.</p>
+<div class="tw"><table class="t"><thead><tr><th>بخش</th><th>کاربرد</th><th>توضیح</th></tr></thead><tbody>
+<tr><td>🔍 جستجو (بالا-راست نوار)</td><td>باز کردن منوی جستجو</td><td>جستجو در ویژگی‌های لایه‌های روشن و اسکن بارکد/QR.</td></tr>
+<tr><td>آنلاین / آفلاین</td><td>وضعیت اینترنت</td><td>در حالت آفلاین فقط نقشه‌های ذخیره‌شده و لایه‌های داخل گوشی کار می‌کنند.</td></tr>
+<tr><td>GPS روشن / خاموش</td><td>وضعیت موقعیت‌یاب</td><td>با دکمه‌ی 🎯 «موقعیت من» روشن می‌شود.</td></tr>
+<tr><td>نصب برنامه</td><td>نصب PWA روی صفحه‌ی اصلی گوشی</td><td>فقط وقتی مرورگر اجازه دهد دیده می‌شود.</td></tr>
+<tr><td>زوم</td><td>سطح بزرگ‌نمایی فعلی</td><td>برای دانستن اینکه نقشه‌ی آفلاین تا چه زومی ذخیره شده است.</td></tr>
+<tr><td>مختصات</td><td>مختصات مرکز نقشه (علامت + وسط صفحه)</td><td>—</td></tr>
+<tr><td>کنترل لایه‌ها (بالا-راست نقشه)</td><td>انتخاب سریع نقشه‌ی پایه و پوشش‌ها</td><td>مدیریت کامل در منوی «لایه‌ها».</td></tr>
+<tr><td>🎯 موقعیت من</td><td>روشن کردن GPS و رفتن به موقعیت شما</td><td>دقت GPS روی نقشه به‌صورت دایره نمایش داده می‌شود.</td></tr>
+<tr><td>آیکون مسیریابی (زیر موقعیت من)</td><td>باز کردن منوی مسیریابی</td><td>—</td></tr>
+<tr><td>لمس نقشه</td><td>کپی مختصات نقطه‌ی لمس‌شده</td><td>فقط وقتی <b>هیچ منو یا ابزاری باز نیست</b>؛ قالب کپی در «تنظیمات» انتخاب می‌شود. مستقیم در پیام‌رسان Paste کنید.</td></tr>
+</tbody></table></div>
+<p><b>نوار پایین</b> پنج دکمه دارد؛ «بیشتر» بقیه‌ی منوها را به‌صورت پنل آیکون‌دار باز می‌کند:</p>
+<div class="grid">
+<div class="tile"><i>📚</i><b>لایه‌ها</b><span>نقشه‌ها و لایه‌های داده</span></div>
+<div class="tile"><i>📍</i><b>نشانگر</b><span>ثبت نقطه‌ی جدید</span></div>
+<div class="tile"><i>ℹ️</i><b>شناسایی</b><span>عوارض اطراف یک نقطه/خط/محدوده</span></div>
+<div class="tile"><i>🥾</i><b>برداشت مسیر</b><span>ثبت مسیر پیاده/خودرو و موانع</span></div>
+<div class="tile"><i>⋯</i><b>بیشتر</b><span>باز کردن فایل، مختصات، خط‌کش، ویرایش، اصلاح عوارض، ذخیره، پشتیبان، هشدار نزدیکی، تنظیمات</span></div>
+</div>
+</section>
+
+<section id="search">
+<h2><span class="ic">🔍</span>جستجو</h2>
+<p class="sub">از آیکون ذره‌بین بالای صفحه باز می‌شود و فقط در لایه‌های روشن جستجو می‌کند.</p>
+<div class="tw"><table class="t"><thead><tr><th>گزینه</th><th>کاربرد</th><th>نحوه‌ی استفاده</th></tr></thead><tbody>
+<tr><td>انتخاب لایه / ستون</td><td>محدود کردن جستجو به یک لایه و یک ویژگی</td><td>یا «همه» را بگذارید تا در همه‌ی ستون‌ها جستجو شود.</td></tr>
+<tr><td>حالت جستجو</td><td>شامل / دقیقاً برابر / شروع با</td><td>برای کد یا شماره از «دقیقاً برابر» استفاده کنید.</td></tr>
+<tr><td>جستجو</td><td>اجرای جستجو</td><td>روی هر نتیجه بزنید تا نقشه روی آن عارضه برود و پنجره‌ی اطلاعاتش باز شود.</td></tr>
+<tr><td>اسکن</td><td>خواندن QR و بارکد خطی با دوربین (یا از عکس گالری)</td><td>مقدار خوانده‌شده در کادر جستجو می‌نشیند، با نوع بارکد نمایش داده می‌شود و جستجو انجام می‌شود. دکمه‌ی «کپی» و «اسکن دوباره» دارد.</td></tr>
+<tr><td>🧭 مسیر تا اینجا</td><td>زیر هر نتیجه</td><td>آن عارضه را مقصد مسیریابی می‌کند؛ اگر GPS روشن باشد مبدأ همان موقعیت شماست.</td></tr>
+<tr><td>پاک کردن</td><td>حذف اطلاعات جستجو</td><td>متن، نتایج و نتیجه‌ی اسکن و فهرست انتخاب مبدأ/مقصد مسیریابی را پاک می‌کند.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="layers">
+<h2><span class="ic">📚</span>لایه‌ها</h2>
+<p class="sub">دو بخش: «نقشه‌های پایه» و «لایه‌های داده».</p>
+<div class="tw"><table class="t"><thead><tr><th>گزینه</th><th>کاربرد</th><th>نحوه‌ی استفاده</th></tr></thead><tbody>
+<tr><td>فهرست نقشه‌های پایه</td><td>انتخاب نقشه‌ی زمینه</td><td>یک نقشه‌ی پایه فعال است (دکمه‌ی رادیویی). پوشش‌های WMS (Overlay) با تیک روشن/خاموش می‌شوند.</td></tr>
+<tr><td>حذف (نقشه)</td><td>حذف نقشه از فهرست</td><td><span class="badge b-off">حداقل یک نقشه‌ی پایه</span> باید بماند؛ حذف آخرین نقشه مسدود است.</td></tr>
+<tr><td>+ افزودن نقشه (WMS / XYZ)</td><td>معرفی نقشه‌ی جدید</td><td>نوع را انتخاب کنید (یا از «پیش‌تنظیم» مثل Google Hybrid یا «تایل شبکه داخلی» استفاده کنید)، نام و آدرس را بدهید. برای WMS نام لایه‌ها (Layers) لازم است؛ «دریافت لیست لایه‌ها» فهرست را از سرور می‌خواند (نیازمند CORS؛ در غیر این صورت دستی بنویسید). نسخه، قالب، سیستم مختصات، شفاف بودن، Overlay، حداقل/حداکثر زوم و TMS قابل تنظیم است. «تأیید و ایجاد نقشه» آن را می‌سازد و فعال می‌کند.</td></tr>
+<tr><td>همگام‌سازی از سرور</td><td>دریافت فهرست نقشه‌ها از <code>maps.json</code> سرور</td><td>نقشه‌های جدید اضافه و قبلی‌ها به‌روز می‌شوند.</td></tr>
+<tr><td>بازنشانی نقشه‌ها</td><td>برگشت فهرست به حالت اولیه</td><td>نقشه‌های افزوده‌شده پاک می‌شوند (با تأیید).</td></tr>
+<tr><td>ذخیره نقشه برای آفلاین</td><td>دانلود تایل‌های محدوده‌ی فعلی</td><td>نقشه را روی منطقه ببرید ← نقشه‌های روشن را تیک بزنید ← «زوم از/تا» را بدهید ← «محاسبه» (تعداد و حجم) ← «شروع دانلود». «توقف» و «پاک کردن نقشه‌های آفلاین» هم هست.</td></tr>
+<tr><td>لایه‌های داده: نمایش</td><td>روشن/خاموش کردن لایه</td><td>—</td></tr>
+<tr><td>رنگ / آیکون</td><td>سبک نمایش لایه</td><td>آیکون برای لایه‌های نقطه‌ای.</td></tr>
+<tr><td>زوم</td><td>رفتن به محدوده‌ی لایه</td><td>—</td></tr>
+<tr><td>حذف (لایه)</td><td>حذف لایه</td><td>با تأیید؛ ابتدا پشتیبان بگیرید.</td></tr>
+</tbody></table></div>
+<div class="box n">اگر برنامه روی HTTPS است، آدرس‌های <code>http://</code> را مرورگر مسدود می‌کند. برای سرویس‌های داخلی از مسیرهای نسبی همان سرور (<code>wms</code> و <code>tiles/{z}/{x}/{y}.jpg</code>) استفاده کنید.</div>
+</section>
+
+<section id="open">
+<h2><span class="ic">📂</span>باز کردن فایل</h2>
+<p class="sub">بارگذاری فایل مکانی از حافظه‌ی گوشی (چند فایل همزمان).</p>
+<div class="tw"><table class="t"><thead><tr><th>قالب</th><th>توضیح</th></tr></thead><tbody>
+<tr><td>GeoJSON / JSON</td><td>قالب اصلی؛ نقطه، خط و چندضلعی.</td></tr>
+<tr><td>KML / KMZ</td><td>KMZ خودکار از حالت فشرده خارج می‌شود.</td></tr>
+<tr><td>GPX</td><td>مسیرها و نقاط GPS.</td></tr>
+<tr><td>GPKG (GeoPackage)</td><td>هر جدول مکانی یک لایه می‌شود.</td></tr>
+</tbody></table></div>
+<p>فایل نامعتبر یا بسیار بزرگ پیام خطا می‌دهد و برنامه را از کار نمی‌اندازد. مختصات و ترتیب طول/عرض بررسی می‌شود. عکس‌های داخل فایل به مخزن جداگانه‌ی عکس منتقل می‌شوند.</p>
+</section>
+
+<section id="coord">
+<h2><span class="ic">🧭</span>مختصات و ناوبری</h2>
+<div class="tw"><table class="t"><thead><tr><th>گزینه</th><th>کاربرد</th><th>نحوه‌ی استفاده</th></tr></thead><tbody>
+<tr><td>قالب مختصات</td><td>درجه (طول/عرض) یا UTM زون 39N</td><td>قالب ورودی را انتخاب کنید.</td></tr>
+<tr><td>عرض / طول (یا Easting / Northing)</td><td>ورود مختصات مقصد</td><td>مثلاً عرض ۳۷٫۲۸ و طول ۴۹٫۵۸.</td></tr>
+<tr><td>رفتن به نقطه</td><td>رفتن نقشه به آن نقطه و گذاشتن نشانگر موقت</td><td>—</td></tr>
+<tr><td>حذف نشانگر</td><td>پاک کردن نشانگر موقت</td><td>—</td></tr>
+<tr><td>قالب کپی مختصات</td><td>قالب کپی با لمس نقشه</td><td>عرض,طول / طول,عرض / لینک Google Maps.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="identify">
+<h2><span class="ic">🎯</span>شناسایی عوارض اطراف</h2>
+<p class="sub">می‌گوید چه عارضه‌ای در اطراف یک نقطه، کنار یک خط یا داخل یک محدوده هست — مناسب شرایط بحرانی.</p>
+<div class="tw"><table class="t"><thead><tr><th>گزینه</th><th>کاربرد</th><th>نحوه‌ی استفاده</th></tr></thead><tbody>
+<tr><td>نقطه + شعاع</td><td>عوارض داخل شعاع از یک نقطه</td><td>روی نقشه ضربه بزنید و شعاع (متر) را بنویسید.</td></tr>
+<tr><td>خط</td><td>عوارض نزدیک یک مسیر</td><td>رأس‌های خط را روی نقشه بزنید؛ شعاع، فاصله‌ی دو طرف خط است.</td></tr>
+<tr><td>چندضلعی</td><td>عوارض داخل یک محدوده‌ی رسم‌شده</td><td>حداقل ۳ رأس بزنید.</td></tr>
+<tr><td>نقطه = موقعیت من</td><td>مرکز را روی GPS شما می‌گذارد</td><td>برای «اطراف من چه چیزی هست؟».</td></tr>
+<tr><td>فقط لایه‌های روشن</td><td>محدود کردن بررسی</td><td>—</td></tr>
+<tr><td>شناسایی عوارض</td><td>اجرا</td><td>نتیجه به تفکیک لایه با تعداد نمایش داده می‌شود؛ هر عارضه قابل انتخاب و نمایش روی نقشه است.</td></tr>
+<tr><td>برگشت / پاک</td><td>حذف آخرین رأس / پاک کردن همه</td><td>—</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="marker">
+<h2><span class="ic">📍</span>نشانگر جدید</h2>
+<p class="sub">ثبت یک نقطه با نام، توضیحات و عکس.</p>
+<div class="tw"><table class="t"><thead><tr><th>گزینه</th><th>کاربرد</th><th>نحوه‌ی استفاده</th></tr></thead><tbody>
+<tr><td>نقطه‌ی نشانگر</td><td>محل ثبت</td><td>نقطه را بکشید تا دقیق شود یا جای دیگر نقشه را لمس کنید.</td></tr>
+<tr><td>نام / توضیحات</td><td>مشخصات نقطه</td><td>—</td></tr>
+<tr><td>📷 گرفتن عکس / 🖼 گالری</td><td>افزودن عکس</td><td>هر دو روش در دسترس است. با لمس بندانگشتی، عکس تمام‌صفحه دیده می‌شود.</td></tr>
+<tr><td>موقعیت من</td><td>گذاشتن نشانگر روی موقعیت GPS</td><td>—</td></tr>
+<tr><td>ثبت نشانگر</td><td>ذخیره در لایه‌ی «نشانگرهای من»</td><td>موقعیت GPS شما هم به‌عنوان مختصات ثبت‌کننده ثبت می‌شود؛ اگر GPS نباشد هشدار می‌دهد.</td></tr>
+<tr><td>لغو</td><td>انصراف</td><td>—</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="ruler">
+<h2><span class="ic">📏</span>خط‌کش</h2>
+<div class="tw"><table class="t"><thead><tr><th>گزینه</th><th>کاربرد</th><th>نحوه‌ی استفاده</th></tr></thead><tbody>
+<tr><td>ضربه روی نقشه</td><td>افزودن رأس</td><td>طول کل و طول هر بخش نمایش داده می‌شود (محاسبه‌ی کروی، خطای معمول کمتر از ۰٫۵٪).</td></tr>
+<tr><td>موقعیت من</td><td>افزودن موقعیت GPS به‌عنوان رأس</td><td>—</td></tr>
+<tr><td>برگشت</td><td>حذف آخرین رأس</td><td>—</td></tr>
+<tr><td>افزودن به لایه‌ها</td><td>ذخیره‌ی خط اندازه‌گیری‌شده با طول</td><td>—</td></tr>
+<tr><td>پاک</td><td>پاک کردن اندازه‌گیری</td><td>—</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="edit">
+<h2><span class="ic">✏️</span>ویرایش</h2>
+<p class="sub">ویرایش مشخصات و هندسه‌ی عوارض. اصل داده بدون تأیید شما تغییر نمی‌کند.</p>
+<div class="tw"><table class="t"><thead><tr><th>گزینه</th><th>کاربرد</th><th>نحوه‌ی استفاده</th></tr></thead><tbody>
+<tr><td>اطلاعات عارضه</td><td>ویرایش ستون‌های یک عارضه</td><td>روی عارضه ضربه بزنید ← «ویرایش مشخصات» ← مقدارها را عوض کنید ← «ذخیره». ستون جدید هم می‌توان افزود. فیلدهای موقعیت کاربر قفل هستند.</td></tr>
+<tr><td>خط جدید</td><td>رسم خط</td><td>رأس‌ها را بزنید؛ با کشیدن رأس جابه‌جا می‌شود و با نقطه‌ی سفید میان دو رأس، رأس جدید اضافه می‌شود. «ثبت» آن را در لایه‌ی «ویرایش‌ها» می‌گذارد.</td></tr>
+<tr><td>نقطه روی خط</td><td>گذاشتن نقطه‌ی دقیقاً روی خط یک لایه</td><td>نزدیک خط ضربه بزنید؛ سبز یعنی نشست، نارنجی یعنی نزدیک هیچ خطی نیست (نقطه را بکشید).</td></tr>
+<tr><td>چسبیدن (Snap)</td><td>چسباندن رأس به خطوط موجود</td><td>رنگ رأس: نارنجی آزاد، سبز چسبیده به رأس، بنفش چسبیده به خط. خط مقصد لحظه‌ای زرد می‌شود.</td></tr>
+<tr><td>ایجاد رأس (Node)</td><td>ساختن رأس مشترک روی خط مقصد</td><td>روشن باشد تا خطوط در QGIS و تحلیل شبکه واقعاً به هم وصل باشند.</td></tr>
+<tr><td>چسباندن گروهی نقاط</td><td>چسباندن نقاط نزدیک (مثل شیر) به خط</td><td>لایه‌ی نقطه و خط را انتخاب، «بررسی» (پیش‌نمایش نارنجی) و سپس «اعمال چسباندن». فاصله‌ی مجاز از «تنظیمات».</td></tr>
+<tr><td>افزودن در: ابتدا/انتها، برگشت، حذف رأس</td><td>کنترل رأس‌ها</td><td>روی رأس ضربه بزنید تا «حذف رأس» ظاهر شود.</td></tr>
+<tr><td>مختصات شما</td><td>موقعیت ثبت‌کننده</td><td>خودکار از GPS پر می‌شود و فقط هنگام ثبت قابل ویرایش است.</td></tr>
+<tr><td>ثبت / لغو</td><td>تأیید یا انصراف</td><td>—</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="fix">
+<h2><span class="ic">🛠</span>اصلاح عوارض (هندسه و توپولوژی)</h2>
+<p class="sub">لایه را بررسی می‌کند و خطاها را فهرست می‌کند؛ رفع خطا اختیاری است.</p>
+<ol class="steps">
+<li>لایه را انتخاب و «بررسی لایه» را بزنید.</li>
+<li>برای هر نوع خطا «نمایش» را بزنید تا محل‌ها روی نقشه علامت بخورد.</li>
+<li>نوع‌های موردنظر را تیک بزنید و «رفع موارد انتخاب‌شده» را بزنید.</li>
+</ol>
+<div class="tw"><table class="t"><thead><tr><th>نوع خطا</th><th>رفع خودکار</th></tr></thead><tbody>
+<tr><td>مختصات خارج از بازه / جابه‌جایی طول و عرض</td><td><span class="badge b-on">جابه‌جایی طول/عرض اصلاح می‌شود</span></td></tr>
+<tr><td>رأس تکراری پشت‌سرهم</td><td><span class="badge b-on">حذف می‌شود</span></td></tr>
+<tr><td>خط یا چندضلعی با رأس ناکافی</td><td><span class="badge b-off">فقط گزارش</span></td></tr>
+<tr><td>حلقه‌ی باز چندضلعی</td><td><span class="badge b-on">بسته می‌شود</span></td></tr>
+<tr><td>جهت حلقه (RFC 7946)</td><td><span class="badge b-on">برعکس می‌شود</span></td></tr>
+<tr><td>چندضلعی خودتقاطع (پاپیونی)</td><td><span class="badge b-on">به چندضلعی‌های معتبر شکسته می‌شود</span></td></tr>
+<tr><td>انتهای آویزان (نزدیک خط دیگر ولی وصل نیست)</td><td><span class="badge b-on">به خط می‌چسبد و Node می‌گیرد</span></td></tr>
+<tr><td>تقاطع خطوط بدون Node</td><td><span class="badge b-on">در محل تقاطع Node ساخته می‌شود</span></td></tr>
+<tr><td>خط تکراری</td><td><span class="badge b-opt">حذف با تأیید</span></td></tr>
+<tr><td>هم‌پوشانی چندضلعی‌ها</td><td><span class="badge b-off">فقط گزارش</span></td></tr>
+</tbody></table></div>
+<div class="tw"><table class="t"><thead><tr><th>گزینه</th><th>توضیح</th></tr></thead><tbody>
+<tr><td>اصلاح روی کپی لایه</td><td>پیش‌فرض روشن: لایه‌ی «… (اصلاح‌شده)» ساخته می‌شود و اصل دست نمی‌خورد.</td></tr>
+<tr><td>وصل به لایه‌های دیگر</td><td>فقط بدون کپی: انتهای آویزان به خطوط سایر لایه‌های روشن هم وصل می‌شود.</td></tr>
+<tr><td>بازگردانی آخرین اصلاح</td><td>اگر مستقیم روی لایه اصلاح کرده باشید، وضعیت قبل را برمی‌گرداند.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="save">
+<h2><span class="ic">💾</span>ذخیره / خروجی لایه‌ها</h2>
+<p class="sub">لایه‌ها را با چک‌باکس انتخاب کنید و قالب خروجی را بدهید.</p>
+<div class="tw"><table class="t"><thead><tr><th>قالب</th><th>محتوا</th><th>کاربرد</th></tr></thead><tbody>
+<tr><td>GeoJSON</td><td>یک فایل ادغام‌شده (یا یک لایه)</td><td>تبادل عمومی؛ عکس‌ها داخل فایل.</td></tr>
+<tr><td>ZIP</td><td>هر لایه یک GeoJSON</td><td>ارسال گروهی.</td></tr>
+<tr><td>بسته QGIS</td><td>GeoJSON + پوشه‌ی عکس‌ها + پروژه‌ی <code>.qgs</code></td><td>نمایش لایه‌ها با عکس در QGIS (بعد از Extract باز کنید).</td></tr>
+<tr><td>GeoPackage (.gpkg)</td><td>یک فایل، هر لایه یک جدول</td><td>QGIS / ArcGIS.</td></tr>
+<tr><td>CSV</td><td>جدول همه‌ی عوارض با مختصات مرکز</td><td>Excel.</td></tr>
+</tbody></table></div>
+<p>گزینه‌ی «انتخاب محل ذخیره (اشتراک‌گذاری)» منوی اشتراک‌گذاری گوشی را باز می‌کند (Files، Drive، پیام‌رسان‌ها).</p>
+</section>
+
+<section id="backup">
+<h2><span class="ic">🗄</span>پشتیبان‌گیری و بازیابی</h2>
+<div class="tw"><table class="t"><thead><tr><th>گزینه</th><th>کاربرد</th><th>نحوه‌ی استفاده</th></tr></thead><tbody>
+<tr><td>گرفتن نسخه پشتیبان</td><td>همه‌ی لایه‌ها، استایل‌ها، نشانگرها، عکس‌ها و تنظیمات در یک فایل JSON</td><td>قبل از تعویض گوشی یا پاک کردن داده‌ی مرورگر انجام دهید.</td></tr>
+<tr><td>بازیابی (افزودن)</td><td>اضافه کردن به داده‌ی فعلی</td><td>حالت امن؛ نشانگرهای تکراری اضافه نمی‌شوند.</td></tr>
+<tr><td>بازیابی (جایگزینی کامل)</td><td>حذف داده‌ی فعلی و جایگزینی</td><td>با تأیید.</td></tr>
+<tr><td>پاکسازی عکس‌های بی‌مصرف</td><td>حذف عکس‌هایی که به هیچ عارضه‌ای وصل نیستند</td><td>تعداد و حجم مخزن عکس بالای منو نوشته شده است.</td></tr>
+</tbody></table></div>
+<div class="box n">عکس‌ها در یک store جداگانه نگهداری می‌شوند و عارضه فقط لینک آن‌ها را دارد؛ برای همین حجم لایه‌ها کنترل‌شده می‌ماند.</div>
+</section>
+
+<section id="track">
+<h2><span class="ic">🥾</span>برداشت مسیر</h2>
+<p class="sub">ثبت مسیر با GPS، ثبت مانع و ساخت لایه‌ی خطی با طول.</p>
+<div class="tw"><table class="t"><thead><tr><th>دکمه</th><th>کاربرد</th><th>نحوه‌ی استفاده</th></tr></thead><tbody>
+<tr><td>▶ شروع</td><td>شروع ثبت مسیر</td><td>نقاط به‌تدریج ذخیره می‌شوند و صفحه روشن می‌ماند (قفل بیداری). اگر برنامه ناگهان بسته شود، دفعه‌ی بعد برداشت نیمه‌تمام بازیابی می‌شود.</td></tr>
+<tr><td>⏸ توقف</td><td>مکث ثبت</td><td>پیشنهاد «ثبت مانع» ظاهر می‌شود.</td></tr>
+<tr><td>⚠ ثبت مانع در این نقطه</td><td>ثبت مانع با یک لمس</td><td>نوع مانع (فهرست در «تنظیمات»)، عکس (دوربین) و یادداشت را بدهید ← «ثبت مانع». در همان نقطه‌ی توقف ثبت می‌شود.</td></tr>
+<tr><td>▶ ادامه</td><td>ادامه‌ی مسیر</td><td>فاصله‌ی توقف تا ادامه جزو طول حساب می‌شود.</td></tr>
+<tr><td>■ پایان</td><td>پایان و ساخت لایه</td><td>لایه‌ای با یک خط (طول، تعداد نقطه، مدت) و نشانگرهای مانع (با فاصله از ابتدای مسیر) روی نقشه می‌ماند.</td></tr>
+<tr><td>کپی متراژ</td><td>کپی طول آخرین برداشت</td><td>برای استفاده در گزارش یا سایر سامانه‌ها.</td></tr>
+</tbody></table></div>
+<div class="box w">نقطه‌ای با دقت GPS بدتر از حد تنظیم‌شده (پیش‌فرض ۳۰ متر) یا جابه‌جایی کمتر از ۴ متر ثبت نمی‌شود؛ هر دو در «تنظیمات» قابل تغییرند. هنگام برداشت صفحه روشن بماند.</div>
+</section>
+
+<section id="route">
+<h2><span class="ic">🛣</span>مسیریابی (کوتاه‌ترین مسیر)</h2>
+<p class="sub">با آیکون زیر «موقعیت من» در بالا-راست نقشه باز می‌شود.</p>
+<div class="tw"><table class="t"><thead><tr><th>گزینه</th><th>کاربرد</th><th>نحوه‌ی استفاده</th></tr></thead><tbody>
+<tr><td>① مبدأ / ② مقصد</td><td>انتخاب نقطه‌ها روی نقشه</td><td>دکمه را بزنید و روی نقشه ضربه بزنید؛ نشانگرها قابل کشیدن‌اند و مسیر دوباره محاسبه می‌شود.</td></tr>
+<tr><td>مبدأ = موقعیت من</td><td>مبدأ از GPS</td><td>—</td></tr>
+<tr><td>🔍 مبدأ/مقصد: از نتیجه جستجو</td><td>انتخاب از آخرین جستجو</td><td>اگر جستجویی نشده باشد، نقطه را مستقیم روی نقشه انتخاب کنید.</td></tr>
+<tr><td>روش</td><td>خودکار / خودرو / دوچرخه / پیاده / آفلاین / خط مستقیم</td><td>«آفلاین» روی خطوط لایه‌های روشن (دایکسترا) و بدون اینترنت کار می‌کند؛ خطوط باید در رأس‌ها به هم وصل باشند. «آنلاین» به سرویس مسیریابی اینترنتی نیاز دارد.</td></tr>
+<tr><td>محاسبه مسیر / جابه‌جایی</td><td>اجرا / عوض کردن مبدأ و مقصد</td><td>طول مسیر (و زمان، در حالت آنلاین) نمایش داده می‌شود.</td></tr>
+<tr><td>افزودن به لایه‌ها</td><td>ذخیره‌ی مسیر به‌صورت لایه</td><td>—</td></tr>
+<tr><td>پاک</td><td>پاک کردن مبدأ، مقصد و مسیر</td><td>—</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="prox">
+<h2><span class="ic">🔔</span>هشدار نزدیکی (بیپ)</h2>
+<p class="sub">وقتی به یک عارضه نزدیک شوید، بیپ می‌زند و عارضه‌ها را روی نقشه مشخص می‌کند.</p>
+<div class="tw"><table class="t"><thead><tr><th>گزینه</th><th>کاربرد</th><th>نحوه‌ی استفاده</th></tr></thead><tbody>
+<tr><td>فاصله هشدار (متر)</td><td>آستانه‌ی نزدیکی</td><td>عدد دلخواه یا دکمه‌های ۱۰، ۲۰، ۵۰، ۱۰۰، ۲۰۰.</td></tr>
+<tr><td>لایه‌های مورد بررسی</td><td>انتخاب لایه‌ها</td><td>پیش‌فرض: لایه‌های روشن.</td></tr>
+<tr><td>آزمایش صدا</td><td>شنیدن صدای انتخابی</td><td>پیش از رفتن به میدان تست کنید.</td></tr>
+<tr><td>▶ شروع هشدار / ■ توقف</td><td>روشن و خاموش کردن</td><td>GPS و قفل بیداری فعال می‌شوند؛ صفحه باید روشن بماند.</td></tr>
+<tr><td>نمایش روی نقشه</td><td>رنگ‌بندی عوارض</td><td><b style="color:#e91e63">● صورتی</b>: همه‌ی عارضه‌های داخل فاصله؛ <b style="color:#c9a100">◯ زرد</b>: نزدیک‌ترین.</td></tr>
+<tr><td>فهرست داخل محدوده</td><td>نام، لایه، فاصله و جهت</td><td>«نمایش» شما و عارضه را روی نقشه می‌آورد و اطلاعاتش را باز می‌کند. نوار قرمز بالای نقشه هم همین را خلاصه می‌گوید.</td></tr>
+</tbody></table></div>
+<div class="box n">نوع صدا، حالت (هشدار هنگام ورود / بیپ تندشونده)، بلندی، ارتعاش، مدت سکوت پس از هشدار و قفل بیداری در «تنظیمات» تعیین می‌شود. اگر دقت GPS از فاصله‌ی هشدار بدتر باشد، هشدار داده می‌شود.</div>
+</section>
+
+<section id="settings">
+<h2><span class="ic">⚙️</span>تنظیمات</h2>
+<p class="sub">تعریف گزینه‌های کاربر؛ بقیه‌ی منوها فقط عملیات انجام می‌دهند. تنظیمات در پشتیبان هم ذخیره می‌شوند.</p>
+<div class="tw"><table class="t"><thead><tr><th>بخش</th><th>گزینه</th><th>اثر</th></tr></thead><tbody>
+<tr><td>عمومی</td><td>نام یا کد ثبت‌کننده</td><td>روی هر عارضه‌ی ثبت یا ویرایش‌شده در فیلد «ثبت‌کننده» می‌آید.</td></tr>
+<tr><td>عمومی</td><td>قالب کپی مختصات</td><td>خروجی کپی با لمس نقشه.</td></tr>
+<tr><td>برداشت مسیر</td><td>حداکثر خطای GPS، حداقل فاصله‌ی نقاط، قفل بیداری</td><td>کیفیت و تراکم نقاط مسیر.</td></tr>
+<tr><td>برداشت مسیر</td><td>انواع مانع</td><td>فهرست قابل ویرایش (هر خط یک مورد).</td></tr>
+<tr><td>اصلاح عوارض</td><td>فاصله‌ی اتصال انتهای آویزان / چسباندن گروهی نقاط (متر)</td><td>آستانه‌ی اصلاح خودکار.</td></tr>
+<tr><td>هشدار نزدیکی</td><td>حالت، نوع صدا، بلندی، ارتعاش، مدت سکوت، قفل بیداری</td><td>رفتار هشدار.</td></tr>
+<tr><td>—</td><td>بازنشانی تنظیمات</td><td>برگشت به مقدارهای پیش‌فرض.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="fields">
+<h2><span class="ic">🏷</span>فیلدهایی که خودکار روی عوارض ثبت می‌شود</h2>
+<p class="sub">برای صحت‌سنجی اطلاعات؛ موقعیت کاربر فقط هنگام ثبت قابل ویرایش است و بعداً قفل می‌شود.</p>
+<div class="tw"><table class="t"><thead><tr><th>فیلد</th><th>معنی</th></tr></thead><tbody>
+<tr><td>تاریخ شمسی</td><td>تاریخ و ساعت شمسی با خط تیره، مثل <code>1405-08-30 14:35:07</code></td></tr>
+<tr><td>زمان</td><td>تاریخ و ساعت میلادی با ثانیه، مثل <code>2026-11-21 14:35:07</code></td></tr>
+<tr><td>عرض کاربر / طول کاربر</td><td>مختصات GPS ثبت‌کننده هنگام ثبت</td></tr>
+<tr><td>دقت GPS کاربر (متر)</td><td>دقت اعلام‌شده‌ی GPS</td></tr>
+<tr><td>فاصله کاربر تا عارضه (متر)</td><td>برای سنجش اینکه کاربر واقعاً نزدیک عارضه بوده است</td></tr>
+<tr><td>زمان ثبت موقعیت کاربر / نوع ثبت / وضعیت موقعیت کاربر</td><td>زمان دریافت موقعیت، «ایجاد» یا «ویرایش»، و اینکه GPS یا دستی بوده است</td></tr>
+<tr><td>ثبت‌کننده</td><td>نام یا کد کاربر از «تنظیمات»</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="offline">
+<h2><span class="ic">📡</span>آنلاین و آفلاین</h2>
+<div class="tw"><table class="t"><thead><tr><th>امکان</th><th>آنلاین</th><th>آفلاین</th></tr></thead><tbody>
+<tr><td>اجرای برنامه</td><td><span class="badge b-on">بله</span></td><td><span class="badge b-on">بله (پس از یک‌بار باز شدن روی سرور)</span></td></tr>
+<tr><td>نقشه‌ی پایه</td><td><span class="badge b-on">بله</span></td><td><span class="badge b-opt">فقط محدوده و زوم‌های ذخیره‌شده</span></td></tr>
+<tr><td>لایه‌های WMS</td><td><span class="badge b-on">بله</span></td><td><span class="badge b-opt">فقط اگر ذخیره شده باشند</span></td></tr>
+<tr><td>لایه‌های داخل گوشی، تحلیل، ویرایش، شناسایی</td><td><span class="badge b-on">بله</span></td><td><span class="badge b-on">بله</span></td></tr>
+<tr><td>مسیریابی جاده‌ای آنلاین</td><td><span class="badge b-on">بله</span></td><td><span class="badge b-off">خیر؛ مسیریابی آفلاین روی خطوط لایه‌ها</span></td></tr>
+<tr><td>GPS، برداشت مسیر، هشدار نزدیکی</td><td><span class="badge b-on">بله</span></td><td><span class="badge b-on">بله</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section id="faq">
+<h2><span class="ic">🧰</span>عیب‌یابی سریع</h2>
+<div class="tw"><table class="t"><thead><tr><th>مشکل</th><th>علت محتمل</th><th>راه‌حل</th></tr></thead><tbody>
+<tr><td>گزینه‌ی نصب یا GPS/دوربین کار نمی‌کند</td><td>آدرس HTTPS معتبر نیست</td><td>گواهی سازمانی را روی گوشی نصب کنید یا از آدرس HTTPS معتبر استفاده کنید.</td></tr>
+<tr><td>نقشه‌ی داخلی نمایش داده نمی‌شود</td><td>سرور تایل یا آدرس/TMS اشتباه</td><td>مسیر <code>/tiles/…</code> را در مرورگر آزمایش کنید؛ در نقشه گزینه‌ی TMS را بررسی کنید.</td></tr>
+<tr><td>لایه‌ی WMS خالی است</td><td>نام لایه، کلید API یا CRS</td><td>نام لایه را بررسی کنید؛ سرور باید کلید را اضافه کند؛ CRS را EPSG:4326 یا 3857 بگذارید.</td></tr>
+<tr><td>بارکد خوانده نمی‌شود</td><td>نور کم یا بارکد کوچک</td><td>بارکد را درشت‌تر و کامل در کادر بگیرید یا از «عکس» استفاده کنید؛ بار اول موتور اسکن باید بارگذاری شود.</td></tr>
+<tr><td>مسیر آفلاین پیدا نمی‌شود</td><td>خطوط به هم وصل نیستند</td><td>از «اصلاح عوارض» انتهای آویزان و تقاطع‌ها را رفع کنید.</td></tr>
+<tr><td>بیپ نمی‌آید</td><td>صدای رسانه بسته یا هشدار شروع نشده</td><td>«آزمایش صدا» را بزنید و بلندی را در تنظیمات بالا ببرید.</td></tr>
+<tr><td>حجم داده زیاد شده</td><td>عکس‌ها یا نقشه‌های آفلاین</td><td>«پاکسازی عکس‌های بی‌مصرف» و «پاک کردن نقشه‌های آفلاین».</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="admin">
+<h2><span class="ic">🖥</span>ضمیمه‌ی مدیر سیستم</h2>
+<div class="tw"><table class="t"><thead><tr><th>مسیر / فایل</th><th>نقش</th></tr></thead><tbody>
+<tr><td><code>/</code></td><td>خود برنامه (پوشه‌ی <code>public</code>)</td></tr>
+<tr><td><code>/wms</code></td><td>پروکسی WMS؛ کلید API در سرور اضافه می‌شود و به کلاینت نمی‌رسد</td></tr>
+<tr><td><code>/tiles/{z}/{x}/{y}.jpg</code></td><td>پروکسی سرور تایل داخلی</td></tr>
+<tr><td><code>/maps.json</code></td><td>فهرست نقشه‌هایی که با «همگام‌سازی» وارد برنامه می‌شود</td></tr>
+<tr><td><code>/health</code></td><td>بررسی سلامت سرور</td></tr>
+<tr><td><code>config.json</code></td><td>پورت‌ها، گواهی HTTPS، آدرس بالادستی WMS و کلید، آدرس سرور تایل</td></tr>
+</tbody></table></div>
+</section>
+
+<footer>این راهنما کاملاً مستقل (بدون نیاز به اینترنت) است و قابل چاپ است.</footer>
+</div>
+</body>
+</html>

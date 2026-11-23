@@ -6,6 +6,7 @@
 <title>WebGIS موبایل</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1f6f5c">
+<script>try{var __t=JSON.parse(localStorage.getItem("webgis_settings")||"{}").theme,__h=new Date().getHours();document.documentElement.dataset.theme=(__t==="dark"||(__t==="auto"&&(__h<6||__h>=18)))?"dark":"light"}catch(e){}</script>
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="lib/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'">
 <style>
@@ -55,9 +56,8 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 .leaflet-popup-content td:first-child{font-weight:700;color:var(--pri);white-space:nowrap}
 .leaflet-control-container .leaflet-top{top:56px}
 .me{width:16px;height:16px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 0 0 2px rgba(26,115,232,.4)}
-#rtBtn{width:36px;height:36px;border-radius:2px;border:0;background:#fff;color:var(--pri);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}.rt-ctl{background:#fff}
-.leaflet-touch #rtBtn{width:44px;height:44px}#rtBtn svg{width:26px;height:26px}
-#rtBtn.on{background:#c0392b;color:#fff}
+/* route button = same round dark button as "my location" / layers */
+#rtBtn{display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
 .seg{display:flex;gap:4px;margin:4px 0}.seg button{flex:1;padding:9px 4px;border:1px solid var(--bd);background:#fff;border-radius:8px;font:inherit;font-size:13px;color:var(--fg)}.seg button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
 .idg{border:1px solid var(--bd);border-radius:10px;margin:6px 0;background:#fff;overflow:hidden}.idg>summary{padding:9px 10px;font-weight:700;font-size:13px;cursor:pointer}
 .idrow{display:block;width:100%;text-align:right;padding:9px 10px;border:0;border-top:1px solid #e3e8e5;background:#fff;font:inherit;font-size:13px;color:var(--fg)}.idrow.sel{background:#fde3ef}.idrow small{color:#666}
@@ -81,7 +81,7 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 #pxBan{position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:560;background:#c0392b;color:#fff;border-radius:10px;padding:8px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.4);max-width:92%;display:none;text-align:center}
 .setsec{font-weight:700;color:#1f6f5c;margin:10px 0 4px;border-bottom:1px solid #e3e8e5;padding-bottom:2px}
 #sSet label{display:block;font-size:13px;margin:6px 0}#sSet input[type=text],#sSet input[type=number],#sSet select,#sSet textarea{width:100%;margin-top:3px;padding:8px;border:1px solid #cfd9d3;border-radius:8px;font:inherit}
-:root{--pri:#1a73e8;--pri2:#e8f0fe;--bd:#dadce0;--dk:#2a2d36}
+:root{--pri:#1a73e8;--pri2:#e8f0fe;--bd:#dadce0;--dk:#2a2d36;--sf:#fff;--ln:#eceff1;--mt:#666}
 /* map controls: round dark buttons (Neshan style) */
 .leaflet-control-layers{background:var(--dk)!important;border:0!important;border-radius:50%!important;box-shadow:0 2px 8px rgba(0,0,0,.45)!important}
 .leaflet-control-layers-toggle{width:46px!important;height:46px!important;background-size:24px!important;background-position:center!important;background-repeat:no-repeat!important;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3 3 8l9 5 9-5-9-5Z'/><path d='m3 12 9 5 9-5'/><path d='m3 16 9 5 9-5'/></svg>")!important}
@@ -89,8 +89,9 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 .leaflet-control-layers-expanded .leaflet-control-layers-toggle{display:none!important}
 .loc-ctl{border:0!important;background:transparent!important;box-shadow:none!important}
 .loc-ctl a{width:46px!important;height:46px!important;border-radius:50%!important;background:var(--dk)!important;color:#fff!important;border:0!important;box-shadow:0 2px 8px rgba(0,0,0,.45)}
-.loc-ctl a#rtBtn{background:#5b9bff!important;color:#0b1b33!important}
-.loc-ctl a#rtBtn.on{background:#c0392b!important;color:#fff!important}
+#rtBtn{width:46px!important;height:46px!important;border-radius:50%!important;background:var(--dk)!important;color:#fff!important;border:0!important;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+#rtBtn svg{width:26px;height:26px}#rtBtn.on{background:#1a73e8!important}
+.leaflet-touch .loc-ctl a,.leaflet-touch #rtBtn{width:46px!important;height:46px!important}
 .loc-ctl a.on{background:#1a73e8!important}
 /* top search pill */
 #tSearch{width:auto!important;min-width:140px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:20px;background:#f1f3f4;color:#5f6368;font-size:12px;border:0}
@@ -110,12 +111,13 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 .shd .back:active{background:#eceff1}
 .shd .ttl{font-size:18px;font-weight:700;color:#202124}
 .sheet.panel .shd .ttl{font-size:16px}
-/* "Others" page as a list with chevrons */
-#moreGrid{display:block!important}
-#moreGrid .tile{display:flex!important;flex-direction:row!important;align-items:center;gap:16px;width:100%;min-height:64px;border:0!important;border-bottom:1px solid #eceff1!important;background:#fff!important;padding:0 6px!important;border-radius:0!important;position:relative;text-align:right;justify-content:flex-start}
-#moreGrid .tile .ic{width:26px!important;height:26px!important;color:#1a73e8!important}
-#moreGrid .tile span{color:#202124!important;font-size:16px!important}
-#moreGrid .tile:after{content:"";position:absolute;left:10px;top:50%;width:9px;height:9px;margin-top:-5px;border-left:2px solid #9aa0a6;border-bottom:2px solid #9aa0a6;transform:rotate(45deg)}
+/* "Others" page: icon + name grid (3 rows x 4 columns) */
+#moreGrid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:10px;padding:14px 0 6px}
+#moreGrid .tile{display:flex!important;flex-direction:column!important;align-items:center;justify-content:center;gap:7px;width:100%;min-height:92px;border:1px solid var(--bd)!important;background:var(--sf)!important;border-radius:16px!important;padding:8px 4px!important;text-align:center;position:relative}
+#moreGrid .tile .ic{width:30px!important;height:30px!important;color:var(--pri)!important}
+#moreGrid .tile span{color:var(--fg)!important;font-size:12px!important;line-height:1.35;text-align:center}
+#moreGrid .tile:active{background:var(--pri2)!important}
+#moreGrid .tile.on{background:var(--pri)!important}#moreGrid .tile.on span,#moreGrid .tile.on .ic{color:#fff!important}
 /* settings rows + switches */
 #sSet label{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 2px;border-bottom:1px solid #eceff1;margin:0;font-size:15px}
 #sSet label input[type=number],#sSet label select{width:130px;margin:0}
@@ -136,11 +138,42 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 #pickDot{position:absolute;left:50%;top:50%;width:10px;height:4px;margin:-2px 0 0 -5px;border-radius:50%;background:rgba(0,0,0,.35);pointer-events:none}
 #pickMe{position:absolute;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);width:54px;height:54px;border-radius:50%;border:0;background:var(--dk);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.45)}
 #pickOk{position:absolute;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);height:58px;border-radius:29px;border:0;background:#5b9bff;color:#0b1b33;font:inherit;font-size:19px;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.35)}
+
+/* ===== v15: wider side padding in all sheets/pages, guide page, dark theme ===== */
+.sheet{padding:12px 20px}.sheet.mini{padding:8px 18px}.sheet.panel{padding:6px 20px 14px}
+.sheet.page>:not(.shd){margin-left:22px;margin-right:22px}.sheet.page .shd{padding-left:18px;padding-right:18px}
+.leaflet-popup-content{margin:12px 16px}
+#sGuide.show{display:flex!important;flex-direction:column;overflow:hidden!important;padding-bottom:0!important}
+#sGuide>.shd{flex:none}#sGuide>iframe{flex:1;width:100%;min-height:0;border:0;margin:0!important;background:var(--sf)}
+#sSet label select[data-k=theme]{width:175px}
+html[data-theme=dark]{color-scheme:dark;--bg:#14161a;--fg:#e8eaed;--pri:#5b9bff;--pri2:#2a3650;--bd:#3a3f4a;--dk:#1c1f25;--sf:#23272f;--ln:#343943;--mt:#a9b0b9}
+html[data-theme=dark] .sheet,html[data-theme=dark] .sheet.page,html[data-theme=dark] .shd{background:var(--sf)!important;color:var(--fg)}
+html[data-theme=dark] .shd .ttl{color:var(--fg)}html[data-theme=dark] .shd .back{color:var(--fg)}html[data-theme=dark] .shd .back:active{background:#343943}
+html[data-theme=dark] .sheet.page .shd{border-bottom-color:var(--ln)}html[data-theme=dark] .sheet.panel:before{background:#4a4f59}
+html[data-theme=dark] #top{background:rgba(28,31,37,.94)}
+html[data-theme=dark] #tSearch,html[data-theme=dark] .ib{background:#2d3139!important;color:#c3c8cf!important;border-color:var(--bd)}
+html[data-theme=dark] .pill.off{background:#4a2b2b;color:#ffb4ab}
+html[data-theme=dark] input:not([type=checkbox]):not([type=range]):not([type=file]),html[data-theme=dark] select,html[data-theme=dark] textarea,
+html[data-theme=dark] #sSet input:not([type=checkbox]):not([type=range]),html[data-theme=dark] #sSet select,html[data-theme=dark] #sSet textarea{background:#2d3139;color:var(--fg);border-color:var(--bd)}
+html[data-theme=dark] #sSet input[type=checkbox]{background:#555b66}html[data-theme=dark] #sSet input[type=checkbox]:checked{background:#5b9bff}
+html[data-theme=dark] .btn{color:#0b1b33}html[data-theme=dark] .btn.g{background:#2d3a55;color:#9cc2ff}html[data-theme=dark] .btn.r{background:#4a2b2b;color:#ffb4ab}
+html[data-theme=dark] .seg button{background:#2d3139;color:var(--fg)}html[data-theme=dark] .seg button.on{background:var(--pri);color:#0b1b33}
+html[data-theme=dark] .lay,html[data-theme=dark] .idg{background:var(--sf);border-color:var(--bd)}
+html[data-theme=dark] .idrow{background:var(--sf);color:var(--fg);border-top-color:var(--ln)}html[data-theme=dark] .idrow.sel{background:#4a2a3a}html[data-theme=dark] .idrow small{color:var(--mt)}
+html[data-theme=dark] #sSet label{border-bottom-color:var(--ln)}html[data-theme=dark] .setsec{color:#8ab4f8!important}
+html[data-theme=dark] .sheet [style*="color:#666"],html[data-theme=dark] .sheet [style*="color:#555"],html[data-theme=dark] .sheet [style*="color:#888"]{color:var(--mt)!important}
+html[data-theme=dark] .sheet [style*="color:#a5281b"]{color:#ff9b93!important}
+html[data-theme=dark] .sheet [style*="background:#fff"]{background:var(--sf)!important}
+html[data-theme=dark] .sheet [style*="background:#eef7f3"],html[data-theme=dark] .sheet [style*="background:#fff7ee"]{background:#2a3430!important}
+html[data-theme=dark] .leaflet-popup-content-wrapper,html[data-theme=dark] .leaflet-popup-tip{background:var(--sf);color:var(--fg)}
+html[data-theme=dark] .leaflet-popup-content td{border-bottom-color:var(--ln)}html[data-theme=dark] .leaflet-popup-close-button{color:var(--mt)}
+html[data-theme=dark] .leaflet-control-layers-expanded{background:var(--sf)!important;color:var(--fg)}
+html[data-theme=dark] .leaflet-control-scale-line{background:rgba(28,31,37,.8);color:#e8eaed;border-color:#e8eaed}
 </style>
 </head>
 <body>
 <div id="map"></div><div id="cross"></div>
-<div id="top"><button class="ib" id="tSearch" aria-label="جستجو"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>جستجو در لایه‌ها</span></button><span id="net" class="pill">آنلاین</span><span id="gps" class="pill off">GPS خاموش</span><button id="inst" class="pill" hidden>نصب برنامه</button><span id="zm" class="pill">زوم</span><span id="coord">—</span></div>
+<div id="top"><button class="ib" id="tSearch" aria-label="جستجو"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>جستجو در لایه‌ها</span></button><span id="net" class="pill">آنلاین</span><span id="gps" class="pill off">GPS خاموش</span><button id="inst" class="pill" hidden>نصب برنامه</button><span id="zm" class="pill">زوم</span></div>
 <div id="toast"></div>
 
 <div id="sLayers" class="sheet"><h3>لایه‌ها</h3>
@@ -266,6 +299,7 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 </div>
 
 <div id="sMore" class="sheet"><h3>همه‌ی منوها</h3><div id="moreGrid"></div></div>
+<div id="sGuide" class="sheet"><h3>راهنمای سامانه</h3><iframe id="guideFrame" title="راهنمای سامانه"></iframe></div>
 
 <div id="pxBan"></div>
 
@@ -287,6 +321,8 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <div style="font-size:11px;color:#666">فاصله‌ی مجاز اتصال انتهای آویزان و چسباندن نقاط در «تنظیمات» تعیین می‌شود.</div></div>
 
 <div id="sSet" class="sheet"><h3>تنظیمات</h3>
+<div class="setsec">ظاهر</div>
+<label>پوسته نمایش منوها<select data-k="theme"><option value="light">سفید (روز)</option><option value="dark">تاریک (شب)</option><option value="auto">خودکار بر اساس روز و شب</option></select></label>
 <div class="setsec">عمومی</div>
 <label>نام یا کد ثبت‌کننده (روی هر عارضه ثبت می‌شود)<input type="text" data-k="user"></label>
 <label>قالب کپی مختصات با لمس نقشه<select data-k="cp"><option value="ll">عرض, طول (استاندارد)</option><option value="xy">طول, عرض</option><option value="url">لینک Google Maps</option></select></label>
@@ -360,6 +396,7 @@ button.pill{border:0;font:inherit;font-size:12px;color:var(--pri);font-weight:70
 <button id="bFx"></button>
 <button id="bPx"></button>
 <button id="bSet"></button>
+<button id="bGd"></button>
 <button id="bMore"></button>
 <button id="bW">ثبت کار</button>
 </div>
@@ -400,7 +437,7 @@ const LocCtl=L.Control.extend({options:{position:'topright'},onAdd(){
  a.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
  L.DomEvent.disableClickPropagation(d);return d}});
 new LocCtl().addTo(map);
-const RtCtl=L.Control.extend({options:{position:'topright'},onAdd(){const d=L.DomUtil.create('div','leaflet-bar rt-ctl');d.appendChild($('rtBtn'));L.DomEvent.disableClickPropagation(d);return d}});
+const RtCtl=L.Control.extend({options:{position:'topright'},onAdd(){const d=L.DomUtil.create('div','leaflet-bar loc-ctl rt-ctl');d.appendChild($('rtBtn'));L.DomEvent.disableClickPropagation(d);return d}});
 new RtCtl().addTo(map);
 const zmU=()=>{$('zm').textContent='زوم '+(Math.round(map.getZoom()*10)/10)};map.on('zoom zoomend',zmU);zmU();
 function onOv(e,on){const L_=layers.find(l=>l.lyr===e.layer);if(L_&&L_.on!==on){L_.on=on;saveL(L_);renderList()}}
@@ -517,11 +554,11 @@ addEventListener('online',updNet);addEventListener('offline',updNet);updNet();
 function fmtPt(lat,lon){
  if($('fmt').value==='utm'){const u=UTM.fwd(lat,lon);return `E ${u.E.toFixed(0)}  N ${u.N.toFixed(0)}  (39N)`}
  return `${lat.toFixed(5)}, ${lon.toFixed(5)}`}
-function updCoord(){const c=map.getCenter();$('coord').textContent=fmtPt(c.lat,c.lng)}
+function updCoord(){const e=$('coord');if(e){const c=map.getCenter();e.textContent=fmtPt(c.lat,c.lng)}}
 map.on('move',updCoord);updCoord();
 
 /* ---------- Sheets ---------- */
-const sheets=['sLayers','sGo','sCount','sMark','sRule','sSave','sEdit','sSearch','sRoute','sBackup','sSnap','sBase','sId','sTrack','sWork','sOffline','sMore','sFix','sSet','sPrx'];
+const sheets=['sLayers','sGo','sCount','sMark','sRule','sSave','sEdit','sSearch','sRoute','sBackup','sSnap','sBase','sId','sTrack','sWork','sOffline','sMore','sFix','sSet','sPrx','sGuide'];
 function openSheet(id,from){
  const was=$(id).classList.contains('show')||(id==='sMark'&&mkMode);
  if(!was)NAVP[id]=from||NAV_PD[id]||null;
@@ -539,6 +576,7 @@ function openSheet(id,from){
  if(id==='sTrack'&&!was)tkUI();
  if(id==='sWork'&&!was)wkInit();
  if(id==='sSet'&&!was)setLoad();
+ if(id==='sGuide'&&!was)guideLoad();
  if(id==='sFix'&&!was)fxInit();
  if(id==='sPrx'&&!was){pxLayersUI();pxUI()}
  $('cross').style.display=(mkMode||ruler||ed.active||rt.active||(idm.active&&idm.phase==='draw'))?'none':''}
@@ -2381,7 +2419,7 @@ function fxNode(c,p){
  c.splice(best.i,0,[p[0],p[1]]);return true}
 
 /* ---------- Settings (user-defined options; other menus only operate) ---------- */
-const SET_DEF={user:'',cp:'ll',obs:['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'],
+const SET_DEF={theme:'light',user:'',cp:'ll',obs:['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'],
  tkAcc:30,tkStep:4,tkWake:true,fxEnd:1,fxPt:2,
  prxDist:30,prxMode:'enter',prxSound:'two',prxVol:.8,prxVib:true,prxHold:60,prxWake:true};
 const S=(()=>{let o={};try{o=JSON.parse(localStorage.getItem('webgis_settings'))||{}}catch(e){}return Object.assign({},SET_DEF,o,{obs:Array.isArray(o.obs)&&o.obs.length?o.obs:SET_DEF.obs})})();
@@ -2399,9 +2437,36 @@ document.querySelectorAll('#sSet [data-k]').forEach(el=>{
   else v=el.value.trim();
   if(k==='cp'){$('cpFmt').value=v;if($('cpFmt').onchange)$('cpFmt').onchange()}
   S[k]=v;setSave();setLoad();
+  if(k==='theme')applyTheme();
   if(k==='prxDist'&&$('pxD'))$('pxD').value=v;
   if(k==='prxSound'||k==='prxVol')pxBeep('two')}});
-$('setReset').onclick=()=>{if(!confirm('همه تنظیمات به حالت پیش‌فرض برگردد؟'))return;Object.assign(S,SET_DEF,{obs:SET_DEF.obs.slice()});setSave();setLoad();toast('تنظیمات بازنشانی شد')};
+
+/* ---------- Theme: white / dark / automatic (day = sun above horizon at the map position) ---------- */
+function sunElev(lat,lon,t){const D=Math.PI/180,d=t/86400000+2440587.5-2451545.0,g=(357.529+0.98560028*d)%360,q=(280.459+0.98564736*d)%360,
+ Lg=q+1.915*Math.sin(g*D)+0.020*Math.sin(2*g*D),e=23.439-0.00000036*d,dec=Math.asin(Math.sin(e*D)*Math.sin(Lg*D)),
+ RA=Math.atan2(Math.cos(e*D)*Math.sin(Lg*D),Math.cos(Lg*D)),gm=(280.46061837+360.98564736629*d)%360,H=(gm+lon)*D-RA;
+ return Math.asin(Math.sin(lat*D)*Math.sin(dec)+Math.cos(lat*D)*Math.cos(dec)*Math.cos(H))/D}
+function themeEff(){
+ const m=S.theme;if(m==='dark'||m==='light')return m;
+ let c={lat:35.7,lng:51.4};try{c=map.getCenter()}catch(e){}
+ return sunElev(c.lat,c.lng,Date.now())>-0.833?'light':'dark'}
+function applyTheme(){
+ const t=themeEff();document.documentElement.dataset.theme=t;
+ const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='dark'?'#1c1f25':'#1f6f5c';
+ if(typeof guideTheme==='function')guideTheme()}
+setInterval(()=>{if(S.theme==='auto')applyTheme()},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.theme==='auto')applyTheme()});
+
+/* ---------- System guide: guide.html shown inside the app (back arrow / hardware back returns) ---------- */
+const GUIDE_DARK='html[data-theme="dark"]{--bg:#14161a;--card:#1d2127;--bd:#3a3f4a;--txt:#e8eaed;--mut:#a0a7b0;--warn:#3a2f1c;--warnb:#a8742a;--note:#1b2a3d;--noteb:#3f6c9f;--err:#3b2321;--errb:#a14f48;--pri:#6fc3a9}html[data-theme="dark"] nav.toc a,html[data-theme="dark"] h2 .ic{background:#26302c;color:#8fd8bf}html[data-theme="dark"] table.t{background:#1d2127}html[data-theme="dark"] table.t tr:nth-child(even) td{background:#222831}html[data-theme="dark"] table.t td:first-child{color:#8fd8bf}html[data-theme="dark"] .steps li,html[data-theme="dark"] .tile{background:#222831}html[data-theme="dark"] code,html[data-theme="dark"] kbd{background:#2d3139;color:#e8eaed}html[data-theme="dark"] .b-on{background:#1d3a2c;color:#8fe0b4}html[data-theme="dark"] .b-off{background:#4a2b2b;color:#ffb4ab}html[data-theme="dark"] .b-opt{background:#3a2f1c;color:#f0c27a}';
+function guideTheme(){
+ const fr=$('guideFrame');if(!fr)return;
+ try{const d=fr.contentDocument;if(!d||!d.documentElement||!d.head)return;
+  if(!d.getElementById('gdDark')){const st=d.createElement('style');st.id='gdDark';st.textContent=GUIDE_DARK;d.head.appendChild(st)}
+  d.documentElement.dataset.theme=document.documentElement.dataset.theme||'light'}catch(e){}}
+function guideLoad(){const fr=$('guideFrame');if(!fr.getAttribute('src')){fr.onload=guideTheme;fr.src='guide.html'}else guideTheme()}
+applyTheme();
+$('setReset').onclick=()=>{if(!confirm('همه تنظیمات به حالت پیش‌فرض برگردد؟'))return;Object.assign(S,SET_DEF,{obs:SET_DEF.obs.slice()});setSave();setLoad();applyTheme();toast('تنظیمات بازنشانی شد')};
 
 /* ---------- Proximity alert: beep when the user gets within a chosen distance of a feature ---------- */
 const PX={on:false,watch:null,fix:null,near:null,timer:null,wl:null,ac:null,hold:new Map(),sel:new Set(),bb:new WeakMap()};
@@ -2603,18 +2668,19 @@ const UI_IC={
  bS:'<path d="M5 3h11l3 3v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',
  bB:'<ellipse cx="12" cy="5.5" rx="8" ry="2.8"/><path d="M4 5.5v6c0 1.5 3.6 2.8 8 2.8s8-1.3 8-2.8v-6"/><path d="M4 11.5v6c0 1.5 3.6 2.8 8 2.8s8-1.3 8-2.8v-6"/>',
  bPx:'<path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15L6 17Z"/><path d="M10 21h4"/><path d="M3 8a10 10 0 0 1 2-3M21 8a10 10 0 0 0-2-3"/>',
- bSet:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'};
-const UI_LB={bL:'لایه‌ها',bMk:'نشانگر',bI:'شناسایی',bT:'برداشت مسیر',bMore:'سایر',bF:'باز کردن فایل',bG:'مختصات',bR:'خط‌کش',bE:'ویرایش',bFx:'اصلاح عوارض',bS:'ذخیره',bB:'پشتیبان',bPx:'هشدار نزدیکی',bSet:'تنظیمات'};
+ bGd:'<path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2V5Z"/><path d="M4 20a2 2 0 0 1 2-2h13v3H6a2 2 0 0 1-2-1Z"/><path d="M9 8h6M9 11.5h4"/>',
+  bSet:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'};
+const UI_LB={bL:'لایه‌ها',bMk:'نشانگر',bI:'شناسایی',bT:'برداشت مسیر',bMore:'سایر',bF:'باز کردن فایل',bG:'مختصات',bR:'خط‌کش',bE:'ویرایش',bFx:'اصلاح عوارض',bS:'ذخیره',bB:'پشتیبان',bPx:'هشدار نزدیکی',bSet:'تنظیمات',bGd:'راهنمای سامانه'};
 function uiBuild(){
  const grid=$('moreGrid'),bar=$('bar');
  Object.keys(UI_LB).forEach(id=>{
   const b=$(id);if(!b)return;
   b.innerHTML=`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${UI_IC[id]}</svg><span>${UI_LB[id]}</span>`});
- ['bF','bG','bR','bE','bFx','bS','bB','bPx','bSet'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
+ ['bF','bG','bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
  ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
  bar.appendChild($('bMore'))}
 $('bMore').onclick=()=>openSheet('sMore');
-$('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');
+$('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');$('bGd').onclick=()=>openSheet('sGuide');
 uiBuild();
 
 /* ---------- Photo store: photos live in their own IndexedDB store; features keep only a link ("photo:<id>") ---------- */
@@ -2943,8 +3009,8 @@ addEventListener('popstate',()=>{
  if(hs.ign>0){hs.ign--;return}
  const n=hs.stk.pop();
  if(n==='pv')pvHide();else if(n==='pk')pickEnd(false);else if(n==='nav')navBack()});
-const NAVP={},NAV_PD={sBase:'sLayers',sOffline:'sLayers',sFix:'sMore',sSet:'sMore',sBackup:'sMore',sSave:'sMore',sGo:'sMore',sEdit:'sMore',sRule:'sMore',sPrx:'sMore',sSnap:'sEdit'};
-const PAGES=['sMore','sSet','sLayers','sBackup','sSave','sBase','sOffline','sGo','sFix','sSnap','sSearch','sWork'];
+const NAVP={},NAV_PD={sBase:'sLayers',sOffline:'sLayers',sFix:'sMore',sSet:'sMore',sBackup:'sMore',sSave:'sMore',sGo:'sMore',sEdit:'sMore',sRule:'sMore',sPrx:'sMore',sGuide:'sMore',sSnap:'sEdit'};
+const PAGES=['sMore','sGuide','sSet','sLayers','sBackup','sSave','sBase','sOffline','sGo','sFix','sSnap','sSearch','sWork'];
 const SH_TITLE={sRule:'خط‌کش',sEdit:'ویرایش عوارض',sMore:'سایر'};
 const ARROW='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg>';
 const anySheet=()=>sheets.some(s=>$(s).classList.contains('show'));
