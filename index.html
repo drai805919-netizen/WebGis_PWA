@@ -172,6 +172,19 @@ html[data-theme=dark] .leaflet-popup-content-wrapper,html[data-theme=dark] .leaf
 html[data-theme=dark] .leaflet-popup-content td{border-bottom-color:var(--ln)}html[data-theme=dark] .leaflet-popup-close-button{color:var(--mt)}
 html[data-theme=dark] .leaflet-control-layers-expanded{background:var(--sf)!important;color:var(--fg)}
 html[data-theme=dark] .leaflet-control-scale-line{background:rgba(28,31,37,.8);color:#e8eaed;border-color:#e8eaed}
+
+/* ===== v17: drag handle on every sheet (pull down = peek strip, tap / pull up / menu button = reopen) ===== */
+.sheet.panel:before{display:none!important}
+.gh{position:absolute;top:0;left:0;right:0;height:26px;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab;z-index:5;-webkit-tap-highlight-color:transparent}
+.gh i{display:block;width:46px;height:5px;border-radius:3px;background:#c9ced4}
+.sheet.panel .shd{padding-top:22px}
+.sheet.page .shd{padding-top:calc(env(safe-area-inset-top,0px) + 22px)}
+.sheet.peek{position:fixed!important;left:0!important;right:0!important;top:auto!important;bottom:calc(env(safe-area-inset-bottom,0px) + 66px)!important;height:30px!important;min-height:0!important;max-height:30px!important;overflow:hidden!important;padding:0!important;border-radius:18px 18px 0 0!important;z-index:700;transform:none!important;display:block!important}
+.sheet.peek>:not(.shd){display:none!important}
+.sheet.peek .shd{display:block!important;height:30px;padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important;position:static}
+.sheet.peek .shd>:not(.gh){display:none!important}
+.sheet.peek .gh{height:30px;cursor:pointer}
+html[data-theme=dark] .gh i{background:#5a606b}
 </style>
 </head>
 <body>
@@ -185,14 +198,7 @@ html[data-theme=dark] .leaflet-control-scale-line{background:rgba(28,31,37,.8);c
 <div class="row"><button class="btn g" id="bsSync" style="font-size:12px">همگام‌سازی نقشه‌ها از سرور (maps.json)</button><button class="btn g" id="bsOff" style="font-size:12px">ذخیره نقشه برای آفلاین</button></div>
 <div style="font-weight:700;margin:8px 0 4px">لایه‌های داده</div><div id="layList"></div><div style="font-size:12px;color:#666">نقشه پایه و روشن/خاموش کردن لایه‌ها از دکمه لایه‌ها (گوشه بالا) هم در دسترس است.</div></div>
 
-<div id="sGo" class="sheet"><h3>مختصات و ناوبری</h3>
-<div class="row"><select id="fmt"><option value="ll">طول/عرض (درجه)</option><option value="utm">UTM زون 39N (گیلان)</option></select></div>
-<div class="row" id="inLL"><input type="number" id="iLat" step="any" placeholder="عرض مثلاً 37.28"><input type="number" id="iLon" step="any" placeholder="طول مثلاً 49.58"></div>
-<div class="row" id="inUTM" style="display:none"><input type="number" id="iE" placeholder="Easting"><input type="number" id="iN" placeholder="Northing"></div>
-<div class="row"><button class="btn" id="goBtn">رفتن به نقطه</button><button class="btn g" id="clrBtn">حذف نشانگر</button></div>
-<div class="row"><select id="cpFmt" style="direction:rtl"><option value="ll">کپی با لمس نقشه: عرض, طول (استاندارد)</option><option value="xy">کپی با لمس نقشه: طول, عرض</option><option value="url">کپی با لمس نقشه: لینک Google Maps</option></select></div>
-<div style="font-size:11px;color:#666">با ضربه روی هر نقطه از نقشه، مختصات آن خودکار کپی می‌شود؛ مستقیم در پیام‌رسان Paste کنید.</div>
-<div id="navInfo" style="font-size:13px"></div></div>
+
 
 <div id="sCount" class="sheet"><h3>شمارش نقاط در چندضلعی</h3>
 <div style="font-size:13px">روی نقشه ضربه بزنید تا رأس‌ها اضافه شوند (حداقل ۳ رأس)، سپس «پایان» را بزنید.</div>
@@ -239,12 +245,22 @@ html[data-theme=dark] .leaflet-control-scale-line{background:rgba(28,31,37,.8);c
 <div style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 16px);left:0;right:0;text-align:center;color:#fff;font-size:15px">QR یا بارکد خطی (EAN / Code128 / Code39 ...) را داخل کادر بگیرید</div><div id="scanSt"></div>
 <div style="position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);left:0;right:0;display:flex;gap:10px;justify-content:center"><label class="btn g">از عکس<input type="file" id="scanF" accept="image/*" hidden></label><button class="btn r" id="scanX">بستن</button></div></div>
 
-<div id="sSearch" class="sheet"><h3>جستجو در لایه‌های فعال</h3>
+<div id="sSearch" class="sheet"><h3>جستجو و مختصات</h3>
+<div class="seg" id="srTabs"><button data-p="sr" class="on">جستجو در لایه‌ها</button><button data-p="go">مختصات و ناوبری</button></div>
+<div id="srPane">
 <div class="row"><select id="sLay" style="direction:rtl"></select></div>
 <div class="row"><select id="sCol" style="direction:rtl"></select><select id="sMode" style="direction:rtl"><option value="c">شامل (Contains)</option><option value="e">دقیقاً برابر</option><option value="s">شروع با</option></select></div>
 <div class="row"><input type="text" id="sQ" placeholder="متن یا شماره..." style="direction:rtl"><button class="btn" id="sDo">جستجو</button><button class="btn g" id="sScanBtn">اسکن</button><button class="btn r" id="sClr">پاک کردن</button></div>
 <div id="sScanned" style="display:none"></div>
 <div id="sInfo" style="font-size:12px;color:#666;margin-bottom:4px"></div><div id="sRes"></div></div>
+<div id="goPane" style="display:none">
+<div class="row"><select id="fmt"><option value="ll">طول/عرض (درجه)</option><option value="utm">UTM زون 39N (گیلان)</option></select></div>
+<div class="row" id="inLL"><input type="number" id="iLat" step="any" placeholder="عرض مثلاً 37.28"><input type="number" id="iLon" step="any" placeholder="طول مثلاً 49.58"></div>
+<div class="row" id="inUTM" style="display:none"><input type="number" id="iE" placeholder="Easting"><input type="number" id="iN" placeholder="Northing"></div>
+<div class="row"><button class="btn" id="goBtn">رفتن به نقطه</button><button class="btn g" id="clrBtn">حذف نشانگر</button></div>
+<div id="navInfo" style="font-size:13px"></div>
+<select id="cpFmt" style="display:none"><option value="ll">ll</option><option value="xy">xy</option><option value="url">url</option><option value="none">none</option></select>
+</div></div>
 
 <div id="sOffline" class="sheet"><h3>ذخیره نقشه برای آفلاین</h3>
 <div style="font-size:12px;color:#555;margin-bottom:4px">ابتدا نقشه را روی منطقه‌ی موردنظر ببرید؛ محدوده = همین نمایش فعلی. نقشه‌هایی که الان روشن هستند ذخیره می‌شوند.</div>
@@ -328,7 +344,7 @@ html[data-theme=dark] .leaflet-control-scale-line{background:rgba(28,31,37,.8);c
 <label>پوسته نمایش منوها<select data-k="theme"><option value="light">سفید (روز)</option><option value="dark">تاریک (شب)</option><option value="auto">خودکار بر اساس روز و شب</option></select></label>
 <div class="setsec">عمومی</div>
 <label>نام یا کد ثبت‌کننده (روی هر عارضه ثبت می‌شود)<input type="text" data-k="user"></label>
-<label>قالب کپی مختصات با لمس نقشه<select data-k="cp"><option value="ll">عرض, طول (استاندارد)</option><option value="xy">طول, عرض</option><option value="url">لینک Google Maps</option></select></label>
+<label>ضربه روی نقشه (نمایش و کپی مختصات)<select data-k="cp"><option value="ll">کپی: عرض, طول (استاندارد)</option><option value="xy">کپی: طول, عرض</option><option value="url">کپی: لینک Google Maps</option><option value="none">بدون عملیات (ضربه کاری انجام ندهد)</option></select></label>
 <div class="setsec">برداشت مسیر</div>
 <label>حداکثر خطای GPS برای ثبت نقطه (متر)<input type="number" data-k="tkAcc" min="5" max="200" step="1"></label>
 <label>حداقل فاصله بین نقاط ثبت‌شده (متر)<input type="number" data-k="tkStep" min="1" max="50" step="1"></label>
@@ -387,8 +403,6 @@ html[data-theme=dark] .leaflet-control-scale-line{background:rgba(28,31,37,.8);c
 
 <div id="bar">
 <button id="bL">لایه‌ها</button>
-<button id="bF">باز کردن فایل</button>
-<button id="bG">مختصات</button>
 <button id="bC">شمارش</button>
 <button id="bI">شناسایی</button>
 <button id="bMk">نشانگر</button>
@@ -404,7 +418,7 @@ html[data-theme=dark] .leaflet-control-scale-line{background:rgba(28,31,37,.8);c
 <button id="bMore"></button>
 <button id="bW">ثبت کار</button>
 </div>
-<input type="file" id="file" accept=".geojson,.json,.kml,.kmz,.gpx,.gpkg,application/geopackage+sqlite3,application/octet-stream" multiple hidden>
+<input type="file" id="file" accept=".geojson,.json,.kml,.kmz,.gpx,.gpkg,.csv,.tsv,.txt,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/geopackage+sqlite3,application/octet-stream" multiple hidden>
 
 <script src="lib/leaflet.min.js"></script>
 <script>window.L||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"><\/script>')</script>
@@ -436,6 +450,11 @@ const UTM={Z:39,a:6378137,f:1/298.257223563,k0:.9996,
 const map=L.map('map',{zoomControl:true}).setView([37.28,49.58],9);
 L.control.scale({imperial:false}).addTo(map);
 const ctl=L.control.layers({},{},{collapsed:true,position:'topright'}).addTo(map);
+const FileCtl=L.Control.extend({options:{position:'topright'},onAdd(){
+ const d=L.DomUtil.create('div','leaflet-bar loc-ctl file-ctl'),a=L.DomUtil.create('a','',d);a.id='bFile';a.href='#';a.title='باز کردن فایل';a.setAttribute('role','button');a.setAttribute('aria-label','باز کردن فایل');
+ a.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M12 16v-5M9.5 13.5 12 11l2.5 2.5"/></svg>';
+ L.DomEvent.disableClickPropagation(d);L.DomEvent.on(a,'click',e=>{L.DomEvent.stop(e);$('file').click()});return d}});
+new FileCtl().addTo(map);
 const LocCtl=L.Control.extend({options:{position:'topright'},onAdd(){
  const d=L.DomUtil.create('div','leaflet-bar loc-ctl'),a=L.DomUtil.create('a','',d);a.id='bM';a.href='#';a.title='موقعیت من';a.setAttribute('role','button');a.setAttribute('aria-label','موقعیت من');
  a.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
@@ -562,8 +581,9 @@ function updCoord(){const e=$('coord');if(e){const c=map.getCenter();e.textConte
 map.on('move',updCoord);updCoord();
 
 /* ---------- Sheets ---------- */
-const sheets=['sLayers','sGo','sCount','sMark','sRule','sSave','sEdit','sSearch','sRoute','sBackup','sSnap','sBase','sId','sTrack','sWork','sOffline','sMore','sFix','sSet','sPrx','sGuide'];
+const sheets=['sLayers','sCount','sMark','sRule','sSave','sEdit','sSearch','sRoute','sBackup','sSnap','sBase','sId','sTrack','sWork','sOffline','sMore','sFix','sSet','sPrx','sGuide'];
 function openSheet(id,from){
+ if($(id).classList.contains('peek')&&$(id).classList.contains('show')){sheetPeek(id,false);return}
  const was=$(id).classList.contains('show')||(id==='sMark'&&mkMode);
  if(!was)NAVP[id]=from||NAV_PD[id]||null;
  sheets.forEach(s=>$(s).classList.remove('show'));
@@ -585,16 +605,16 @@ function openSheet(id,from){
  if(id==='sPrx'&&!was){pxLayersUI();pxUI()}
  $('cross').style.display=(mkMode||ruler||ed.active||rt.active||(idm.active&&idm.phase==='draw'))?'none':''}
 $('bL').onclick=()=>openSheet('sLayers');
-$('bG').onclick=()=>openSheet('sGo');
 $('bC').onclick=()=>openSheet('sCount');
 $('bMk').onclick=()=>openSheet('sMark');
 $('bR').onclick=()=>openSheet('sRule');
 $('bS').onclick=()=>openSheet('sSave');
 $('bE').onclick=()=>openSheet('sEdit');
 $('bB').onclick=()=>openSheet('sBackup');
-$('tSearch').onclick=()=>openSheet('sSearch');
+$('tSearch').onclick=()=>{srTab('sr');openSheet('sSearch')};
+function srTab(p){$('srPane').style.display=p==='sr'?'':'none';$('goPane').style.display=p==='go'?'':'none';document.querySelectorAll('#srTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p))}
+$('srTabs').onclick=e=>{const b=e.target.closest('button');if(b)srTab(b.dataset.p)};
 $('sScanBtn').onclick=()=>startScan();
-$('bF').onclick=()=>$('file').click();
 
 /* ---------- GPS ---------- */
 let meM=null,meC=null,watchId=null,myPos=null,first=true,myFix=null;
@@ -1049,6 +1069,113 @@ function gpkgWrite(items){
 const layers=[],colors=['#1f6f5c','#d35400','#2e5aac','#8e44ad','#c0392b','#16a085'];let lid=0;
 const MAX=25*1024*1024;
 $('file').onchange=async e=>{for(const f of e.target.files)await loadFile(f);e.target.value=''};
+/* ---------- Tables: CSV / Excel (.xlsx) with coordinates (lon/lat or UTM zone 39N) -> point layer ---------- */
+function csvParse(text){
+ text=String(text).replace(/^\ufeff/,'');
+ const first=text.split(/\r?\n/,1)[0]||'';
+ let d=',',best=-1;
+ [',',';','\t','|'].forEach(c=>{const n=first.split(c).length-1;if(n>best){best=n;d=c}});
+ const rows=[];let row=[],cur='',q=false;
+ for(let i=0;i<text.length;i++){
+  const ch=text[i];
+  if(q){if(ch==='"'){if(text[i+1]==='"'){cur+='"';i++}else q=false}else cur+=ch}
+  else if(ch==='"'&&cur==='')q=true;
+  else if(ch===d){row.push(cur);cur=''}
+  else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cur);cur='';rows.push(row);row=[]}
+  else cur+=ch}
+ if(cur!==''||row.length){row.push(cur);rows.push(row)}
+ return rows.filter(r=>r.some(c=>String(c).trim()!==''))}
+async function readText(f){
+ const buf=await f.arrayBuffer();
+ try{return new TextDecoder('utf-8',{fatal:true}).decode(buf)}
+ catch(e){try{return new TextDecoder('windows-1256').decode(buf)}catch(e2){return new TextDecoder().decode(buf)}}}
+const xmlDec=s=>String(s).replace(/&#x([0-9a-f]+);/gi,(m,h)=>String.fromCodePoint(parseInt(h,16))).replace(/&#(\d+);/g,(m,n)=>String.fromCodePoint(+n)).replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
+const xmlTs=s=>{const o=[];String(s).replace(/<t\b[^>]*>([\s\S]*?)<\/t>/g,(m,t)=>{o.push(xmlDec(t));return m});return o.join('')};
+const xmlAttr=(tag,n)=>{const m=tag.match(new RegExp('(?:^|[\\s<])'+n+'="([^"]*)"'));return m?xmlDec(m[1]):''};
+function colIdx(ref){const m=/^([A-Z]+)/i.exec(ref);if(!m)return -1;let n=0;for(const ch of m[1].toUpperCase())n=n*26+ch.charCodeAt(0)-64;return n-1}
+/* files: {path: xmlString} -> [{name,rows}] */
+function xlsxParse(files){
+ const shared=[];const ss=files['xl/sharedStrings.xml'];
+ if(ss)ss.replace(/<si\b[^>]*>([\s\S]*?)<\/si>/g,(m,b)=>{shared.push(xmlTs(b));return m});
+ const wb=files['xl/workbook.xml']||'',rels=files['xl/_rels/workbook.xml.rels']||'',map={};
+ rels.replace(/<Relationship\b[^>]*>/g,t=>{map[xmlAttr(t,'Id')]=xmlAttr(t,'Target');return t});
+ const out=[];
+ wb.replace(/<sheet\b[^>]*>/g,t=>{
+  const name=xmlAttr(t,'name'),rid=xmlAttr(t,'r:id');let tg=map[rid]||'';if(!tg)return t;
+  tg=tg.replace(/^\/+/,'');const path=tg.startsWith('xl/')?tg:'xl/'+tg,xml=files[path];if(!xml)return t;
+  const rows=[];
+  xml.replace(/<row\b[^>]*>([\s\S]*?)<\/row>/g,(m,rb)=>{
+   const r=[];
+   rb.replace(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g,(mm,at,body)=>{
+    const ci=colIdx(xmlAttr(at,'r'));if(ci<0||ci>500)return mm;
+    const ty=xmlAttr(at,'t');let v='';
+    if(body){
+     if(ty==='inlineStr')v=xmlTs(body);
+     else{const mv=body.match(/<v>([\s\S]*?)<\/v>/);if(mv){const raw=xmlDec(mv[1]);v=ty==='s'?(shared[+raw]??''):ty==='e'?'':raw}}}
+    while(r.length<ci)r.push('');r[ci]=v;return mm});
+   rows.push(r);return m});
+  out.push({name,rows:rows.filter(r=>r.some(c=>String(c).trim()!==''))});return t});
+ return out}
+const DIG='۰۱۲۳۴۵۶۷۸۹',DIGA='٠١٢٣٤٥٦٧٨٩';
+function tabNum(v){
+ if(typeof v==='number')return v;
+ let s=String(v==null?'':v).trim();if(!s)return NaN;
+ s=s.replace(/[۰-۹]/g,d=>DIG.indexOf(d)).replace(/[٠-٩]/g,d=>DIGA.indexOf(d)).replace(/٫/g,'.').replace(/[٬\s]/g,'');
+ if(/^-?\d+,\d+$/.test(s))s=s.replace(',','.');else s=s.replace(/,/g,'');
+ return /^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(s)?Number(s):NaN}
+const hNorm=h=>String(h==null?'':h).toLowerCase().replace(/[\s_\-\.\(\)\[\]:]/g,'');
+const H_LON=['lon','long','lng','longitude','lon_dd','طول','طولجغرافیایی'].map(hNorm),H_LAT=['lat','latitude','lat_dd','عرض','عرضجغرافیایی'].map(hNorm);
+const H_E=['e','east','easting','utme','utmx','xutm','x','xcoord','xcoordinate','eastingm'].map(hNorm),H_N=['n','north','northing','utmn','utmy','yutm','y','ycoord','ycoordinate','northingm'].map(hNorm);
+/* rows[0] = header. returns {geo,info}. utm: converter {inv(E,N)->{lon,lat}} (zone 39N) */
+function tableToGeo(rows,utm){
+ if(!rows||rows.length<2)throw new Error('جدول داده‌ای ندارد');
+ if(rows.length>200001)throw new Error('تعداد ردیف‌ها بیش از ۲۰۰ هزار است');
+ let hdr=rows[0].map(h=>String(h==null?'':h).trim());
+ const nh=hdr.map(hNorm),find=l=>nh.findIndex(h=>l.includes(h)&&h);
+ let ix=find(H_LON),iy=find(H_LAT),mode='ll',swapN=false;
+ if(ix<0||iy<0){
+  const ie=find(H_E),inn=find(H_N);
+  if(ie<0||inn<0)throw new Error('ستون مختصات پیدا نشد. نام ستون‌ها باید مثل lon و lat (یا طول و عرض) یا X و Y / Easting و Northing (UTM زون 39N) باشد. ستون‌ها: '+hdr.slice(0,12).join('، '));
+  ix=ie;iy=inn;mode=null}
+ const data=rows.slice(1),vals=data.map(r=>[tabNum(r[ix]),tabNum(r[iy])]);
+ const ok=vals.filter(v=>isFinite(v[0])&&isFinite(v[1]));
+ if(!ok.length)throw new Error('هیچ ردیفی مختصات عددی معتبر ندارد');
+ const inLL=ok.every(v=>Math.abs(v[0])<=180&&Math.abs(v[1])<=90),
+  inUTM=ok.every(v=>v[0]>=100000&&v[0]<=900000&&v[1]>=0&&v[1]<=1e7);
+ if(mode===null){mode=inLL?'ll':inUTM?'utm':null;
+  if(!mode)throw new Error('مقادیر ستون‌های X و Y نه درجه (طول/عرض) است و نه UTM معتبر (X بین ۱۰۰ تا ۹۰۰ هزار، Y تا ۱۰ میلیون)')}
+ else if(!inLL){
+  if(inUTM)mode='utm';
+  else{const sw=ok.every(v=>Math.abs(v[1])<=180&&Math.abs(v[0])<=90);
+   if(sw){swapN=true}else throw new Error('مقادیر طول/عرض خارج از محدوده معتبر است')}}
+ const seen=new Set();hdr=hdr.map((h,i)=>{let n=h||('ستون'+(i+1)),b=n,k=2;while(seen.has(n))n=b+'_'+(k++);seen.add(n);return n});
+ const feats=[];let skipped=0,outZone=0;
+ data.forEach((r,ri)=>{
+  let x=tabNum(r[ix]),y=tabNum(r[iy]);
+  if(!isFinite(x)||!isFinite(y)){skipped++;return}
+  let lon,lat;
+  if(mode==='utm'){const c=utm.inv(x,y);lon=c.lon;lat=c.lat;if(lon<42||lon>60)outZone++}
+  else if(swapN){lon=y;lat=x}else{lon=x;lat=y}
+  if(!(Math.abs(lon)<=180&&Math.abs(lat)<=90)){skipped++;return}
+  const p={};
+  hdr.forEach((h,i)=>{let v=r[i];if(v===undefined||v===null)v='';if(typeof v==='string'){v=v.trim();if(/^-?(0|[1-9]\d{0,14})(\.\d+)?$/.test(v))v=Number(v)}p[h]=v});
+  feats.push({type:'Feature',properties:p,geometry:{type:'Point',coordinates:[+lon.toFixed(7),+lat.toFixed(7)]}})});
+ if(!feats.length)throw new Error('هیچ ردیف معتبری برای نمایش پیدا نشد');
+ let info=`${feats.length} نقطه (${mode==='utm'?'UTM زون 39N ← WGS84':'طول/عرض'})`;
+ if(swapN)info+=' | ترتیب طول و عرض جابه‌جا تشخیص داده شد و اصلاح شد';
+ if(skipped)info+=` | ${skipped} ردیف بدون مختصات معتبر حذف شد`;
+ if(outZone)info+=` | هشدار: ${outZone} نقطه خارج از محدوده زون ۳۹ است (شاید زون دیگری باشد)`;
+ return{geo:{type:'FeatureCollection',features:feats},info}}
+function tabAdd(rows,name){const r=tableToGeo(rows,UTM);checkCoords(r.geo);addLayer(name,r.geo);toast(name+': '+r.info,6000)}
+async function xlsxLoad(f){
+ const z=await JSZip.loadAsync(await f.arrayBuffer()),files={};
+ for(const n of Object.keys(z.files)){if(z.files[n].dir)continue;if(/^xl\/(workbook\.xml|sharedStrings\.xml|_rels\/workbook\.xml\.rels|worksheets\/[^\/]+\.xml)$/.test(n))files[n]=await z.files[n].async('string')}
+ const sheets=xlsxParse(files).filter(s=>s.rows.length>1);
+ if(!sheets.length)throw new Error('برگه‌ای با داده در فایل Excel پیدا نشد');
+ let n=0,lastErr=null;
+ for(const sh of sheets){try{tabAdd(sh.rows,f.name+(sheets.length>1?' – '+sh.name:''));n++}catch(e){lastErr=e}}
+ if(!n)throw lastErr||new Error('ستون مختصات در هیچ برگه‌ای پیدا نشد')}
+
 async function loadFile(f){
  try{
   const ext=f.name.split('.').pop().toLowerCase(),lim=ext==='gpkg'?150*1024*1024:MAX;
@@ -1069,6 +1196,9 @@ async function loadFile(f){
   else if(ext==='kml')geo=kml2geo(await f.text());
   else if(ext==='gpx')geo=gpx2geo(await f.text());
   else if(ext==='geojson'||ext==='json')geo=normGeo(JSON.parse(await f.text()));
+  else if(ext==='csv'||ext==='tsv'||ext==='txt'){tabAdd(csvParse(await readText(f)),f.name);return}
+  else if(ext==='xlsx'){toast('در حال خواندن Excel ...',2500);await xlsxLoad(f);return}
+  else if(ext==='xls')throw new Error('فرمت قدیمی .xls پشتیبانی نمی‌شود؛ فایل را در Excel به‌صورت .xlsx یا CSV ذخیره کنید');
   else throw new Error('فرمت پشتیبانی نمی‌شود: '+ext);
   geo=normGeo(geo);checkCoords(geo);addLayer(f.name,geo);
  }catch(err){toast(f.name+': '+err.message,6000)}}
@@ -2067,6 +2197,7 @@ let clickMk=null;
 map.on('click',async e=>{
  const idle=!(mkMode||ruler||drawing||ed.active||rt.active||document.querySelector('.sheet.show')||PK.active);
  if(!idle)return;
+ if($('cpFmt').value==='none')return;
  const t=cpText(e.latlng.lat,e.latlng.lng),ok=await copyText(t);
  {
   toast(ok?'📋 کپی شد: '+t:'کپی خودکار ممکن نشد: '+t,3500);
@@ -2471,7 +2602,7 @@ function guideTheme(){
   d.documentElement.dataset.theme=document.documentElement.dataset.theme||'light'}catch(e){}}
 function guideLoad(){const fr=$('guideFrame');if(!fr.getAttribute('src')){fr.onload=guideTheme;fr.src='guide.html'}else guideTheme()}
 applyTheme();
-$('setReset').onclick=()=>{if(!confirm('همه تنظیمات به حالت پیش‌فرض برگردد؟'))return;Object.assign(S,SET_DEF,{obs:SET_DEF.obs.slice()});setSave();setLoad();applyTheme();toast('تنظیمات بازنشانی شد')};
+$('setReset').onclick=()=>{if(!confirm('همه تنظیمات به حالت پیش‌فرض برگردد؟'))return;Object.assign(S,SET_DEF,{obs:SET_DEF.obs.slice()});setSave();setLoad();applyTheme();$('cpFmt').value=S.cp;lsSet('webgis_cp',S.cp);toast('تنظیمات بازنشانی شد')};
 
 /* ---------- Proximity alert: beep when the user gets within a chosen distance of a feature ---------- */
 const PX={on:false,watch:null,fix:null,near:null,timer:null,wl:null,ac:null,hold:new Map(),sel:new Set(),bb:new WeakMap()};
@@ -2681,7 +2812,7 @@ function uiBuild(){
  Object.keys(UI_LB).forEach(id=>{
   const b=$(id);if(!b)return;
   b.innerHTML=`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${UI_IC[id]}</svg><span>${UI_LB[id]}</span>`});
- ['bF','bG','bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
+ ['bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
  ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
  bar.appendChild($('bMore'))}
 $('bMore').onclick=()=>openSheet('sMore');
@@ -3014,8 +3145,8 @@ addEventListener('popstate',()=>{
  if(hs.ign>0){hs.ign--;return}
  const n=hs.stk.pop();
  if(n==='pv')pvHide();else if(n==='pk')pickEnd(false);else if(n==='idpk')idPkEnd(false);else if(n==='nav')navBack()});
-const NAVP={},NAV_PD={sBase:'sLayers',sOffline:'sLayers',sFix:'sMore',sSet:'sMore',sBackup:'sMore',sSave:'sMore',sGo:'sMore',sEdit:'sMore',sRule:'sMore',sPrx:'sMore',sGuide:'sMore',sSnap:'sEdit'};
-const PAGES=['sGuide','sSet','sLayers','sBackup','sSave','sBase','sOffline','sGo','sFix','sSnap','sSearch','sWork'];
+const NAVP={},NAV_PD={sBase:'sLayers',sOffline:'sLayers',sFix:'sMore',sSet:'sMore',sBackup:'sMore',sSave:'sMore',sEdit:'sMore',sRule:'sMore',sPrx:'sMore',sGuide:'sMore',sSnap:'sEdit'};
+const PAGES=['sGuide','sSet','sLayers','sBackup','sSave','sBase','sOffline','sFix','sSnap','sSearch','sWork'];
 const SH_TITLE={sRule:'خط‌کش',sEdit:'ویرایش عوارض',sMore:'سایر'};
 const ARROW='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg>';
 const anySheet=()=>sheets.some(s=>$(s).classList.contains('show'));
@@ -3040,6 +3171,26 @@ sheets.forEach(id=>{
  if(h3)h3.remove();
  el.insertBefore(hd,el.firstChild)});
 {const mo=new MutationObserver(navSync);sheets.forEach(s=>mo.observe($(s),{attributes:true,attributeFilter:['class']}))}
+
+/* ---------- Drag handle on every sheet: pull down -> only a thin strip stays (map fully visible); tap / pull up / its menu button -> back ---------- */
+function sheetPeek(id,on){const el=$(id);el.classList.toggle('peek',on);el.style.transform='';el.style.transition=''}
+sheets.forEach(id=>{
+ const el=$(id),hd=el.querySelector(':scope>.shd'),gh=document.createElement('div');
+ gh.className='gh';gh.innerHTML='<i></i>';gh.setAttribute('role','button');gh.setAttribute('aria-label','کشیدن برای مخفی یا نمایش کادر');
+ hd.insertBefore(gh,hd.firstChild);
+ let y0=null,dy=0,moved=false;
+ gh.addEventListener('pointerdown',e=>{y0=e.clientY;dy=0;moved=false;try{gh.setPointerCapture(e.pointerId)}catch(_){}el.style.transition='none'});
+ gh.addEventListener('pointermove',e=>{
+  if(y0===null)return;dy=e.clientY-y0;if(Math.abs(dy)>6)moved=true;
+  if(!el.classList.contains('peek')&&dy>0)el.style.transform='translateY('+dy+'px)'});
+ const end=()=>{
+  if(y0===null)return;y0=null;
+  if(el.classList.contains('peek')){if(!moved||dy<-30)sheetPeek(id,false);return}
+  if(dy>70)sheetPeek(id,true);
+  else{el.style.transition='transform .18s';el.style.transform=''}};
+ gh.addEventListener('pointerup',end);gh.addEventListener('pointercancel',end)});
+{const mo2=new MutationObserver(ms=>ms.forEach(m=>{const el=m.target;if(!el.classList.contains('show')&&el.classList.contains('peek')){el.classList.remove('peek');el.style.transform='';el.style.transition=''}}));
+ sheets.forEach(s=>mo2.observe($(s),{attributes:true,attributeFilter:['class']}))}
 
 /* ---- pick a point by moving the map under a fixed pin (Neshan style) ---- */
 const PK={active:false,cb:null,restore:[]};
