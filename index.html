@@ -185,6 +185,26 @@ html[data-theme=dark] .leaflet-control-scale-line{background:rgba(28,31,37,.8);c
 .sheet.peek .shd>:not(.gh){display:none!important}
 .sheet.peek .gh{height:30px;cursor:pointer}
 html[data-theme=dark] .gh i{background:#5a606b}
+#pgBack{display:none;position:fixed;inset:0;z-index:790;background:rgba(0,0,0,.45)}
+@media (min-width:760px){
+ body.pg-open #pgBack{display:block}
+ .sheet.page{left:50%!important;right:auto!important;top:50%!important;bottom:auto!important;transform:translate(-50%,-50%);width:min(560px,92vw);height:auto;max-height:min(86vh,780px)!important;border-radius:18px!important;box-shadow:0 16px 48px rgba(0,0,0,.4)!important;padding:0 0 20px!important}
+ .sheet.page .shd{border-radius:18px 18px 0 0}
+ .sheet.panel{left:auto!important;right:16px!important;width:min(440px,calc(100vw - 32px));bottom:78px!important;max-height:calc(100vh - 170px)!important;border-radius:16px!important;box-shadow:0 10px 32px rgba(0,0,0,.35)}
+ .sheet.panel:before{display:none}
+ #bar{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(560px,100%);border-radius:16px 16px 0 0;overflow:hidden}
+ #pickOk{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(420px,calc(100% - 28px))}
+ #pickTop{padding-left:max(14px,calc(50% - 280px));padding-right:max(14px,calc(50% - 280px))}
+ .leaflet-popup-content{max-width:360px}
+ #pxBan{max-width:560px}
+}
+@media (min-width:1200px){.sheet.page{width:min(620px,60vw)}}
+/* map-layer thumbnails */
+.th{display:inline-block;position:relative;width:40px;height:40px;border-radius:8px;overflow:hidden;vertical-align:middle;flex:none;margin:0 0 0 8px;border:1px solid #dadce0;background:#e8eaed url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239aa0a6' stroke-width='1.6' stroke-linejoin='round'><path d='M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6Z'/><path d='M9 4v14M15 6v14'/></svg>") center/55% no-repeat;background-size:55%}
+.th.ov{background-size:200%;background-position:center}
+.th img{position:absolute;width:200%;height:200%;left:-50%;top:-50%;object-fit:cover;background:transparent}
+.leaflet-control-layers-expanded .th{width:34px;height:34px;margin:0 0 0 6px}
+.leaflet-control-layers label>span{display:flex;align-items:center}
 </style>
 </head>
 <body>
@@ -394,6 +414,7 @@ html[data-theme=dark] .gh i{background:#5a606b}
 <button id="rtBtn" aria-label="مسیریابی"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></svg></button>
 
 <div id="idPk"><div id="idPkMsg"></div><div class="idpkrow"><label id="idPkRL" for="idPkR"></label><input id="idPkR" type="number" step="any" inputmode="decimal"></div><div class="idpkrow"><button class="btn g" id="idPkUndo">برگشت رأس</button><button class="btn r" id="idPkCancel">انصراف</button><button class="btn" id="idPkOk">تأیید</button></div></div>
+<div id="pgBack"></div>
 <div id="pick">
 <div id="pickTop"><button id="pickBack" aria-label="برگشت"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></svg></button><span id="pickTitle">برای انتخاب، نقشه را تکان دهید</span></div>
 <svg id="pickPin" viewBox="0 0 46 56"><path d="M23 54C23 54 5 33 5 21a18 18 0 0 1 36 0c0 12-18 33-18 33Z" fill="#ef5a5a"/><circle cx="23" cy="21" r="7" fill="#b33636"/></svg><div id="pickDot"></div>
@@ -518,6 +539,7 @@ function bsRender(){
   const r=document.createElement('div');r.className='lay';r.style.cssText='display:flex;align-items:center;gap:8px';
   const on=map.hasLayer(baseL[d.id]);
   r.innerHTML=`<input type="${d.overlay?'checkbox':'radio'}" name="bsAct" ${on?'checked':''} style="width:22px;height:22px;flex:none"><span style="flex:1"><b>${esc(d.name)}</b><br><span style="font-size:11px;color:#666">${d.type==='wms'?'WMS':'XYZ'}${d.overlay?' — پوشش شفاف':''}${d.tms?' — TMS':''}${d.server?' — از سرور':''}</span></span><button class="btn r" style="padding:6px 10px;font-size:12px" ${(!d.overlay&&nb<=1)?'disabled title="حداقل یک نقشه پایه"':''}>حذف</button>`;
+  r.insertBefore(bsThumbEl(d),r.children[1]);
   r.querySelector('input').onchange=e=>{d.overlay?(e.target.checked?map.addLayer(baseL[d.id]):map.removeLayer(baseL[d.id])):bsActivate(d.id);bsRender()};
   r.querySelector('button').onclick=()=>bsDel(d.id);
   el.appendChild(r)})}
@@ -713,7 +735,7 @@ const DB={db:null,
  st(sn,m,f){return new Promise(r=>{try{const q=f(DB.db.transaction(sn,m).objectStore(sn));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  run(m,f){return new Promise(r=>{try{const q=f(DB.db.transaction('layers',m).objectStore('layers'));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  put(o){return DB.run('readwrite',st=>st.put(o))},del(id){return DB.run('readwrite',st=>st.delete(id))},clear(){return DB.run('readwrite',st=>st.clear())},all(){return DB.run('readonly',st=>st.getAll()).then(x=>x||[])}};
-function saveL(L_){DB.put({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res})}
+function saveL(L_){DB.put({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res,src:L_.src||null})}
 
 /* ---------- GeoPackage reader (pure JS SQLite parser, no WASM / no CDN) ---------- */
 function gpkgRead(buf,opt){
@@ -1068,6 +1090,9 @@ function gpkgWrite(items){
 /* ---------- Layers ---------- */
 const layers=[],colors=['#1f6f5c','#d35400','#2e5aac','#8e44ad','#c0392b','#16a085'];let lid=0;
 const MAX=25*1024*1024;
+let LOADCTX=null;
+function uniqueLayerName(n){if(!layers.some(l=>l.name===n))return n;let i=2;while(layers.some(l=>l.name===n+' ('+i+')'))i++;return n+' ('+i+')'}
+function fileDup(f){const base=f.name.replace(/\.[^.]+$/,'');return layers.find(l=>l.src&&l.src.n===f.name&&l.src.s===f.size)||layers.find(l=>l.name===f.name||l.name===base||l.name.indexOf(f.name+' (')===0)}
 $('file').onchange=async e=>{for(const f of e.target.files)await loadFile(f);e.target.value=''};
 /* ---------- Tables: CSV / Excel (.xlsx) with coordinates (lon/lat or UTM zone 39N) -> point layer ---------- */
 function csvParse(text){
@@ -1178,6 +1203,12 @@ async function xlsxLoad(f){
 
 async function loadFile(f){
  try{
+  const dup=fileDup(f);
+  if(dup){
+   try{if(dup.lyr&&dup.lyr.getBounds)map.fitBounds(dup.lyr.getBounds(),{padding:[30,30]})}catch(e){}
+   if(!confirm('⚠ فایل «'+f.name+'» قبلاً بارگذاری شده و در فهرست لایه‌ها هست (لایه‌ی «'+dup.name+'»).\n\nدوباره به‌صورت لایه‌ی جدید اضافه شود؟\n\nتأیید = اضافه شود   |   انصراف = همان لایه‌ی قبلی استفاده شود')){toast('«'+f.name+'» از قبل در لایه‌ها انتخاب شده است',5000);return}
+  }
+  LOADCTX={n:f.name,s:f.size,m:f.lastModified};
   const ext=f.name.split('.').pop().toLowerCase(),lim=ext==='gpkg'?150*1024*1024:MAX;
   if(f.size>lim)throw new Error('حجم فایل بیش از '+Math.round(lim/1048576)+' مگابایت است');
   let geo;
@@ -1201,7 +1232,7 @@ async function loadFile(f){
   else if(ext==='xls')throw new Error('فرمت قدیمی .xls پشتیبانی نمی‌شود؛ فایل را در Excel به‌صورت .xlsx یا CSV ذخیره کنید');
   else throw new Error('فرمت پشتیبانی نمی‌شود: '+ext);
   geo=normGeo(geo);checkCoords(geo);addLayer(f.name,geo);
- }catch(err){toast(f.name+': '+err.message,6000)}}
+ }catch(err){toast(f.name+': '+err.message,6000)}finally{LOADCTX=null}}
 const isImg=v=>typeof v==='string'&&(v.startsWith('photo:')||/^data:image\/(jpeg|png|webp|gif);base64,/.test(v)||/^https?:\/\/\S+\.(jpe?g|png|webp|gif)(\?\S*)?$/i.test(v));
 function popupHtml(p){
  const k=Object.keys(p||{}).filter(x=>!isImg(p[x]));
@@ -1270,7 +1301,7 @@ function popEl(L_,f){
 function rebuild(L_){L_.lyr.clearLayers();L_.lyr.addData(L_.geo);saveL(L_);renderList()}
 function mkLayer(name,geo,user,sv){
  const id=sv?sv.id:++lid;
- const L_={id,name,geo,color:sv?sv.color:(user?'#c0392b':colors[(id-1)%colors.length]),icon:sv?sv.icon:(user?'pin':'circle'),on:sv?sv.on!==false:true,user:!!user,res:!!(sv&&sv.res)};
+ const L_={id,name,geo,color:sv?sv.color:(user?'#c0392b':colors[(id-1)%colors.length]),icon:sv?sv.icon:(user?'pin':'circle'),on:sv?sv.on!==false:true,user:!!user,res:!!(sv&&sv.res),src:(sv&&sv.src)||null};
  L_.lyr=L.geoJSON(geo,{
   style:()=>({color:L_.color,weight:3,fillOpacity:.25}),
   pointToLayer:(f,ll)=>{
@@ -1280,7 +1311,8 @@ function mkLayer(name,geo,user,sv){
  layers.push(L_);ctl.addOverlay(L_.lyr,esc(name));if(L_.on)L_.lyr.addTo(map);
  return L_}
 function addLayer(name,geo){
- const L_=mkLayer(name,geo,false);saveL(L_);
+ name=uniqueLayerName(name);
+ const L_=mkLayer(name,geo,false);if(LOADCTX)L_.src=Object.assign({},LOADCTX);saveL(L_);
  try{map.fitBounds(L_.lyr.getBounds(),{padding:[30,30]})}catch(e){}
  renderList();PH.migGeo(geo).then(n=>{if(n)saveL(L_)}).catch(()=>{});toast(`«${name}» بارگذاری شد: ${geo.features.length} عارضه`)}
 function stats(geo){let p=0,l=0,a=0;turf.flattenEach(geo,f=>{const t=f.geometry.type;if(t==='Point')p++;else if(t==='LineString')l++;else a++});return{p,l,a}}
@@ -3157,6 +3189,7 @@ function navBack(){
  openSheet(cur);                       /* closes the current page (it is open) */
  if(par&&!$(par).classList.contains('show'))openSheet(par)}
 function navSync(){
+ document.body.classList.toggle('pg-open',PAGES.some(id=>$(id).classList.contains('show')));
  if(PK.active||pv.open)return;
  const open=anySheet()||mkMode;
  if(open&&!hs.stk.includes('nav'))hsPush('nav');
@@ -3171,6 +3204,8 @@ sheets.forEach(id=>{
  if(h3)h3.remove();
  el.insertBefore(hd,el.firstChild)});
 {const mo=new MutationObserver(navSync);sheets.forEach(s=>mo.observe($(s),{attributes:true,attributeFilter:['class']}))}
+$('pgBack').onclick=()=>{const cur=PAGES.find(id=>$(id).classList.contains('show'));if(cur)openSheet(cur)};
+document.addEventListener('keydown',e=>{if(e.key!=='Escape'||pv.open)return;if(PK.active)pickEnd(false);else if(anySheet())navBack()});
 
 /* ---------- Drag handle on every sheet: pull down -> only a thin strip stays (map fully visible); tap / pull up / its menu button -> back ---------- */
 function sheetPeek(id,on){const el=$(id);el.classList.toggle('peek',on);el.style.transform='';el.style.transition=''}
@@ -3260,6 +3295,44 @@ $('idPick').onclick=idPkStart;
 $('idPkOk').onclick=()=>idPkEnd(true);$('idPkCancel').onclick=()=>idPkEnd(false);
 $('idPkUndo').onclick=()=>{idm.pts.pop();idDraw()};
 $('idPkR').oninput=()=>{$('idR').value=$('idPkR').value;idDraw()};
+
+/* ---------- Map-layer thumbnails (menu list + layer control) ---------- */
+function bsTileAt(d){
+ const c=map.getCenter();let z=Math.round(map.getZoom());
+ z=Math.max(d.minZoom||0,Math.min(d.maxZoom||19,z,19));
+ const n=Math.pow(2,z),lr=c.lat*Math.PI/180,cl=v=>Math.max(0,Math.min(n-1,v));
+ return{z,x:cl(Math.floor((c.lng+180)/360*n)),y:cl(Math.floor((1-Math.log(Math.tan(lr)+1/Math.cos(lr))/Math.PI)/2*n))}}
+function wmsThumbUrl(d,x,y,z){
+ const n=Math.pow(2,z),lon=k=>k/n*360-180,lat=k=>{const t=Math.PI-2*Math.PI*k/n;return 180/Math.PI*Math.atan(.5*(Math.exp(t)-Math.exp(-t)))};
+ const w=lon(x),e=lon(x+1),nn=lat(y),ss=lat(y+1),ver=d.version||'1.3.0',v13=parseFloat(ver)>=1.3;
+ let bbox,crs;
+ if(d.crs==='4326'){crs='EPSG:4326';bbox=v13?[ss,w,nn,e]:[w,ss,e,nn]}
+ else{const R=6378137,m=(lo,la)=>[R*lo*Math.PI/180,R*Math.log(Math.tan(Math.PI/4+la*Math.PI/360))],a=m(w,ss),b=m(e,nn);crs='EPSG:3857';bbox=[a[0],a[1],b[0],b[1]]}
+ const q=new URLSearchParams({service:'WMS',request:'GetMap',layers:d.layers||'',styles:'',format:d.format||'image/png',transparent:d.transparent===false?'false':'true',version:ver,width:'128',height:'128',bbox:bbox.join(',')});
+ q.set(v13?'crs':'srs',crs);
+ return new URL(d.url,location.href).href+(d.url.includes('?')?'&':'?')+q.toString()}
+function bsThumbUrl(d){
+ if(d.thumb)return d.thumb;
+ const t=bsTileAt(d);
+ return d.type==='wms'?wmsThumbUrl(d,t.x,t.y,t.z):tileUrlFor(d,null,t.x,t.y,t.z)}
+const bsActiveBase=()=>baseList.find(x=>!x.overlay&&baseL[x.id]&&map.hasLayer(baseL[x.id]));
+function bsThumbFill(el,d){
+ el.innerHTML='';el.style.backgroundImage='';
+ if(d.overlay){const b=bsActiveBase();if(b&&b!==d){try{el.style.backgroundImage='url("'+bsThumbUrl(b)+'")'}catch(e){}}}
+ try{const im=document.createElement('img');im.alt='';im.loading='lazy';im.onerror=()=>{im.style.display='none'};im.src=bsThumbUrl(d);el.appendChild(im)}catch(e){}}
+function bsThumbEl(d){const el=document.createElement('span');el.className='th'+(d.overlay?' ov':'');bsThumbFill(el,d);return el}
+function bsDecorate(refresh){
+ const c=ctl.getContainer();
+ c.querySelectorAll('.leaflet-control-layers-base label,.leaflet-control-layers-overlays label').forEach(lb=>{
+  const sp=lb.querySelector('span>span');if(!sp)return;
+  const nm=sp.textContent.trim(),d=baseList.find(x=>x.name===nm);if(!d)return;
+  let th=lb.querySelector('.th');
+  if(!th){th=bsThumbEl(d);sp.parentNode.insertBefore(th,sp)}
+  else if(refresh)bsThumbFill(th,d)})}
+{let raf=0;const sched=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>bsDecorate(false))};
+ new MutationObserver(sched).observe(ctl.getContainer(),{childList:true,subtree:true});
+ ['mouseover','click','touchstart'].forEach(ev=>ctl.getContainer().addEventListener(ev,()=>bsDecorate(true),{passive:true}));
+ sched()}
 
 /* ---------- PWA ---------- */
 (async()=>{
