@@ -185,26 +185,12 @@ html[data-theme=dark] .leaflet-control-scale-line{background:rgba(28,31,37,.8);c
 .sheet.peek .shd>:not(.gh){display:none!important}
 .sheet.peek .gh{height:30px;cursor:pointer}
 html[data-theme=dark] .gh i{background:#5a606b}
-#pgBack{display:none;position:fixed;inset:0;z-index:790;background:rgba(0,0,0,.45)}
-@media (min-width:760px){
- body.pg-open #pgBack{display:block}
- .sheet.page{left:50%!important;right:auto!important;top:50%!important;bottom:auto!important;transform:translate(-50%,-50%);width:min(560px,92vw);height:auto;max-height:min(86vh,780px)!important;border-radius:18px!important;box-shadow:0 16px 48px rgba(0,0,0,.4)!important;padding:0 0 20px!important}
- .sheet.page .shd{border-radius:18px 18px 0 0}
- .sheet.panel{left:auto!important;right:16px!important;width:min(440px,calc(100vw - 32px));bottom:78px!important;max-height:calc(100vh - 170px)!important;border-radius:16px!important;box-shadow:0 10px 32px rgba(0,0,0,.35)}
- .sheet.panel:before{display:none}
- #bar{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(560px,100%);border-radius:16px 16px 0 0;overflow:hidden}
- #pickOk{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(420px,calc(100% - 28px))}
- #pickTop{padding-left:max(14px,calc(50% - 280px));padding-right:max(14px,calc(50% - 280px))}
- .leaflet-popup-content{max-width:360px}
- #pxBan{max-width:560px}
-}
-@media (min-width:1200px){.sheet.page{width:min(620px,60vw)}}
-/* map-layer thumbnails */
-.th{display:inline-block;position:relative;width:40px;height:40px;border-radius:8px;overflow:hidden;vertical-align:middle;flex:none;margin:0 0 0 8px;border:1px solid #dadce0;background:#e8eaed url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239aa0a6' stroke-width='1.6' stroke-linejoin='round'><path d='M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6Z'/><path d='M9 4v14M15 6v14'/></svg>") center/55% no-repeat;background-size:55%}
-.th.ov{background-size:200%;background-position:center}
-.th img{position:absolute;width:200%;height:200%;left:-50%;top:-50%;object-fit:cover;background:transparent}
-.leaflet-control-layers-expanded .th{width:34px;height:34px;margin:0 0 0 6px}
-.leaflet-control-layers label>span{display:flex;align-items:center}
+
+/* ===== v20: map-layer thumbnails + topology compare ===== */
+.bs-th{flex:none;width:72px;height:72px;border-radius:10px;object-fit:cover;border:1px solid var(--bd);background:repeating-conic-gradient(#d9dde1 0% 25%,#f4f6f8 0% 50%) 0 0/14px 14px;cursor:pointer}
+.leaflet-control-layers .bs-th{width:60px;height:60px;border-radius:8px}
+.leaflet-control-layers-list label>span{display:flex;align-items:center;gap:8px}
+.leaflet-control-layers-list label{margin:6px 0}
 </style>
 </head>
 <body>
@@ -414,7 +400,6 @@ html[data-theme=dark] .gh i{background:#5a606b}
 <button id="rtBtn" aria-label="مسیریابی"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></svg></button>
 
 <div id="idPk"><div id="idPkMsg"></div><div class="idpkrow"><label id="idPkRL" for="idPkR"></label><input id="idPkR" type="number" step="any" inputmode="decimal"></div><div class="idpkrow"><button class="btn g" id="idPkUndo">برگشت رأس</button><button class="btn r" id="idPkCancel">انصراف</button><button class="btn" id="idPkOk">تأیید</button></div></div>
-<div id="pgBack"></div>
 <div id="pick">
 <div id="pickTop"><button id="pickBack" aria-label="برگشت"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></svg></button><span id="pickTitle">برای انتخاب، نقشه را تکان دهید</span></div>
 <svg id="pickPin" viewBox="0 0 46 56"><path d="M23 54C23 54 5 33 5 21a18 18 0 0 1 36 0c0 12-18 33-18 33Z" fill="#ef5a5a"/><circle cx="23" cy="21" r="7" fill="#b33636"/></svg><div id="pickDot"></div>
@@ -486,6 +471,36 @@ new RtCtl().addTo(map);
 const zmU=()=>{$('zm').textContent='زوم '+(Math.round(map.getZoom()*10)/10)};map.on('zoom zoomend',zmU);zmU();
 function onOv(e,on){const L_=layers.find(l=>l.lyr===e.layer);if(L_&&L_.on!==on){L_.on=on;saveL(L_);renderList()}}
 map.on('overlayadd',e=>onOv(e,true));map.on('overlayremove',e=>onOv(e,false));
+
+/* ---------- Map-layer thumbnails: one tile of every map at the current view (browser / service-worker cache) ---------- */
+const TH_PH='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" fill="#e8eaed"/><path d="M8 14l10-4 12 4 10-4v24l-10 4-12-4-10 4V14Z" fill="none" stroke="#9aa0a6" stroke-width="2.5" stroke-linejoin="round"/><path d="M18 10v24M30 14v24" stroke="#9aa0a6" stroke-width="2.5"/></svg>');
+function bsThumbUrl(d){
+ const c=map.getCenter(),mn=d.minZoom||0,mx=Math.min(d.maxZoom||19,18);
+ const z=Math.max(mn,Math.min(mx,Math.round(map.getZoom())-1)),n=Math.pow(2,z),la=Math.max(-85.0511,Math.min(85.0511,c.lat))*Math.PI/180;
+ let x=Math.floor((c.lng+180)/360*n),y=Math.floor((1-Math.log(Math.tan(la)+1/Math.cos(la))/Math.PI)/2*n);
+ x=((x%n)+n)%n;y=Math.max(0,Math.min(n-1,y));
+ if(d.type==='wms'){
+  if(!d.layers)return null;
+  const S=40075016.68557849,sz=S/n,x0=-S/2+x*sz,y1=S/2-y*sz,x1=x0+sz,y0=y1-sz,ver=d.version||'1.3.0',u=String(d.url),j=u.includes('?')?'&':'?';
+  let bbox,crs;
+  if(d.crs==='4326'){const lon=v=>v/(S/2)*180,lat=v=>Math.atan(Math.sinh(v/(S/2)*Math.PI))*180/Math.PI;crs='EPSG:4326';bbox=ver==='1.3.0'?[lat(y0),lon(x0),lat(y1),lon(x1)]:[lon(x0),lat(y0),lon(x1),lat(y1)]}
+  else{crs='EPSG:3857';bbox=[x0,y0,x1,y1]}
+  return u+j+'service=WMS&request=GetMap&version='+ver+'&layers='+encodeURIComponent(d.layers)+'&styles=&format='+encodeURIComponent(d.format||'image/png')+'&transparent='+(d.transparent!==false)+'&width=160&height=160&'+(ver==='1.3.0'?'crs':'srs')+'='+crs+'&bbox='+bbox.map(v=>+v.toFixed(6)).join(',')}
+ const yy=d.tms?n-1-y:y;
+ return String(d.url).replace(/\{z\}/g,z).replace(/\{x\}/g,x).replace(/\{y\}/g,yy).replace(/\{s\}/g,'a').replace(/\{r\}/g,'')}
+function bsThumbSet(im,d){let u=null;try{u=bsThumbUrl(d)}catch(e){}if(!u){im.src=TH_PH;return}if(im.dataset.u!==u){im.dataset.u=u;im.src=u}}
+function bsThumbEl(d){const im=new Image();im.className='bs-th';im.dataset.id=d.id;im.alt='';im.decoding='async';im.onerror=()=>{im.onerror=null;im.src=TH_PH};bsThumbSet(im,d);return im}
+function bsThumbRefresh(){document.querySelectorAll('img.bs-th[data-id]').forEach(im=>{const d=baseList.find(x=>x.id===im.dataset.id);if(d)bsThumbSet(im,d)})}
+{const _ai=L.Control.Layers.prototype._addItem;
+ L.Control.Layers.prototype._addItem=function(obj){
+  const label=_ai.call(this,obj);
+  try{const id=Object.keys(baseL).find(k=>baseL[k]===obj.layer),d=id&&baseList.find(x=>x.id===id);
+   if(d){const sp=label.querySelector('span'),nm=sp&&sp.querySelector('span');if(sp&&nm){sp.insertBefore(bsThumbEl(d),nm);nm.style.flex='1'}}}catch(e){}
+  return label}}
+let thT=0;
+map.on('moveend',()=>{clearTimeout(thT);thT=setTimeout(()=>{if(document.querySelector('.leaflet-control-layers-expanded')||$('sLayers').classList.contains('show'))bsThumbRefresh()},700)});
+ctl.getContainer().addEventListener('click',()=>setTimeout(bsThumbRefresh,80));
+
 /* ---------- Base maps manager (XYZ + WMS), persistent, at least one base always kept ---------- */
 const BASE_DEF=[
  {id:'osm',name:'نقشه OSM',type:'xyz',url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',maxZoom:19,attr:'© OpenStreetMap'},
@@ -539,7 +554,7 @@ function bsRender(){
   const r=document.createElement('div');r.className='lay';r.style.cssText='display:flex;align-items:center;gap:8px';
   const on=map.hasLayer(baseL[d.id]);
   r.innerHTML=`<input type="${d.overlay?'checkbox':'radio'}" name="bsAct" ${on?'checked':''} style="width:22px;height:22px;flex:none"><span style="flex:1"><b>${esc(d.name)}</b><br><span style="font-size:11px;color:#666">${d.type==='wms'?'WMS':'XYZ'}${d.overlay?' — پوشش شفاف':''}${d.tms?' — TMS':''}${d.server?' — از سرور':''}</span></span><button class="btn r" style="padding:6px 10px;font-size:12px" ${(!d.overlay&&nb<=1)?'disabled title="حداقل یک نقشه پایه"':''}>حذف</button>`;
-  r.insertBefore(bsThumbEl(d),r.children[1]);
+  {const im=bsThumbEl(d);im.onclick=()=>r.querySelector('input').click();r.insertBefore(im,r.querySelector('span'))}
   r.querySelector('input').onchange=e=>{d.overlay?(e.target.checked?map.addLayer(baseL[d.id]):map.removeLayer(baseL[d.id])):bsActivate(d.id);bsRender()};
   r.querySelector('button').onclick=()=>bsDel(d.id);
   el.appendChild(r)})}
@@ -735,7 +750,7 @@ const DB={db:null,
  st(sn,m,f){return new Promise(r=>{try{const q=f(DB.db.transaction(sn,m).objectStore(sn));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  run(m,f){return new Promise(r=>{try{const q=f(DB.db.transaction('layers',m).objectStore('layers'));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  put(o){return DB.run('readwrite',st=>st.put(o))},del(id){return DB.run('readwrite',st=>st.delete(id))},clear(){return DB.run('readwrite',st=>st.clear())},all(){return DB.run('readonly',st=>st.getAll()).then(x=>x||[])}};
-function saveL(L_){DB.put({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res,src:L_.src||null})}
+function saveL(L_){DB.put({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res})}
 
 /* ---------- GeoPackage reader (pure JS SQLite parser, no WASM / no CDN) ---------- */
 function gpkgRead(buf,opt){
@@ -1090,9 +1105,6 @@ function gpkgWrite(items){
 /* ---------- Layers ---------- */
 const layers=[],colors=['#1f6f5c','#d35400','#2e5aac','#8e44ad','#c0392b','#16a085'];let lid=0;
 const MAX=25*1024*1024;
-let LOADCTX=null;
-function uniqueLayerName(n){if(!layers.some(l=>l.name===n))return n;let i=2;while(layers.some(l=>l.name===n+' ('+i+')'))i++;return n+' ('+i+')'}
-function fileDup(f){const base=f.name.replace(/\.[^.]+$/,'');return layers.find(l=>l.src&&l.src.n===f.name&&l.src.s===f.size)||layers.find(l=>l.name===f.name||l.name===base||l.name.indexOf(f.name+' (')===0)}
 $('file').onchange=async e=>{for(const f of e.target.files)await loadFile(f);e.target.value=''};
 /* ---------- Tables: CSV / Excel (.xlsx) with coordinates (lon/lat or UTM zone 39N) -> point layer ---------- */
 function csvParse(text){
@@ -1203,12 +1215,6 @@ async function xlsxLoad(f){
 
 async function loadFile(f){
  try{
-  const dup=fileDup(f);
-  if(dup){
-   try{if(dup.lyr&&dup.lyr.getBounds)map.fitBounds(dup.lyr.getBounds(),{padding:[30,30]})}catch(e){}
-   if(!confirm('⚠ فایل «'+f.name+'» قبلاً بارگذاری شده و در فهرست لایه‌ها هست (لایه‌ی «'+dup.name+'»).\n\nدوباره به‌صورت لایه‌ی جدید اضافه شود؟\n\nتأیید = اضافه شود   |   انصراف = همان لایه‌ی قبلی استفاده شود')){toast('«'+f.name+'» از قبل در لایه‌ها انتخاب شده است',5000);return}
-  }
-  LOADCTX={n:f.name,s:f.size,m:f.lastModified};
   const ext=f.name.split('.').pop().toLowerCase(),lim=ext==='gpkg'?150*1024*1024:MAX;
   if(f.size>lim)throw new Error('حجم فایل بیش از '+Math.round(lim/1048576)+' مگابایت است');
   let geo;
@@ -1232,7 +1238,7 @@ async function loadFile(f){
   else if(ext==='xls')throw new Error('فرمت قدیمی .xls پشتیبانی نمی‌شود؛ فایل را در Excel به‌صورت .xlsx یا CSV ذخیره کنید');
   else throw new Error('فرمت پشتیبانی نمی‌شود: '+ext);
   geo=normGeo(geo);checkCoords(geo);addLayer(f.name,geo);
- }catch(err){toast(f.name+': '+err.message,6000)}finally{LOADCTX=null}}
+ }catch(err){toast(f.name+': '+err.message,6000)}}
 const isImg=v=>typeof v==='string'&&(v.startsWith('photo:')||/^data:image\/(jpeg|png|webp|gif);base64,/.test(v)||/^https?:\/\/\S+\.(jpe?g|png|webp|gif)(\?\S*)?$/i.test(v));
 function popupHtml(p){
  const k=Object.keys(p||{}).filter(x=>!isImg(p[x]));
@@ -1301,7 +1307,7 @@ function popEl(L_,f){
 function rebuild(L_){L_.lyr.clearLayers();L_.lyr.addData(L_.geo);saveL(L_);renderList()}
 function mkLayer(name,geo,user,sv){
  const id=sv?sv.id:++lid;
- const L_={id,name,geo,color:sv?sv.color:(user?'#c0392b':colors[(id-1)%colors.length]),icon:sv?sv.icon:(user?'pin':'circle'),on:sv?sv.on!==false:true,user:!!user,res:!!(sv&&sv.res),src:(sv&&sv.src)||null};
+ const L_={id,name,geo,color:sv?sv.color:(user?'#c0392b':colors[(id-1)%colors.length]),icon:sv?sv.icon:(user?'pin':'circle'),on:sv?sv.on!==false:true,user:!!user,res:!!(sv&&sv.res)};
  L_.lyr=L.geoJSON(geo,{
   style:()=>({color:L_.color,weight:3,fillOpacity:.25}),
   pointToLayer:(f,ll)=>{
@@ -1311,8 +1317,7 @@ function mkLayer(name,geo,user,sv){
  layers.push(L_);ctl.addOverlay(L_.lyr,esc(name));if(L_.on)L_.lyr.addTo(map);
  return L_}
 function addLayer(name,geo){
- name=uniqueLayerName(name);
- const L_=mkLayer(name,geo,false);if(LOADCTX)L_.src=Object.assign({},LOADCTX);saveL(L_);
+ const L_=mkLayer(name,geo,false);saveL(L_);
  try{map.fitBounds(L_.lyr.getBounds(),{padding:[30,30]})}catch(e){}
  renderList();PH.migGeo(geo).then(n=>{if(n)saveL(L_)}).catch(()=>{});toast(`«${name}» بارگذاری شد: ${geo.features.length} عارضه`)}
 function stats(geo){let p=0,l=0,a=0;turf.flattenEach(geo,f=>{const t=f.geometry.type;if(t==='Point')p++;else if(t==='LineString')l++;else a++});return{p,l,a}}
@@ -2484,7 +2489,7 @@ function fxScan(geo,opt){
   /* range / swapped */
   if(want('range')){let bad=null;fxAllCoords(g,c=>{if(!bad&&(!isFinite(c[0])||!isFinite(c[1])||Math.abs(c[0])>180||Math.abs(c[1])>90))bad=c});if(bad)add('range',f,[0,0],{c:bad})}
   /* duplicate vertices */
-  if(want('dupv')){let n=0;fxLines(g,[]).forEach(c=>{for(let i=1;i<c.length;i++)if(fxSame(c[i-1],c[i]))n++});fxRings(g,[]).forEach(o=>{for(let i=1;i<o.r.length;i++)if(fxSame(o.r[i-1],o.r[i]))n++});if(n)add('dupv',f,null,{n})}
+  if(want('dupv')){let n=0;const pts=[];fxLines(g,[]).forEach(c=>{for(let i=1;i<c.length;i++)if(fxSame(c[i-1],c[i])){n++;pts.push(c[i])}});fxRings(g,[]).forEach(o=>{for(let i=1;i<o.r.length;i++)if(fxSame(o.r[i-1],o.r[i])){n++;pts.push(o.r[i])}});if(n)add('dupv',f,pts[0],{n,pts})}
   /* too few vertices */
   if(want('short')){
    fxLines(g,[]).forEach(c=>{const d=c.filter((v,i)=>!i||!fxSame(c[i-1],v));if(d.length<2)add('short',f,c[0]||null)});
@@ -2497,7 +2502,7 @@ function fxScan(geo,opt){
    if(closed&&r.length>=4&&want('orient')){const a=fxArea(r);if(a!==0&&((!o.hole&&a<0)||(o.hole&&a>0)))add('orient',f,r[0])}});
   /* self-intersecting polygon */
   if(want('kink')&&typeof turf!=='undefined'&&turf.kinks){
-   if(g.type==='Polygon'||g.type==='MultiPolygon'){try{const k=turf.kinks(f);if(k.features.length)add('kink',f,k.features[0].geometry.coordinates,{n:k.features.length})}catch(e){}}}
+   if(g.type==='Polygon'||g.type==='MultiPolygon'){try{const k=turf.kinks(f);if(k.features.length)add('kink',f,k.features[0].geometry.coordinates,{n:k.features.length,pts:k.features.map(x=>x.geometry.coordinates)})}catch(e){}}}
  });
  /* line topology: dangling ends / crossings / duplicates (same layer + optional targets) */
  const needLine=want('dangle')||want('cross')||want('dupline');
@@ -2543,7 +2548,7 @@ function fxScan(geo,opt){
   const polys=geo.features.filter(f=>f.geometry&&/Polygon/.test(f.geometry.type));
   if(polys.length>1&&polys.length<=250){
    for(let i=0;i<polys.length;i++)for(let j=i+1;j<polys.length;j++){
-    try{const x=turf.intersect(polys[i],polys[j]);if(x&&turf.area(x)>0.5)add('overlap',polys[i],turf.centroid(x).geometry.coordinates,{other:polys[j],area:turf.area(x)})}catch(e){}}}}
+    try{const x=turf.intersect(polys[i],polys[j]);if(x&&turf.area(x)>0.5)add('overlap',polys[i],turf.centroid(x).geometry.coordinates,{other:polys[j],area:turf.area(x),shape:x.geometry})}catch(e){}}}}
  return out}
 /* ---- fix: edits geometries in place; returns {fixed, touched:Set(of FeatureCollections), removed:[features]} ---- */
 function fxApply(geo,issues,types,opt){
@@ -2768,10 +2773,45 @@ $('pxD').value=S.prxDist;
 pxUI();
 
 /* ---------- Fix features (geometry + topology) ---------- */
-const fxHL=L.layerGroup().addTo(map);let fxS=null,fxUndoD=null;
+const fxHL=L.layerGroup().addTo(map),fxCmp=L.layerGroup().addTo(map),fxBefore=L.layerGroup(),fxAfter=L.layerGroup();let fxS=null,fxUndoD=null;
+const FX_COL={feat:'#d500f9',spot:'#ff1744',before:'#ff6d00',after:'#00c853'};
+const fxStyle=c=>({color:c,weight:6,opacity:.8,fillColor:c,fillOpacity:.18}),fxPt=c=>(f,ll)=>L.circleMarker(ll,{radius:9,color:c,weight:4,fillColor:'#fff',fillOpacity:.6});
+const fxPad=()=>({paddingTopLeft:[40,70],paddingBottomRight:[40,Math.round(innerHeight*.5)],maxZoom:19});
+/* draw the erroneous features (purple) and the exact error spots (red ring, tooltip = error type) BEFORE any correction */
+function fxDrawIssues(list){
+ fxHL.clearLayers();fxCmp.clearLayers();fxBefore.clearLayers();fxAfter.clearLayers();
+ const MAX=600,use=list.filter(i=>i.type!=='range').slice(0,MAX),fs=new Set();
+ use.forEach(i=>{fs.add(i.f);if(i.other)fs.add(i.other)});
+ if(!use.length)return;
+ const fl=L.geoJSON({type:'FeatureCollection',features:[...fs]},{style:()=>fxStyle(FX_COL.feat),pointToLayer:fxPt(FX_COL.feat),interactive:false}).addTo(fxHL);
+ let b=fl.getBounds();
+ use.forEach(i=>{
+  (i.pts&&i.pts.length?i.pts:[i.ll]).slice(0,50).forEach(p=>{
+   if(!p||!isFinite(p[0])||!isFinite(p[1])||Math.abs(p[0])>180||Math.abs(p[1])>90)return;
+   const ll=[p[1],p[0]];L.circleMarker(ll,{radius:11,color:FX_COL.spot,weight:3,fillColor:'#ffeb3b',fillOpacity:.55}).bindTooltip(FX_TYPES[i.type].t).addTo(fxHL);b.extend(ll)});
+  if(i.type==='dangle'&&i.to&&i.ll)L.polyline([[i.ll[1],i.ll[0]],[i.to[1],i.to[0]]],{color:FX_COL.spot,weight:3,dashArray:'4 5',interactive:false}).addTo(fxHL);
+  if(i.type==='overlap'&&i.shape)L.geoJSON(i.shape,{style:{color:FX_COL.spot,weight:2,fillColor:FX_COL.spot,fillOpacity:.45},interactive:false}).addTo(fxHL)});
+ if(list.length>MAX)toast(`فقط ${MAX} مورد اول روی نقشه نشان داده شد`,4000);
+ try{if(b.isValid())map.fitBounds(b,fxPad())}catch(e){}}
+/* after the fix: original geometry (orange dashed) vs corrected geometry (green), toggle each */
+function fxShowCompare(beforeG,geo,preSet,spots){
+ fxHL.clearLayers();fxCmp.clearLayers();fxBefore.clearLayers();fxAfter.clearLayers();
+ const cur=new Set(geo.features);
+ beforeG.forEach(b=>L.geoJSON({type:'Feature',properties:{},geometry:b.geom},{style:()=>({color:FX_COL.before,weight:6,opacity:.95,dashArray:'9 6',fillColor:FX_COL.before,fillOpacity:.12}),pointToLayer:fxPt(FX_COL.before),interactive:false}).addTo(fxBefore));
+ const aft=beforeG.map(b=>b.f).filter(f=>cur.has(f)).concat(geo.features.filter(f=>!preSet.has(f)));
+ L.geoJSON({type:'FeatureCollection',features:aft},{style:()=>({color:FX_COL.after,weight:3,opacity:1,fillColor:FX_COL.after,fillOpacity:.15}),pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:6,color:FX_COL.after,weight:3,fillColor:'#fff',fillOpacity:.8}),interactive:false}).addTo(fxAfter);
+ spots.forEach(s=>{if(s.ll&&isFinite(s.ll[0])&&Math.abs(s.ll[0])<=180&&Math.abs(s.ll[1])<=90)L.circleMarker([s.ll[1],s.ll[0]],{radius:11,color:FX_COL.spot,weight:2,dashArray:'3 4',fill:false,interactive:false}).addTo(fxBefore)});
+ fxCmp.addLayer(fxBefore);fxCmp.addLayer(fxAfter);
+ const el=$('fxRes');el.innerHTML='';
+ const box=document.createElement('div');box.className='lay';box.style.fontSize='13px';
+ box.innerHTML=`<b>مقایسه‌ی قبل و بعد از اصلاح</b><br><label><input type="checkbox" checked data-g="b"> <span style="color:${FX_COL.before}">■ قبل از اصلاح (نارنجی خط‌چین) و محل خطا</span></label><br><label><input type="checkbox" checked data-g="a"> <span style="color:${FX_COL.after}">■ بعد از اصلاح (سبز)</span></label><div class="row"><button class="btn g" style="font-size:12px">حذف علامت‌های مقایسه</button></div>`;
+ box.querySelectorAll('input').forEach(i=>i.onchange=()=>{const g=i.dataset.g==='b'?fxBefore:fxAfter;i.checked?fxCmp.addLayer(g):fxCmp.removeLayer(g)});
+ box.querySelector('button').onclick=()=>{fxCmp.clearLayers();fxBefore.clearLayers();fxAfter.clearLayers();el.innerHTML=''};
+ el.appendChild(box);
+ try{const bb=fxBefore.getLayers().length?L.featureGroup(fxBefore.getLayers()).getBounds():null;if(bb&&bb.isValid())map.fitBounds(bb,fxPad())}catch(e){}}
 function fxInit(){
  const el=$('fxLayer');el.innerHTML=layers.length?layers.map(l=>`<option value="${l.id}">${esc(l.name)} (${l.geo.features.length})</option>`).join(''):'<option value="">لایه‌ای نیست</option>';
- fxS=null;fxHL.clearLayers();$('fxRes').innerHTML='';$('fxInfo').textContent='لایه را انتخاب و «بررسی» را بزنید.';$('fxDo').style.display='none';
+ fxS=null;fxHL.clearLayers();fxCmp.clearLayers();fxBefore.clearLayers();fxAfter.clearLayers();$('fxRes').innerHTML='';$('fxInfo').textContent='لایه را انتخاب و «بررسی» را بزنید.';$('fxDo').style.display='none';
  $('fxCopy').onchange=()=>{$('fxTg').disabled=$('fxCopy').checked;if($('fxCopy').checked)$('fxTg').checked=false};$('fxCopy').onchange()}
 const fxLay=()=>layers.find(l=>String(l.id)===$('fxLayer').value);
 function fxTargets(L_){return layers.filter(l=>l!==L_&&l.on).map(l=>({L_:l,geo:l.geo}))}
@@ -2782,7 +2822,7 @@ $('fxScanB').onclick=async()=>{
  const issues=fxScan(L_.geo,{endTol:S.fxEnd,targets:tg.map(x=>x.geo)});
  fxS={L_,issues,tg};fxRender()};
 function fxRender(){
- const R=fxS,el=$('fxRes');fxHL.clearLayers();el.innerHTML='';
+ const R=fxS,el=$('fxRes');fxHL.clearLayers();fxCmp.clearLayers();el.innerHTML='';
  const by={};R.issues.forEach(i=>(by[i.type]=by[i.type]||[]).push(i));
  const keys=Object.keys(by);
  $('fxInfo').innerHTML=keys.length?`<b>${R.issues.length}</b> مورد در <b>${keys.length}</b> نوع خطا — لایه‌ی «${esc(R.L_.name)}»`:'<span style="color:#27ae60"><b>✔ خطایی پیدا نشد.</b></span>';
@@ -2791,22 +2831,26 @@ function fxRender(){
   const row=document.createElement('div');row.className='lay';row.style.cssText='display:flex;gap:8px;align-items:center';
   const can=FX_TYPES[k].fix,def=can&&k!=='dupline'&&k!=='kink';
   row.innerHTML=`<input type="checkbox" data-t="${k}" ${can?'':'disabled'} ${def?'checked':''} style="width:20px;height:20px;flex:none"><span style="flex:1;font-size:13px"><b>${esc(FX_TYPES[k].t)}</b><br><span style="font-size:11px;color:#666">${can?(k==='dupline'?'رفع = حذف خط تکراری (با تأیید)':k==='kink'?'رفع = شکستن به چندضلعی‌های معتبر':'قابل رفع خودکار'):'فقط گزارش'}</span></span><span style="background:#c0392b;color:#fff;border-radius:12px;padding:1px 10px">${by[k].length}</span><button class="btn g" style="padding:4px 10px;font-size:12px">نمایش</button>`;
-  row.querySelector('button').onclick=()=>{
-   fxHL.clearLayers();const pts=[];
-   by[k].slice(0,400).forEach((i,n)=>{const ll=[i.ll[1],i.ll[0]];if(!isFinite(ll[0])||!isFinite(ll[1]))return;pts.push(ll);L.circleMarker(ll,{radius:10,color:'#c0392b',weight:3,fillColor:'#f1c40f',fillOpacity:.5,interactive:false}).addTo(fxHL)});
-   if(pts.length)try{map.fitBounds(L.latLngBounds(pts),{paddingTopLeft:[40,70],paddingBottomRight:[40,Math.round(innerHeight*.5)],maxZoom:19})}catch(e){}};
-  el.appendChild(row)})}
+  row.querySelector('button').onclick=()=>fxDrawIssues(by[k]);
+  el.appendChild(row)});
+ if(keys.length){fxDrawIssues(R.issues);
+  $('fxInfo').innerHTML+='<div style="font-size:12px;margin-top:4px"><span style="color:'+FX_COL.feat+'">■ عارضه‌ی دارای خطا</span> &nbsp; <span style="color:'+FX_COL.spot+'">◯ محل دقیق خطا</span> — با «نمایش» هر نوع را جدا ببینید</div>';
+  const r=document.createElement('div');r.className='row';r.innerHTML='<button class="btn g" style="font-size:12px">نمایش همه‌ی خطاها روی نقشه</button>';r.firstChild.onclick=()=>fxDrawIssues(R.issues);el.insertBefore(r,el.firstChild)}}
 $('fxDo').onclick=async()=>{
  const R=fxS;if(!R)return;
  const types=[...$('fxRes').querySelectorAll('input[data-t]:checked')].map(i=>i.dataset.t);
  if(!types.length)return toast('حداقل یک نوع خطا را برای رفع تیک بزنید');
  const copy=$('fxCopy').checked;
+ const sel=R.issues.filter(i=>types.includes(i.type));
+ fxDrawIssues(sel);await new Promise(r=>setTimeout(r,300));
+ if(!confirm(`${new Set(sel.map(i=>i.f)).size} عارضه (بنفش) و ${sel.length} محل خطا (حلقه قرمز) روی نقشه نشان داده شد.\nاصلاح انجام شود؟`))return;
  if(types.includes('dupline')&&!confirm('خطوط تکراری حذف می‌شوند. ادامه می‌دهید؟'))return;
  if(!copy&&!confirm('اصلاح مستقیماً روی خود لایه انجام می‌شود (با امکان «بازگردانی آخرین اصلاح»). ادامه؟'))return;
  const L0=R.L_;let geo,L_=L0,tg=R.tg;
  if(copy){geo=JSON.parse(JSON.stringify(L0.geo));tg=[]}
  else{geo=L0.geo;fxUndoD={L_:L0,json:JSON.stringify(L0.geo),others:R.tg.map(x=>({L_:x.L_,json:JSON.stringify(x.geo)}))}}
  const issues=copy?fxScan(geo,{endTol:S.fxEnd,types,targets:[]}):R.issues;
+ const useI=issues.filter(i=>types.includes(i.type)),beforeG=[...new Set(useI.map(i=>i.f))].map(f=>({f,geom:JSON.parse(JSON.stringify(f.geometry))})),preSet=new Set(geo.features),spots=useI.map(i=>({ll:i.ll&&i.ll.slice?i.ll.slice():null}));
  const res=fxApply(geo,issues,types,{});
  if(copy){
   const N=mkLayer(L0.name+' (اصلاح‌شده)',geo,true,{id:++lid,color:L0.color||'#8e44ad',icon:L0.icon||'circle',on:true});saveL(N);renderList();
@@ -2814,11 +2858,11 @@ $('fxDo').onclick=async()=>{
  else{
   rebuild(L0);R.tg.forEach(x=>rebuild(x.L_));$('fxUndo').disabled=false;
   toast(`${res.fixed} مورد اصلاح شد — «بازگردانی آخرین اصلاح» در دسترس است`,6000)}
- fxHL.clearLayers();$('fxRes').innerHTML='';$('fxInfo').textContent='انجام شد؛ برای اطمینان دوباره «بررسی» را بزنید.';$('fxDo').style.display='none';fxS=null};
+ fxShowCompare(beforeG,geo,preSet,spots);$('fxInfo').textContent='انجام شد؛ برای اطمینان دوباره «بررسی» را بزنید.';$('fxDo').style.display='none';fxS=null};
 $('fxUndo').onclick=()=>{
  const u=fxUndoD;if(!u)return toast('چیزی برای بازگردانی نیست');
  u.L_.geo=JSON.parse(u.json);rebuild(u.L_);u.others.forEach(o=>{o.L_.geo=JSON.parse(o.json);rebuild(o.L_)});
- fxUndoD=null;$('fxUndo').disabled=true;toast('آخرین اصلاح بازگردانی شد')};
+ fxUndoD=null;$('fxUndo').disabled=true;fxCmp.clearLayers();fxBefore.clearLayers();fxAfter.clearLayers();toast('آخرین اصلاح بازگردانی شد')};
 $('fxSnapB').onclick=()=>openSheet('sSnap','sFix');
 
 /* ---------- Menu icons + "More" panel ---------- */
@@ -3189,7 +3233,6 @@ function navBack(){
  openSheet(cur);                       /* closes the current page (it is open) */
  if(par&&!$(par).classList.contains('show'))openSheet(par)}
 function navSync(){
- document.body.classList.toggle('pg-open',PAGES.some(id=>$(id).classList.contains('show')));
  if(PK.active||pv.open)return;
  const open=anySheet()||mkMode;
  if(open&&!hs.stk.includes('nav'))hsPush('nav');
@@ -3204,8 +3247,6 @@ sheets.forEach(id=>{
  if(h3)h3.remove();
  el.insertBefore(hd,el.firstChild)});
 {const mo=new MutationObserver(navSync);sheets.forEach(s=>mo.observe($(s),{attributes:true,attributeFilter:['class']}))}
-$('pgBack').onclick=()=>{const cur=PAGES.find(id=>$(id).classList.contains('show'));if(cur)openSheet(cur)};
-document.addEventListener('keydown',e=>{if(e.key!=='Escape'||pv.open)return;if(PK.active)pickEnd(false);else if(anySheet())navBack()});
 
 /* ---------- Drag handle on every sheet: pull down -> only a thin strip stays (map fully visible); tap / pull up / its menu button -> back ---------- */
 function sheetPeek(id,on){const el=$(id);el.classList.toggle('peek',on);el.style.transform='';el.style.transition=''}
@@ -3295,44 +3336,6 @@ $('idPick').onclick=idPkStart;
 $('idPkOk').onclick=()=>idPkEnd(true);$('idPkCancel').onclick=()=>idPkEnd(false);
 $('idPkUndo').onclick=()=>{idm.pts.pop();idDraw()};
 $('idPkR').oninput=()=>{$('idR').value=$('idPkR').value;idDraw()};
-
-/* ---------- Map-layer thumbnails (menu list + layer control) ---------- */
-function bsTileAt(d){
- const c=map.getCenter();let z=Math.round(map.getZoom());
- z=Math.max(d.minZoom||0,Math.min(d.maxZoom||19,z,19));
- const n=Math.pow(2,z),lr=c.lat*Math.PI/180,cl=v=>Math.max(0,Math.min(n-1,v));
- return{z,x:cl(Math.floor((c.lng+180)/360*n)),y:cl(Math.floor((1-Math.log(Math.tan(lr)+1/Math.cos(lr))/Math.PI)/2*n))}}
-function wmsThumbUrl(d,x,y,z){
- const n=Math.pow(2,z),lon=k=>k/n*360-180,lat=k=>{const t=Math.PI-2*Math.PI*k/n;return 180/Math.PI*Math.atan(.5*(Math.exp(t)-Math.exp(-t)))};
- const w=lon(x),e=lon(x+1),nn=lat(y),ss=lat(y+1),ver=d.version||'1.3.0',v13=parseFloat(ver)>=1.3;
- let bbox,crs;
- if(d.crs==='4326'){crs='EPSG:4326';bbox=v13?[ss,w,nn,e]:[w,ss,e,nn]}
- else{const R=6378137,m=(lo,la)=>[R*lo*Math.PI/180,R*Math.log(Math.tan(Math.PI/4+la*Math.PI/360))],a=m(w,ss),b=m(e,nn);crs='EPSG:3857';bbox=[a[0],a[1],b[0],b[1]]}
- const q=new URLSearchParams({service:'WMS',request:'GetMap',layers:d.layers||'',styles:'',format:d.format||'image/png',transparent:d.transparent===false?'false':'true',version:ver,width:'128',height:'128',bbox:bbox.join(',')});
- q.set(v13?'crs':'srs',crs);
- return new URL(d.url,location.href).href+(d.url.includes('?')?'&':'?')+q.toString()}
-function bsThumbUrl(d){
- if(d.thumb)return d.thumb;
- const t=bsTileAt(d);
- return d.type==='wms'?wmsThumbUrl(d,t.x,t.y,t.z):tileUrlFor(d,null,t.x,t.y,t.z)}
-const bsActiveBase=()=>baseList.find(x=>!x.overlay&&baseL[x.id]&&map.hasLayer(baseL[x.id]));
-function bsThumbFill(el,d){
- el.innerHTML='';el.style.backgroundImage='';
- if(d.overlay){const b=bsActiveBase();if(b&&b!==d){try{el.style.backgroundImage='url("'+bsThumbUrl(b)+'")'}catch(e){}}}
- try{const im=document.createElement('img');im.alt='';im.loading='lazy';im.onerror=()=>{im.style.display='none'};im.src=bsThumbUrl(d);el.appendChild(im)}catch(e){}}
-function bsThumbEl(d){const el=document.createElement('span');el.className='th'+(d.overlay?' ov':'');bsThumbFill(el,d);return el}
-function bsDecorate(refresh){
- const c=ctl.getContainer();
- c.querySelectorAll('.leaflet-control-layers-base label,.leaflet-control-layers-overlays label').forEach(lb=>{
-  const sp=lb.querySelector('span>span');if(!sp)return;
-  const nm=sp.textContent.trim(),d=baseList.find(x=>x.name===nm);if(!d)return;
-  let th=lb.querySelector('.th');
-  if(!th){th=bsThumbEl(d);sp.parentNode.insertBefore(th,sp)}
-  else if(refresh)bsThumbFill(th,d)})}
-{let raf=0;const sched=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>bsDecorate(false))};
- new MutationObserver(sched).observe(ctl.getContainer(),{childList:true,subtree:true});
- ['mouseover','click','touchstart'].forEach(ev=>ctl.getContainer().addEventListener(ev,()=>bsDecorate(true),{passive:true}));
- sched()}
 
 /* ---------- PWA ---------- */
 (async()=>{
