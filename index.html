@@ -191,6 +191,13 @@ html[data-theme=dark] .gh i{background:#5a606b}
 .leaflet-control-layers .bs-th{width:60px;height:60px;border-radius:8px}
 .leaflet-control-layers-list label>span{display:flex;align-items:center;gap:8px}
 .leaflet-control-layers-list label{margin:6px 0}
+
+/* ===== v21: icon picker with previews + version label ===== */
+.icb{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--bd);border-radius:10px;background:var(--sf);font:inherit;font-size:13px;color:var(--fg)}
+.icgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}.icgrid[hidden]{display:none}
+.icgrid button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border:2px solid var(--bd);border-radius:10px;background:var(--pri2);font:inherit;font-size:11px;color:var(--fg)}
+.icgrid button.on{border-color:var(--pri)}
+#verLbl{margin:10px 0 2px;text-align:center;font-size:11px;color:var(--mt);opacity:.7}
 </style>
 </head>
 <body>
@@ -323,7 +330,7 @@ html[data-theme=dark] .gh i{background:#5a606b}
 <button id="pvPrev" aria-label="قبلی">›</button><button id="pvNext" aria-label="بعدی">‹</button>
 </div>
 
-<div id="sMore" class="sheet"><h3>همه‌ی منوها</h3><div id="moreGrid"></div></div>
+<div id="sMore" class="sheet"><h3>همه‌ی منوها</h3><div id="moreGrid"></div><div id="verLbl"></div></div>
 <div id="sGuide" class="sheet"><h3>راهنمای سامانه</h3><iframe id="guideFrame" title="راهنمای سامانه"></iframe></div>
 
 <div id="pxBan"></div>
@@ -743,6 +750,7 @@ const ICONS={circle:['دایره','<circle cx="12" cy="12" r="8"/>'],pin:['سن�
  square:['مربع','<rect x="5" y="5" width="14" height="14" rx="2"/>'],triangle:['مثلث','<path d="M12 3 22 20H2z"/>'],diamond:['لوزی','<path d="M12 2 22 12 12 22 2 12z"/>'],
  star:['ستاره','<path d="M12 2l3 7 7.5.6-5.7 4.9 1.8 7.4L12 18l-6.6 3.9 1.8-7.4L1.5 9.6 9 9z"/>'],cross:['بعلاوه','<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/>'],
  flag:['پرچم','<path d="M5 2h2v20H5z"/><path d="M7 3h12l-3.5 4.5L19 12H7z"/>',1]};
+const icSvg=(k,c,z)=>`<svg viewBox="0 0 24 24" width="${z}" height="${z}" fill="${c}" stroke="#fff" stroke-width="1.5" style="filter:drop-shadow(0 0 1px rgba(0,0,0,.65))">${(ICONS[k]||ICONS.circle)[1]}</svg>`;
 function mkIcon(k,c){const i=ICONS[k]||ICONS.circle;
  return L.divIcon({className:'',html:`<svg viewBox="0 0 24 24" width="26" height="26" fill="${c}" stroke="#fff" stroke-width="1.5" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))">${i[1]}</svg>`,iconSize:[26,26],iconAnchor:i[2]?[13,25]:[13,13],popupAnchor:[0,-12]})}
 const DB={db:null,
@@ -1329,12 +1337,14 @@ function renderList(){
   const s=stats(L_.geo),d=document.createElement('div');d.className='lay';
   d.innerHTML=`<b>${esc(L_.name)}${L_.res?' <span class="pill">نتیجه تحلیل</span>':''}</b><div style="font-size:12px">نقطه ${s.p} | خط ${s.l} | چندضلعی ${s.a}</div>
   <div class="row"><label><input type="checkbox" ${L_.on?'checked':''}> نمایش</label><input type="color" value="${L_.color}">
-  ${s.p?`<select class="ic" style="direction:rtl">${Object.keys(ICONS).map(k=>`<option value="${k}" ${k===L_.icon?'selected':''}>${ICONS[k][0]}</option>`).join('')}</select>`:''}</div>
+  ${s.p?`<button type="button" class="icb"></button>`:''}</div>
+  <div class="icgrid" hidden></div>
   <div class="row"><button class="btn g">زوم</button><button class="btn r">حذف</button></div>`;
-  const cb=d.querySelector('input[type=checkbox]'),cl=d.querySelector('input[type=color]'),ic=d.querySelector('select'),[bz,bd]=d.querySelectorAll('button');
+  const cb=d.querySelector('input[type=checkbox]'),cl=d.querySelector('input[type=color]'),icb=d.querySelector('.icb'),icg=d.querySelector('.icgrid'),[bz,bd]=d.querySelectorAll('button.btn');
+  const fillIc=()=>{if(!icb)return;icb.innerHTML=icSvg(L_.icon,L_.color,26)+'<span>'+ICONS[L_.icon][0]+'</span> ▾';icg.innerHTML=Object.keys(ICONS).map(k=>`<button type="button" data-k="${k}" class="${k===L_.icon?'on':''}">${icSvg(k,L_.color,32)}<span>${ICONS[k][0]}</span></button>`).join('')};fillIc();
   cb.onchange=()=>{cb.checked?L_.lyr.addTo(map):map.removeLayer(L_.lyr)};
-  cl.onchange=()=>{L_.color=cl.value;rebuild(L_)};
-  if(ic)ic.onchange=()=>{L_.icon=ic.value;rebuild(L_)};
+  cl.onchange=()=>{L_.color=cl.value;rebuild(L_);fillIc()};
+  if(icb){icb.onclick=()=>{icg.hidden=!icg.hidden};icg.onclick=e=>{const b=e.target.closest('button');if(!b)return;L_.icon=b.dataset.k;rebuild(L_);fillIc();icg.hidden=true}}
   bz.onclick=()=>{try{map.fitBounds(L_.lyr.getBounds(),{padding:[30,30]})}catch(e){}};
   bd.onclick=()=>{if(confirm('لایه «'+L_.name+'» حذف شود؟')){removeLayerObj(L_);renderList()}};
   el.appendChild(d)})}
@@ -2891,6 +2901,8 @@ function uiBuild(){
  ['bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
  ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
  bar.appendChild($('bMore'))}
+const APP_VER='1.05.21'; /* major.minor.counter — the last number grows by 1 with every change */
+$('verLbl').textContent='نسخه سامانه : '+APP_VER.replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
 $('bMore').onclick=()=>openSheet('sMore');
 $('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');$('bGd').onclick=()=>openSheet('sGuide');
 uiBuild();
