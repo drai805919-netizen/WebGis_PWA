@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#209678"/><stop offset="1" stop-color="#0a483e"/></linearGradient>
+<radialGradient id="glow" cx="50%" cy="38%" r="40%"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<clipPath id="top"><polygon points="94,292 256,211 418,292 256,373"/></clipPath>
+<filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
+<filter id="blur7"><feGaussianBlur stdDeviation="7"/></filter>
+</defs>
+<rect width="512" height="512" fill="url(#bg)"/><rect width="512" height="512" fill="url(#glow)"/>
+<g stroke="#fff" stroke-opacity=".07" stroke-width="1">
+<path d="M64 0V512M128 0V512M192 0V512M256 0V512M320 0V512M384 0V512M448 0V512M0 64H512M0 128H512M0 192H512M0 256H512M0 320H512M0 384H512M0 448H512"/></g>
+<g fill="none" stroke="#fff" stroke-opacity=".09" stroke-width="2"><ellipse cx="256" cy="300" rx="150" ry="82"/><ellipse cx="256" cy="300" rx="215" ry="118"/><ellipse cx="256" cy="300" rx="280" ry="154"/></g>
+<!-- stacked layers (bottom → top) -->
+<g stroke="#0a483e" stroke-opacity=".28" stroke-width="2" stroke-linejoin="round">
+<g fill-opacity=".30"><polygon fill="#c7c7c7" points="94,360 256,441 256,453 94,372"/><polygon fill="#e6e6e6" points="418,360 256,441 256,453 418,372"/><polygon fill="#fff" points="94,360 256,279 418,360 256,441"/></g>
+<g fill-opacity=".55"><polygon fill="#c7c7c7" points="94,326 256,407 256,419 94,338"/><polygon fill="#e6e6e6" points="418,326 256,407 256,419 418,338"/><polygon fill="#fff" points="94,326 256,245 418,326 256,407"/></g>
+<g fill-opacity=".97"><polygon fill="#b8c9c4" points="94,292 256,373 256,385 94,304"/><polygon fill="#d3e3de" points="418,292 256,373 256,385 418,304"/><polygon fill="#ecf8f3" points="94,292 256,211 418,292 256,373"/></g>
+</g>
+<g clip-path="url(#top)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M175 251.5L337 332.5M337 251.5L175 332.5" stroke="#1f6f5c" stroke-opacity=".28" stroke-width="3"/>
+<path d="M136 308L212 314L278 298L332 322L384 302" stroke="#1a73e8" stroke-opacity=".6" stroke-width="5"/></g>
+<!-- pin -->
+<ellipse cx="256" cy="292" rx="48" ry="11" fill="#002823" fill-opacity=".47" filter="url(#blur6)"/>
+<g filter="url(#blur7)" opacity=".4"><circle cx="256" cy="170" r="84"/><polygon points="194.2,227 317.8,227 256,294"/></g>
+<circle cx="256" cy="160" r="84" fill="#fff"/><polygon points="194.2,217 317.8,217 256,284" fill="#fff"/>
+<circle cx="256" cy="160" r="37" fill="#1f6f5c"/><circle cx="256" cy="160" r="19" fill="#fff"/>
+</svg>

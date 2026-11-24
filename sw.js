@@ -1,7 +1,7 @@
-const V='webgis-v21',TILE='webgis-tiles-v1',INT='webgis-int-v1',WMS='webgis-wms-v1',OFF='webgis-offline-v1';
+const V='webgis-v22',TILE='webgis-tiles-v1',INT='webgis-int-v1',WMS='webgis-wms-v1',OFF='webgis-offline-v1';
 const KEEP=[V,TILE,INT,WMS,OFF];            // OFF (نقشه‌های ذخیره‌شده برای آفلاین) هرگز پاک نمی‌شود
 const LOCAL=['./lib/leaflet.min.js','./lib/leaflet.min.css','./lib/images/layers.png','./lib/images/layers-2x.png','./lib/images/marker-icon.png','./lib/images/marker-icon-2x.png','./lib/images/marker-shadow.png','./lib/turf.min.js','./lib/jszip.min.js','./lib/jsQR.min.js','./lib/zxing.min.js'];
-const CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./maps.json','./guide.html'];
+const CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./icon.svg','./favicon-48.png','./apple-touch-icon.png','./maps.json','./guide.html'];
 const B='https://cdnjs.cloudflare.com/ajax/libs/';
 const CDN={'./lib/leaflet.min.js':B+'leaflet/1.9.4/leaflet.min.js','./lib/leaflet.min.css':B+'leaflet/1.9.4/leaflet.min.css','./lib/images/layers.png':B+'leaflet/1.9.4/images/layers.png','./lib/images/layers-2x.png':B+'leaflet/1.9.4/images/layers-2x.png','./lib/turf.min.js':B+'Turf.js/6.5.0/turf.min.js','./lib/jszip.min.js':B+'jszip/3.10.1/jszip.min.js','./lib/jsQR.min.js':B+'jsQR/1.4.0/jsQR.min.js','./lib/zxing.min.js':'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js'};
 const PUBTILE=/openstreetmap\.org|arcgisonline\.com|opentopomap\.org/;
