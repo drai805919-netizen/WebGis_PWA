@@ -1,4 +1,4 @@
-const V='webgis-v22',TILE='webgis-tiles-v1',INT='webgis-int-v1',WMS='webgis-wms-v1',OFF='webgis-offline-v1';
+const V='webgis-v1.05.23',TILE='webgis-tiles-v1',INT='webgis-int-v1',WMS='webgis-wms-v1',OFF='webgis-offline-v1';
 const KEEP=[V,TILE,INT,WMS,OFF];            // OFF (نقشه‌های ذخیره‌شده برای آفلاین) هرگز پاک نمی‌شود
 const LOCAL=['./lib/leaflet.min.js','./lib/leaflet.min.css','./lib/images/layers.png','./lib/images/layers-2x.png','./lib/images/marker-icon.png','./lib/images/marker-icon-2x.png','./lib/images/marker-shadow.png','./lib/turf.min.js','./lib/jszip.min.js','./lib/jsQR.min.js','./lib/zxing.min.js'];
 const CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./icon.svg','./favicon-48.png','./apple-touch-icon.png','./maps.json','./guide.html'];
@@ -44,7 +44,7 @@ self.addEventListener('fetch',e=>{
   if(/\/tiles\/\d+\//.test(p))return e.respondWith(tileInt(r));
   if(/\/wms$/.test(p))return e.respondWith(wmsNet(r));
   if(/\/health$/.test(p))return;
-  if(/\/maps\.json$/.test(p))return e.respondWith(netFirst(r));
+  if(/\/(maps\.json|guide\.html|manifest\.json|icon\.svg|icon-\d+\.png|favicon-48\.png|apple-touch-icon\.png)$/.test(p))return e.respondWith(netFirst(r));
   return e.respondWith(shell(r))}
  if(u.hostname==='cdnjs.cloudflare.com'||u.hostname==='cdn.jsdelivr.net'){
   return e.respondWith(caches.match(r.url).then(c=>c||fetch(r.url).then(x=>{if(x.ok){const y=x.clone();caches.open(V).then(k=>k.put(r.url,y))}return x})))}
