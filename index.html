@@ -7,9 +7,9 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f5f4e">
 <script>try{var __t=JSON.parse(localStorage.getItem("webgis_settings")||"{}").theme,__h=new Date().getHours();document.documentElement.dataset.theme=(__t==="dark"||(__t==="auto"&&(__h<6||__h>=18)))?"dark":"light"}catch(e){}</script>
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.23">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.23">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.23">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.24">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.24">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.24">
 <link rel="stylesheet" href="lib/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'">
 <style>
 :root{--bg:#f4f6f3;--fg:#17261f;--pri:#1f6f5c;--pri2:#e8f1ee;--bd:#cfd9d3}
@@ -488,7 +488,7 @@ const UTM={Z:39,a:6378137,f:1/298.257223563,k0:.9996,
   return{lat:p/r,lon:(this.Z*6-183)+Math.atan2(Math.sinh(e),Math.cos(x))/r}}};
 
 /* ---------- Map ---------- */
-const map=L.map('map',{zoomControl:true}).setView([37.28,49.58],9);
+const map=L.map('map',{zoomControl:true,renderer:L.canvas({padding:.4,tolerance:8})}).setView([37.28,49.58],9);
 /* v22: popups are kept fully visible (below the top bar, above open panels / bottom bar) */
 L.Popup.mergeOptions({autoPan:false});
 function popupFit(pop){
@@ -1304,7 +1304,7 @@ function photoData(file,max=1024,q=.7){return new Promise((res,rej)=>{
   c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
   URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',q))};
  im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('تصویر خوانده نشد'))};im.src=u})}
-function reopen(L_,f){L_.lyr.eachLayer(l=>{if(l.feature===f)l.openPopup()})}
+function reopen(L_,f){L_.lyr.eachLayer(l=>{if(l.feature===f)ensurePop(L_,l).openPopup()})}
 function featC(f){try{return f.geometry.type==='Point'?f.geometry.coordinates:turf.centroid(f).geometry.coordinates}catch(e){return null}}
 const editingF=new WeakSet();
 function editForm(L_,f){
@@ -1354,17 +1354,33 @@ function popEl(L_,f){
   mk('ویرایش مشخصات','',()=>{editingF.add(f);reopen(L_,f)})}
  if(L_.user)mk('حذف','r',async()=>{if(await dlg('این نشانگر حذف شود؟')){L_.geo.features=L_.geo.features.filter(k=>k!==f);rebuild(L_);map.closePopup()}});
  return d}
-function rebuild(L_){L_.lyr.clearLayers();L_.lyr.addData(L_.geo);saveL(L_);renderList()}
+/* v24: big layers are added in chunks (UI stays responsive) and drawn lightly (Canvas) */
+const BIG=2500,CHUNK=1500,DENSE=600;
+function fillLayer(L_){
+ const fs=(L_.geo&&L_.geo.features)||[],tok=L_.tok=(L_.tok||0)+1;
+ L_.dense=fs.length>DENSE;L_.lyr.clearLayers();
+ if(fs.length<=BIG){L_.lyr.addData(L_.geo);return}
+ let i=0;
+ const step=()=>{if(L_.tok!==tok)return;
+  L_.lyr.addData({type:'FeatureCollection',features:fs.slice(i,i+CHUNK)});i+=CHUNK;
+  if(i<fs.length){toast('بارگذاری «'+L_.name+'» '+Math.round(i*100/fs.length)+'٪',1800);setTimeout(step,16)}
+  else{const t=$('toast');if(t)t.style.display='none'}};
+ step()}
+function ensurePop(L_,l){if(!l.getPopup())l.bindPopup(()=>popEl(L_,l.feature));return l}
+function rebuild(L_){fillLayer(L_);saveL(L_);renderList()}
 function mkLayer(name,geo,user,sv){
  const id=sv?sv.id:++lid;
  const L_={id,name,geo,color:sv?sv.color:(user?'#c0392b':colors[(id-1)%colors.length]),icon:sv?sv.icon:(user?'pin':'circle'),on:sv?sv.on!==false:true,user:!!user,res:!!(sv&&sv.res)};
- L_.lyr=L.geoJSON(geo,{
+ L_.lyr=L.geoJSON(null,{
   style:()=>({color:L_.color,weight:3,fillOpacity:.25}),
   pointToLayer:(f,ll)=>{
-   const m=L_.icon==='circle'?L.circleMarker(ll,{radius:user?8:7,color:'#fff',weight:2,fillColor:L_.color,fillOpacity:.95}):L.marker(ll,{icon:mkIcon(L_.icon,L_.color)});
-   if(user&&f.properties&&f.properties['نام'])m.bindTooltip(esc(f.properties['نام']),{permanent:true,direction:'top',offset:[0,-6]});return m},
-  onEachFeature:(f,l)=>l.bindPopup(()=>popEl(L_,f))});
- layers.push(L_);ctl.addOverlay(L_.lyr,esc(name));if(L_.on)L_.lyr.addTo(map);
+   const m=(L_.icon==='circle'||L_.dense)?L.circleMarker(ll,{radius:L_.dense?5:(user?8:7),color:'#fff',weight:L_.dense?1:2,fillColor:L_.color,fillOpacity:.95}):L.marker(ll,{icon:mkIcon(L_.icon,L_.color)});
+   if(user&&!L_.dense&&f.properties&&f.properties['نام'])m.bindTooltip(esc(f.properties['نام']),{permanent:true,direction:'top',offset:[0,-6]});return m},
+  });
+ /* popups are created lazily on first click (not for every feature at load) */
+ L_.lyr.on('click',e=>{const l=e.layer;if(!l||!l.feature||l.getPopup())return;L.DomEvent.stop(e);ensurePop(L_,l).openPopup(e.latlng)});
+ {const gb=L_.lyr.getBounds.bind(L_.lyr);L_.lyr.getBounds=()=>{if(((L_.geo&&L_.geo.features)||[]).length>BIG){try{const b=turf.bbox(L_.geo);return L.latLngBounds([b[1],b[0]],[b[3],b[2]])}catch(e){}}return gb()}}
+ layers.push(L_);ctl.addOverlay(L_.lyr,esc(name));if(L_.on)L_.lyr.addTo(map);fillLayer(L_);
  return L_}
 function addLayer(name,geo){
  const L_=mkLayer(name,geo,false);saveL(L_);
@@ -2177,7 +2193,7 @@ function goF(L_,f){
  if(lyr.getLatLng){c=lyr.getLatLng();map.setView(c,Math.max(map.getZoom(),18))}
  else{map.fitBounds(lyr.getBounds(),{padding:[40,40],maxZoom:19});c=lyr.getBounds().getCenter()}
  const h=L.circleMarker(c,{radius:20,color:'#e74c3c',weight:4,fill:false,interactive:false}).addTo(map);setTimeout(()=>map.removeLayer(h),5000);
- setTimeout(()=>lyr.openPopup(),350)}
+ setTimeout(()=>ensurePop(L_,lyr).openPopup(),350)}
 function runSearch(){
  const q=$('sQ').value;if(!q.trim())return toast('متن جستجو را وارد کنید');
  if(!activeLayers().length)return toast('هیچ لایه فعالی وجود ندارد');
@@ -2956,7 +2972,7 @@ function uiBuild(){
  ['bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
  ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
  bar.appendChild($('bMore'))}
-const APP_VER='1.05.23'; /* major.minor.counter — the last number grows by 1 with every change */
+const APP_VER='1.05.24'; /* major.minor.counter — the last number grows by 1 with every change */
 $('verLbl').textContent='نسخه سامانه : '+APP_VER.replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
 $('bMore').onclick=()=>openSheet('sMore');
 $('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');$('bGd').onclick=()=>openSheet('sGuide');
