@@ -213,6 +213,12 @@ html[data-theme=dark] .gh i{background:#5a606b}
 #dlgOk.danger{background:linear-gradient(135deg,#d9534f,#b02a24)}
 #dlgNo{background:var(--ln,#eceff1);color:var(--fg,#17261f)}
 @keyframes dlgF{from{opacity:0}to{opacity:1}}@keyframes dlgP{from{transform:scale(.92);opacity:0}to{transform:none;opacity:1}}
+
+/* ===== v24: symbology panel ===== */
+.sympanel{margin-top:6px;padding:6px 0}.sympanel[hidden]{display:none}
+.sr{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--ln)}
+.sr input[type=color]{flex:none;width:38px;height:28px;padding:0;border:1px solid var(--bd);border-radius:6px;background:transparent}
+.sr .sv{flex:1;word-break:break-word;font-size:13px}.sr .sc{flex:none;min-width:34px;text-align:left;color:var(--mt);font-size:12px}
 </style>
 <script>
 /* v22: promise-based confirm dialog (replaces native confirm: no site title, Persian buttons) */
@@ -488,7 +494,7 @@ const UTM={Z:39,a:6378137,f:1/298.257223563,k0:.9996,
   return{lat:p/r,lon:(this.Z*6-183)+Math.atan2(Math.sinh(e),Math.cos(x))/r}}};
 
 /* ---------- Map ---------- */
-const map=L.map('map',{zoomControl:true,renderer:L.canvas({padding:.4,tolerance:8})}).setView([37.28,49.58],9);
+const map=L.map('map',{zoomControl:true,preferCanvas:true,renderer:L.canvas({padding:.3,tolerance:6})}).setView([37.28,49.58],9);
 /* v22: popups are kept fully visible (below the top bar, above open panels / bottom bar) */
 L.Popup.mergeOptions({autoPan:false});
 function popupFit(pop){
@@ -795,12 +801,37 @@ const ICONS={circle:['دایره','<circle cx="12" cy="12" r="8"/>'],pin:['سن�
 const icSvg=(k,c,z)=>`<svg viewBox="0 0 24 24" width="${z}" height="${z}" fill="${c}" stroke="#fff" stroke-width="1.5" style="filter:drop-shadow(0 0 1px rgba(0,0,0,.65))">${(ICONS[k]||ICONS.circle)[1]}</svg>`;
 function mkIcon(k,c){const i=ICONS[k]||ICONS.circle;
  return L.divIcon({className:'',html:`<svg viewBox="0 0 24 24" width="26" height="26" fill="${c}" stroke="#fff" stroke-width="1.5" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))">${i[1]}</svg>`,iconSize:[26,26],iconAnchor:i[2]?[13,25]:[13,13],popupAnchor:[0,-12]})}
+/* ---------- Canvas icon marker: pin / flag / square ... drawn on the map canvas (thousands of DOM markers made zoom/pan slow) ---------- */
+const ICON_PATH={circle:'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z',pin:'M12 22s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z',square:'M7 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z',triangle:'M12 3 22 20H2z',diamond:'M12 2 22 12 12 22 2 12z',star:'M12 2l3 7 7.5.6-5.7 4.9 1.8 7.4L12 18l-6.6 3.9 1.8-7.4L1.5 9.6 9 9z',cross:'M9 3h6v6h6v6h-6v6H9v-6H3V9h6z',flag:'M5 2h2v20H5z M7 3h12l-3.5 4.5L19 12H7z'};
+const ICON_DOT='M12 7.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',ICON_P2D={};
+const icP2D=k=>ICON_P2D[k]||(ICON_P2D[k]=new Path2D(ICON_PATH[k]||ICON_PATH.circle));
+const IconMarker=L.CircleMarker.extend({
+ initialize(ll,o){L.CircleMarker.prototype.initialize.call(this,ll,Object.assign({radius:14,fillOpacity:1},o))},
+ _anch(){const i=ICONS[this.options.iconKey];return !!(i&&i[2])},
+ _updateBounds(){const p=this._point,w=this._clickTolerance(),a=this._anch();
+  this._pxBounds=L.bounds([p.x-15-w,p.y-(a?29:15)-w],[p.x+15+w,p.y+(a?3:15)+w])},
+ _containsPoint(p){const a=this._anch(),c=this._point,w=this._clickTolerance();
+  return Math.abs(p.x-c.x)<=15+w&&p.y>=c.y-(a?28:14)-w&&p.y<=c.y+(a?2:14)+w},
+ _getPopupAnchor(){return L.point(0,this._anch()?-26:-14)},
+ _getTooltipAnchor(){return L.point(0,this._anch()?-28:-14)},
+ _updatePath(){
+  const r=this._renderer,ctx=r&&r._ctx;if(!ctx||!r._drawing)return;
+  const c=this._point,k=this.options.iconKey,a=this._anch(),p=icP2D(k);
+  ctx.save();ctx.translate(c.x-13,c.y-(a?25:13));ctx.scale(26/24,26/24);ctx.lineJoin='round';
+  ctx.fillStyle=this.options.fillColor||'#c0392b';ctx.fill(p);
+  ctx.lineWidth=3.4;ctx.strokeStyle='rgba(0,0,0,.35)';ctx.stroke(p);
+  ctx.lineWidth=1.5;ctx.strokeStyle='#fff';ctx.stroke(p);
+  if(k==='pin'){ctx.fillStyle='#fff';ctx.fill(icP2D('pinDot'))}
+  ctx.restore()}
+});
+ICON_PATH.pinDot=ICON_DOT;
+
 const DB={db:null,
  open(){return new Promise((r,j)=>{const q=indexedDB.open('webgis',2);q.onupgradeneeded=()=>{const d=q.result;if(!d.objectStoreNames.contains('layers'))d.createObjectStore('layers',{keyPath:'id'});if(!d.objectStoreNames.contains('photos'))d.createObjectStore('photos',{keyPath:'id'});if(!d.objectStoreNames.contains('tracks'))d.createObjectStore('tracks',{keyPath:'id'});if(!d.objectStoreNames.contains('trkpts'))d.createObjectStore('trkpts',{keyPath:['tid','i']})};q.onsuccess=()=>{DB.db=q.result;r()};q.onerror=()=>j(q.error)})},
  st(sn,m,f){return new Promise(r=>{try{const q=f(DB.db.transaction(sn,m).objectStore(sn));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  run(m,f){return new Promise(r=>{try{const q=f(DB.db.transaction('layers',m).objectStore('layers'));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  put(o){return DB.run('readwrite',st=>st.put(o))},del(id){return DB.run('readwrite',st=>st.delete(id))},clear(){return DB.run('readwrite',st=>st.clear())},all(){return DB.run('readonly',st=>st.getAll()).then(x=>x||[])}};
-function saveL(L_){DB.put({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res})}
+function saveL(L_){DB.put({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res,sym:L_.sym||null})}
 
 /* ---------- GeoPackage reader (pure JS SQLite parser, no WASM / no CDN) ---------- */
 function gpkgRead(buf,opt){
@@ -1304,7 +1335,8 @@ function photoData(file,max=1024,q=.7){return new Promise((res,rej)=>{
   c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
   URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',q))};
  im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('تصویر خوانده نشد'))};im.src=u})}
-function reopen(L_,f){L_.lyr.eachLayer(l=>{if(l.feature===f)ensurePop(L_,l).openPopup()})}
+function ensurePop(L_,l){if(l&&l.feature&&!(l.getPopup&&l.getPopup()))l.bindPopup(()=>popEl(L_,l.feature));return l}
+function reopen(L_,f){L_.lyr.eachLayer(l=>{if(l.feature===f){ensurePop(L_,l);l.openPopup()}})}
 function featC(f){try{return f.geometry.type==='Point'?f.geometry.coordinates:turf.centroid(f).geometry.coordinates}catch(e){return null}}
 const editingF=new WeakSet();
 function editForm(L_,f){
@@ -1354,38 +1386,95 @@ function popEl(L_,f){
   mk('ویرایش مشخصات','',()=>{editingF.add(f);reopen(L_,f)})}
  if(L_.user)mk('حذف','r',async()=>{if(await dlg('این نشانگر حذف شود؟')){L_.geo.features=L_.geo.features.filter(k=>k!==f);rebuild(L_);map.closePopup()}});
  return d}
-/* v24: big layers are added in chunks (UI stays responsive) and drawn lightly (Canvas) */
-const BIG=2500,CHUNK=1500,DENSE=600;
-function fillLayer(L_){
- const fs=(L_.geo&&L_.geo.features)||[],tok=L_.tok=(L_.tok||0)+1;
- L_.dense=fs.length>DENSE;L_.lyr.clearLayers();
- if(fs.length<=BIG){L_.lyr.addData(L_.geo);return}
- let i=0;
- const step=()=>{if(L_.tok!==tok)return;
-  L_.lyr.addData({type:'FeatureCollection',features:fs.slice(i,i+CHUNK)});i+=CHUNK;
-  if(i<fs.length){toast('بارگذاری «'+L_.name+'» '+Math.round(i*100/fs.length)+'٪',1800);setTimeout(step,16)}
-  else{const t=$('toast');if(t)t.style.display='none'}};
- step()}
-function ensurePop(L_,l){if(!l.getPopup())l.bindPopup(()=>popEl(L_,l.feature));return l}
-function rebuild(L_){fillLayer(L_);saveL(L_);renderList()}
+/* ---------- Symbology: color a layer by the unique values of one attribute column ---------- */
+const SYM_PAL=['#e6194b','#3cb44b','#4363d8','#f58231','#911eb4','#46f0f0','#f032e6','#bcf60c','#008080','#9a6324','#800000','#000075','#808000','#ffd8b1','#aaffc3'];
+function hslHex(h,s,l){s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return '#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('')}
+const symPal=i=>i<SYM_PAL.length?SYM_PAL[i]:hslHex((i*137.508)%360,68,48);
+function symKey(v){return v===null||v===undefined||String(v).trim()===''?'(خالی)':String(v).trim()}
+function symColor(L_,f){const s=L_.sym;if(!s||!s.field)return null;return s.map[symKey(f.properties&&f.properties[s.field])]||'#9e9e9e'}
+function symHidden(L_,f){const s=L_.sym;return !!(s&&s.field&&s.hide&&s.hide[symKey(f.properties&&f.properties[s.field])])}
+function cleanSym(x){
+ if(!x||typeof x.field!=='string'||!x.map||typeof x.map!=='object')return null;
+ const map={},hide={};
+ for(const k in x.map)if(/^#[0-9a-f]{6}$/i.test(x.map[k]))map[k]=x.map[k];
+ for(const k in(x.hide||{}))if(x.hide[k])hide[k]=true;
+ return{field:x.field,map,hide}}
+function symSort(keys){
+ const num=keys.filter(k=>k!=='(خالی)');
+ const allNum=num.length>0&&num.every(k=>isFinite(parseFloat(String(k).replace(',','.')))&&/^[-+]?[\d.,٫]+$/.test(k));
+ const cmp=allNum?(a,b)=>parseFloat(String(a).replace(',','.'))-parseFloat(String(b).replace(',','.')):(a,b)=>String(a).localeCompare(String(b),'fa',{numeric:true});
+ const out=num.slice().sort(cmp);if(keys.includes('(خالی)'))out.push('(خالی)');return out}
+/* counts of unique values in a column; null when there are more than 100 (not a good column for symbology) */
+function symCounts(L_,field){
+ const m=new Map();
+ for(const f of L_.geo.features){const k=symKey(f.properties&&f.properties[field]);m.set(k,(m.get(k)||0)+1);if(m.size>100)return null}
+ return m}
+function symFields(L_){
+ const k=new Set(),fs=L_.geo.features,n=Math.min(fs.length,5000);
+ for(let i=0;i<n;i++){const p=fs[i]&&fs[i].properties;if(!p)continue;for(const x in p)if(!k.has(x)&&!UKEYS.includes(x)&&!isImg(p[x])&&(p[x]===null||typeof p[x]!=='object'))k.add(x)}
+ return[...k]}
+function symBuild(L_,field){
+ const counts=symCounts(L_,field);if(!counts)return null;
+ const old=(L_.sym&&L_.sym.field===field)?L_.sym:null,keys=symSort([...counts.keys()]),map={},hide={};
+ keys.forEach((k,i)=>{map[k]=(old&&old.map[k])||symPal(i);if(old&&old.hide&&old.hide[k])hide[k]=true});
+ return{field,map,hide}}
+function vcount(geo){let n=0;const w=x=>{if(typeof x[0]==='number')n++;else for(const y of x)w(y)};
+ (geo.features||[]).forEach(f=>{if(f&&f.geometry&&f.geometry.coordinates)w(f.geometry.coordinates)});return n}
+function restyle(L_){L_.lyr.clearLayers();L_.lyr.addData(L_.geo);saveL(L_)}
+let symT=0;const restyleSoon=L_=>{clearTimeout(symT);symT=setTimeout(()=>restyle(L_),150)};
+function symPanel(L_,box){
+ box.innerHTML='';
+ const fields=symFields(L_);
+ if(!fields.length){box.textContent='این لایه ستون مشخصاتی ندارد.';return}
+ const s=L_.sym,top=document.createElement('div');top.className='row';
+ const lab=document.createElement('label');lab.style.fontSize='13px';lab.textContent='ستون: ';
+ const sel=document.createElement('select');fields.forEach((x,i)=>{const o=document.createElement('option');o.value=i;o.textContent=x;if(s&&s.field===x)o.selected=true;sel.appendChild(o)});lab.appendChild(sel);top.appendChild(lab);
+ const mk=(t,c,fn)=>{const b=document.createElement('button');b.type='button';b.className='btn '+c;b.style.fontSize='12px';b.textContent=t;b.onclick=fn;top.appendChild(b);return b};
+ mk('اعمال رنگ‌بندی','g',()=>{
+  const ns=symBuild(L_,fields[+sel.value]);
+  if(!ns)return toast('این ستون بیش از ۱۰۰ مقدار متفاوت دارد؛ ستون دیگری (مثل سایز، نوع، جنس) را انتخاب کنید',5000);
+  L_.sym=ns;restyle(L_);symPanel(L_,box);symTitle(L_)});
+ if(s)mk('حذف رنگ‌بندی','r',()=>{L_.sym=null;restyle(L_);box.hidden=true;symTitle(L_)});
+ box.appendChild(top);
+ if(!s)return;
+ const counts=symCounts(L_,s.field),list=document.createElement('div');
+ if(!counts){box.appendChild(list);list.textContent='مقادیر ستون بیش از ۱۰۰ مورد است.';return}
+ const keys=symSort([...new Set([...counts.keys(),...Object.keys(s.map)])]);
+ const all=document.createElement('div');all.className='row';
+ const bOn=document.createElement('button');bOn.type='button';bOn.className='btn g';bOn.style.fontSize='12px';bOn.textContent='نمایش همه';
+ bOn.onclick=()=>{s.hide={};restyle(L_);symPanel(L_,box)};all.appendChild(bOn);box.appendChild(all);
+ keys.forEach(k=>{
+  const r=document.createElement('label');r.className='sr';
+  const cb=document.createElement('input');cb.type='checkbox';cb.checked=!(s.hide&&s.hide[k]);
+  const co=document.createElement('input');co.type='color';co.value=s.map[k]||'#9e9e9e';
+  const nm=document.createElement('span');nm.className='sv';nm.textContent=k;
+  const cn=document.createElement('span');cn.className='sc';cn.textContent=String(counts.get(k)||0);
+  cb.onchange=()=>{s.hide=s.hide||{};if(cb.checked)delete s.hide[k];else s.hide[k]=true;restyleSoon(L_)};
+  co.onchange=()=>{s.map[k]=co.value;restyleSoon(L_)};
+  r.append(cb,co,nm,cn);list.appendChild(r)});
+ box.appendChild(list)}
+function symTitle(L_){const el=document.getElementById('symt-'+L_.id);if(el)el.textContent=L_.sym?'رنگ‌بندی بر اساس ستون «'+L_.sym.field+'»':''}
+
+function rebuild(L_){L_.lyr.clearLayers();L_.lyr.addData(L_.geo);saveL(L_);renderList()}
 function mkLayer(name,geo,user,sv){
  const id=sv?sv.id:++lid;
  const L_={id,name,geo,color:sv?sv.color:(user?'#c0392b':colors[(id-1)%colors.length]),icon:sv?sv.icon:(user?'pin':'circle'),on:sv?sv.on!==false:true,user:!!user,res:!!(sv&&sv.res)};
- L_.lyr=L.geoJSON(null,{
-  style:()=>({color:L_.color,weight:3,fillOpacity:.25}),
+ L_.sym=sv&&sv.sym?cleanSym(sv.sym):null;
+ L_.lyr=L.geoJSON(geo,{
+  filter:f=>!symHidden(L_,f),
+  style:f=>({color:symColor(L_,f)||L_.color,weight:3,fillOpacity:.25}),
   pointToLayer:(f,ll)=>{
-   const m=(L_.icon==='circle'||L_.dense)?L.circleMarker(ll,{radius:L_.dense?5:(user?8:7),color:'#fff',weight:L_.dense?1:2,fillColor:L_.color,fillOpacity:.95}):L.marker(ll,{icon:mkIcon(L_.icon,L_.color)});
-   if(user&&!L_.dense&&f.properties&&f.properties['نام'])m.bindTooltip(esc(f.properties['نام']),{permanent:true,direction:'top',offset:[0,-6]});return m},
-  });
- /* popups are created lazily on first click (not for every feature at load) */
- L_.lyr.on('click',e=>{const l=e.layer;if(!l||!l.feature||l.getPopup())return;L.DomEvent.stop(e);ensurePop(L_,l).openPopup(e.latlng)});
- {const gb=L_.lyr.getBounds.bind(L_.lyr);L_.lyr.getBounds=()=>{if(((L_.geo&&L_.geo.features)||[]).length>BIG){try{const b=turf.bbox(L_.geo);return L.latLngBounds([b[1],b[0]],[b[3],b[2]])}catch(e){}}return gb()}}
- layers.push(L_);ctl.addOverlay(L_.lyr,esc(name));if(L_.on)L_.lyr.addTo(map);fillLayer(L_);
+   const col=symColor(L_,f)||L_.color;
+   const m=L_.icon==='circle'?L.circleMarker(ll,{radius:user?8:7,color:'#fff',weight:2,fillColor:col,fillOpacity:.95}):new IconMarker(ll,{iconKey:L_.icon,fillColor:col});
+   if(user&&f.properties&&f.properties['نام'])m.bindTooltip(esc(f.properties['نام']),{permanent:true,direction:'top',offset:[0,-2]});return m}});
+ /* popups are bound lazily on first tap (thousands of pre-built popups slowed loading) */
+ L_.lyr.on('click',e=>{const l=e.layer;if(!l||!l.feature||(l.getPopup&&l.getPopup()))return;const f=l.feature;l.bindPopup(()=>popEl(L_,f));l.openPopup(e.latlng)});
+ layers.push(L_);ctl.addOverlay(L_.lyr,esc(name));if(L_.on)L_.lyr.addTo(map);
  return L_}
 function addLayer(name,geo){
  const L_=mkLayer(name,geo,false);saveL(L_);
  try{map.fitBounds(L_.lyr.getBounds(),{padding:[30,30]})}catch(e){}
- renderList();PH.migGeo(geo).then(n=>{if(n)saveL(L_)}).catch(()=>{});toast(`«${name}» بارگذاری شد: ${geo.features.length} عارضه`)}
+ renderList();PH.migGeo(geo).then(n=>{if(n)saveL(L_)}).catch(()=>{});const vc=vcount(geo);toast(`«${name}» بارگذاری شد: ${geo.features.length} عارضه، ${vc.toLocaleString('en')} رأس`+(vc>400000?' — لایه سنگین است؛ در صورت کندی داده‌ی ساده‌شده بارگذاری کنید':''),vc>400000?7000:3000)}
 function stats(geo){let p=0,l=0,a=0;turf.flattenEach(geo,f=>{const t=f.geometry.type;if(t==='Point')p++;else if(t==='LineString')l++;else a++});return{p,l,a}}
 /* v22: zoom to a layer (bbox from data, keeps the extent visible above the open panel) */
 function zoomLayer(L_){
@@ -1409,14 +1498,16 @@ function renderList(){
   const s=stats(L_.geo),d=document.createElement('div');d.className='lay';
   d.innerHTML=`<b>${esc(L_.name)}${L_.res?' <span class="pill">نتیجه تحلیل</span>':''}</b><div style="font-size:12px">نقطه ${s.p} | خط ${s.l} | چندضلعی ${s.a}</div>
   <div class="row"><label><input type="checkbox" ${L_.on?'checked':''}> نمایش</label><input type="color" value="${L_.color}">
-  ${s.p?`<button type="button" class="icb"></button>`:''}</div>
+  ${s.p?`<button type="button" class="icb"></button>`:''}<button type="button" class="icb symb">🎨 رنگ‌بندی</button></div>
   <div class="icgrid" hidden></div>
+  <div class="symt" id="symt-${L_.id}" style="font-size:12px;color:var(--mt)"></div><div class="sympanel" hidden></div>
   <div class="row"><button class="btn g">زوم</button><button class="btn r">حذف</button></div>`;
   const cb=d.querySelector('input[type=checkbox]'),cl=d.querySelector('input[type=color]'),icb=d.querySelector('.icb'),icg=d.querySelector('.icgrid'),[bz,bd]=d.querySelectorAll('button.btn');
   const fillIc=()=>{if(!icb)return;icb.innerHTML=icSvg(L_.icon,L_.color,26)+'<span>'+ICONS[L_.icon][0]+'</span> ▾';icg.innerHTML=Object.keys(ICONS).map(k=>`<button type="button" data-k="${k}" class="${k===L_.icon?'on':''}">${icSvg(k,L_.color,32)}<span>${ICONS[k][0]}</span></button>`).join('')};fillIc();
   cb.onchange=()=>{cb.checked?L_.lyr.addTo(map):map.removeLayer(L_.lyr)};
   cl.onchange=()=>{L_.color=cl.value;rebuild(L_);fillIc()};
   if(icb){icb.onclick=()=>{icg.hidden=!icg.hidden};icg.onclick=e=>{const b=e.target.closest('button');if(!b)return;L_.icon=b.dataset.k;rebuild(L_);fillIc();icg.hidden=true}}
+  {const sb=d.querySelector('.symb'),sp=d.querySelector('.sympanel'),st=d.querySelector('.symt');if(L_.sym)st.textContent='رنگ‌بندی بر اساس ستون «'+L_.sym.field+'»';sb.onclick=()=>{sp.hidden=!sp.hidden;if(!sp.hidden)symPanel(L_,sp)}}
   bz.onclick=()=>zoomLayer(L_);
   bd.onclick=async()=>{if(await dlg('لایه «'+L_.name+'» حذف شود؟')){removeLayerObj(L_);renderList()}};
   el.appendChild(d)})}
@@ -2193,7 +2284,7 @@ function goF(L_,f){
  if(lyr.getLatLng){c=lyr.getLatLng();map.setView(c,Math.max(map.getZoom(),18))}
  else{map.fitBounds(lyr.getBounds(),{padding:[40,40],maxZoom:19});c=lyr.getBounds().getCenter()}
  const h=L.circleMarker(c,{radius:20,color:'#e74c3c',weight:4,fill:false,interactive:false}).addTo(map);setTimeout(()=>map.removeLayer(h),5000);
- setTimeout(()=>ensurePop(L_,lyr).openPopup(),350)}
+ setTimeout(()=>{ensurePop(L_,lyr);lyr.openPopup()},350)}
 function runSearch(){
  const q=$('sQ').value;if(!q.trim())return toast('متن جستجو را وارد کنید');
  if(!activeLayers().length)return toast('هیچ لایه فعالی وجود ندارد');
@@ -2470,7 +2561,7 @@ async function bkInfo(){
  try{const e=await navigator.storage.estimate();h+=` | فضای مصرفی مرورگر: <b>${(e.usage/1048576).toFixed(1)} MB</b>`}catch(_){}
  try{const ps=await PH.stats(),u=PH.usedIds();h+=`<br>مخزن عکس: <b>${ps.n}</b> عکس (${(ps.bytes/1048576).toFixed(1)} MB)`+(ps.n>u.size?` — <span style="color:#a5281b">${ps.n-u.size} عکس بی‌مصرف</span>`:'')}catch(_){}
  $('bkInfo').innerHTML=h}
-const bkSer=L_=>({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res});
+const bkSer=L_=>({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res,sym:L_.sym||null});
 $('bkMake').onclick=async()=>{
  try{
   let all=await DB.all();if(!all.length&&layers.length)all=layers.map(bkSer);
@@ -2515,7 +2606,7 @@ $('bkFile').onchange=async e=>{
      l.geo.features.forEach(ft=>{if(!have.has(key(ft))){ex.geo.features.push(ft);n++}});
      if(n){rebuild(ex);merged+=n}continue}}
    let id=(replace&&Number.isFinite(+l.id)&&!used.has(+l.id))?+l.id:++lid;used.add(id);lid=Math.max(lid,id);
-   const sv={id,color:/^#[0-9a-f]{6}$/i.test(l.color)?l.color:'#1f6f5c',icon:ICONS[l.icon]?l.icon:'circle',on:l.on!==false,res:!!l.res};
+   const sv={id,color:/^#[0-9a-f]{6}$/i.test(l.color)?l.color:'#1f6f5c',icon:ICONS[l.icon]?l.icon:'circle',on:l.on!==false,res:!!l.res,sym:cleanSym(l.sym)};
    const L_=mkLayer(nm,l.geo,user,sv);saveL(L_);added++}
   userL=layers.find(l=>l.user&&l.name==='نشانگرهای من')||null;editL=layers.find(l=>l.user&&l.name==='ویرایش‌ها')||null;
   renderList();bkInfo();PH.migAll().catch(()=>{});
