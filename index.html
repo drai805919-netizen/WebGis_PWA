@@ -7,9 +7,9 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f5f4e">
 <script>try{var __t=JSON.parse(localStorage.getItem("webgis_settings")||"{}").theme,__h=new Date().getHours();document.documentElement.dataset.theme=(__t==="dark"||(__t==="auto"&&(__h<6||__h>=18)))?"dark":"light"}catch(e){}</script>
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.24">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.24">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.24">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.25">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.25">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.25">
 <link rel="stylesheet" href="lib/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'">
 <style>
 :root{--bg:#f4f6f3;--fg:#17261f;--pri:#1f6f5c;--pri2:#e8f1ee;--bd:#cfd9d3}
@@ -219,6 +219,15 @@ html[data-theme=dark] .gh i{background:#5a606b}
 .sr{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--ln)}
 .sr input[type=color]{flex:none;width:38px;height:28px;padding:0;border:1px solid var(--bd);border-radius:6px;background:transparent}
 .sr .sv{flex:1;word-break:break-word;font-size:13px}.sr .sc{flex:none;min-width:34px;text-align:left;color:var(--mt);font-size:12px}
+
+/* ===== v25: labels, calculator, palette ===== */
+.chip{padding:3px 9px;border:1px solid var(--bd);border-radius:14px;background:var(--pri2);font:inherit;font-size:12px;color:var(--fg)}
+.chip.ex{background:transparent;border-style:dashed}
+.sw{width:26px;height:26px;border-radius:50%;border:2px solid var(--bd);padding:0;font-size:13px;line-height:1;cursor:pointer;background:var(--sf);color:var(--fg)}
+.sw.on{border-color:var(--pri);box-shadow:0 0 0 2px var(--pri)}
+.swc{width:34px;height:26px;padding:0;border:1px solid var(--bd);border-radius:6px;background:transparent}
+.labpanel{margin-top:6px;padding:6px 0}.labpanel[hidden]{display:none}
+.labpanel textarea{padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--sf);color:var(--fg)}
 </style>
 <script>
 /* v22: promise-based confirm dialog (replaces native confirm: no site title, Persian buttons) */
@@ -465,7 +474,7 @@ return new Promise(function(r){res=r})}})();
 <button id="bMore"></button>
 <button id="bW">ثبت کار</button>
 </div>
-<input type="file" id="file" accept=".geojson,.json,.kml,.kmz,.gpx,.gpkg,.csv,.tsv,.txt,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/geopackage+sqlite3,application/octet-stream" multiple hidden>
+<input type="file" id="file" accept=".geojson,.json,.kml,.kmz,.gpx,.gpkg,.shp,.dbf,.prj,.cpg,.zip,application/zip,.csv,.tsv,.txt,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/geopackage+sqlite3,application/octet-stream" multiple hidden>
 
 <script src="lib/leaflet.min.js"></script>
 <script>window.L||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"><\/script>')</script>
@@ -831,7 +840,7 @@ const DB={db:null,
  st(sn,m,f){return new Promise(r=>{try{const q=f(DB.db.transaction(sn,m).objectStore(sn));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  run(m,f){return new Promise(r=>{try{const q=f(DB.db.transaction('layers',m).objectStore('layers'));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  put(o){return DB.run('readwrite',st=>st.put(o))},del(id){return DB.run('readwrite',st=>st.delete(id))},clear(){return DB.run('readwrite',st=>st.clear())},all(){return DB.run('readonly',st=>st.getAll()).then(x=>x||[])}};
-function saveL(L_){DB.put({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res,sym:L_.sym||null})}
+function saveL(L_){DB.put({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res,sym:L_.sym||null,lab:L_.lab||null})}
 
 /* ---------- GeoPackage reader (pure JS SQLite parser, no WASM / no CDN) ---------- */
 function gpkgRead(buf,opt){
@@ -1186,7 +1195,12 @@ function gpkgWrite(items){
 /* ---------- Layers ---------- */
 const layers=[],colors=['#1f6f5c','#d35400','#2e5aac','#8e44ad','#c0392b','#16a085'];let lid=0;
 const MAX=25*1024*1024;
-$('file').onchange=async e=>{for(const f of e.target.files)await loadFile(f);e.target.value=''};
+$('file').onchange=async e=>{
+ const all=[...e.target.files],loose={},rest=[];
+ all.forEach(f=>{const m=/^(.*)\.(shp|dbf|prj|cpg|shx)$/i.exec(f.name);if(m){const k=m[1].toLowerCase();(loose[k]=loose[k]||{})[m[2].toLowerCase()]=f}else rest.push(f)});
+ for(const k in loose)await shpLoadLoose(loose[k],k);
+ for(const f of rest)await loadFile(f);
+ e.target.value=''};
 /* ---------- Tables: CSV / Excel (.xlsx) with coordinates (lon/lat or UTM zone 39N) -> point layer ---------- */
 function csvParse(text){
  text=String(text).replace(/^\ufeff/,'');
@@ -1296,7 +1310,7 @@ async function xlsxLoad(f){
 
 async function loadFile(f){
  try{
-  const ext=f.name.split('.').pop().toLowerCase(),lim=ext==='gpkg'?150*1024*1024:MAX;
+  const ext=f.name.split('.').pop().toLowerCase(),lim=ext==='gpkg'?150*1024*1024:ext==='zip'?100*1024*1024:MAX;
   if(f.size>lim)throw new Error('حجم فایل بیش از '+Math.round(lim/1048576)+' مگابایت است');
   let geo;
   if(ext==='gpkg'){
@@ -1306,6 +1320,8 @@ async function loadFile(f){
    res.layers.forEach(l=>{checkCoords(l.geo);addLayer(l.name,l.geo)});
    if(res.warn.length)toast(res.warn.join(' | '),9000);
    return}
+  if(ext==='zip'){toast('در حال خواندن شیپ‌فایل ...',3000);await new Promise(r=>setTimeout(r,60));await shpZipLoad(f);return}
+  if(ext==='shp'){await shpLoadLoose({shp:f},f.name);return}
   if(ext==='kmz'){
    const z=await JSZip.loadAsync(await f.arrayBuffer());
    const k=Object.keys(z.files).find(n=>/\.kml$/i.test(n)&&!z.files[n].dir);
@@ -1420,7 +1436,7 @@ function symBuild(L_,field){
  return{field,map,hide}}
 function vcount(geo){let n=0;const w=x=>{if(typeof x[0]==='number')n++;else for(const y of x)w(y)};
  (geo.features||[]).forEach(f=>{if(f&&f.geometry&&f.geometry.coordinates)w(f.geometry.coordinates)});return n}
-function restyle(L_){L_.lyr.clearLayers();L_.lyr.addData(L_.geo);saveL(L_)}
+function restyle(L_){L_.lyr.clearLayers();L_.lyr.addData(L_.geo);if(L_.labL)L_.labL.invalidate();saveL(L_)}
 let symT=0;const restyleSoon=L_=>{clearTimeout(symT);symT=setTimeout(()=>restyle(L_),150)};
 function symPanel(L_,box){
  box.innerHTML='';
@@ -1455,11 +1471,614 @@ function symPanel(L_,box){
  box.appendChild(list)}
 function symTitle(L_){const el=document.getElementById('symt-'+L_.id);if(el)el.textContent=L_.sym?'رنگ‌بندی بر اساس ستون «'+L_.sym.field+'»':''}
 
-function rebuild(L_){L_.lyr.clearLayers();L_.lyr.addData(L_.geo);saveL(L_);renderList()}
+/* ---------- Python-style expression calculator for attribute columns (safe mini-interpreter, no eval) ----------
+   Field reference: !FIELD!   (ArcGIS style).  Also $length $area $x $y $id (QGIS style) and !shape.length! !shape.area! ...
+   Supports: + - * / // % **, comparisons, and/or/not, a if c else b, in / not in / is None, str(), int(), float(), round(), abs(), len(), min(), max(), sum(),
+   string methods (upper lower title strip replace zfill split join format ...), slicing s[0:3], f-strings f"{!A!}-{!B!}", "%s-%d" % (a,b), math.sqrt() ... */
+function pyTok(src){
+ const t=[],n=src.length;let i=0;
+ const isN0=c=>/[A-Za-z_\u0600-\u06FF]/.test(c),isN=c=>/[A-Za-z0-9_\u0600-\u06FF]/.test(c);
+ while(i<n){
+  const c=src[i];
+  if(/\s/.test(c)){i++;continue}
+  if(c==='!'&&src[i+1]!=='='){const j=src.indexOf('!',i+1);if(j<0||j===i+1)throw new Error('علامت ! برای ستون باید بسته شود، مثل !NAME!');t.push({k:'F',v:src.slice(i+1,j).trim()});i=j+1;continue}
+  if(c==='$'&&isN0(src[i+1]||'')){let j=i+1;while(j<n&&isN(src[j]))j++;t.push({k:'F',v:src.slice(i,j).toLowerCase(),q:1});i=j;continue}
+  if(/[0-9]/.test(c)||(c==='.'&&/[0-9]/.test(src[i+1]||''))){const m=/^(\d+\.?\d*([eE][+-]?\d+)?|\.\d+([eE][+-]?\d+)?)/.exec(src.slice(i));t.push({k:'N',v:parseFloat(m[0])});i+=m[0].length;continue}
+  if((c==='f'||c==='F')&&(src[i+1]==='"'||src[i+1]==="'")){const r=pyStrLit(src,i+1);t.push({k:'FS',v:r.v});i=r.end;continue}
+  if(c==='"'||c==="'"){const r=pyStrLit(src,i);t.push({k:'S',v:r.v});i=r.end;continue}
+  if(isN0(c)){let j=i;while(j<n&&isN(src[j]))j++;t.push({k:'W',v:src.slice(i,j)});i=j;continue}
+  const two=src.substr(i,2);
+  if(['**','//','==','!=','<=','>='].includes(two)){t.push({k:'O',v:two});i+=2;continue}
+  if('+-*/%<>()[],.:'.includes(c)){t.push({k:'O',v:c});i++;continue}
+  throw new Error('نویسه‌ی نامعتبر در عبارت: '+c)}
+ t.push({k:'E'});return t}
+function pyStrLit(src,i){
+ const q=src[i];let j=i+1,o='';
+ while(j<src.length&&src[j]!==q){
+  if(src[j]==='\\'&&j+1<src.length){const e=src[j+1];o+=({n:'\n',t:'\t','\\':'\\',"'":"'",'"':'"'})[e]??('\\'+e);j+=2}else o+=src[j++]}
+ if(j>=src.length)throw new Error('رشته‌ی متنی بسته نشده است');
+ return{v:o,end:j+1}}
+/* ---- parser: returns AST ---- */
+function pyParse(src,depth){
+ depth=depth||0;if(depth>6)throw new Error('عبارت بیش از حد تو در تو است');
+ if(src.length>1500)throw new Error('عبارت بیش از ۱۵۰۰ نویسه است');
+ const T=pyTok(src);let p=0;
+ const peek=()=>T[p],isO=v=>T[p].k==='O'&&T[p].v===v,isW=v=>T[p].k==='W'&&T[p].v===v;
+ const eatO=v=>{if(!isO(v))throw new Error('انتظار «'+v+'» در عبارت بود');p++};
+ let nodes=0;const mk=o=>{if(++nodes>400)throw new Error('عبارت بیش از حد پیچیده است');return o};
+ function ternary(){const a=orE();if(isW('if')){p++;const c=orE();if(!isW('else'))throw new Error('بعد از if باید else بیاید');p++;const b=ternary();return mk({t:'if',c,a,b})}return a}
+ function orE(){let a=andE();while(isW('or')){p++;a=mk({t:'or',a,b:andE()})}return a}
+ function andE(){let a=notE();while(isW('and')){p++;a=mk({t:'and',a,b:notE()})}return a}
+ function notE(){if(isW('not')){p++;return mk({t:'not',a:notE()})}return cmp()}
+ function cmp(){
+  let a=add();
+  for(;;){
+   let op=null;const x=peek();
+   if(x.k==='O'&&['==','!=','<','>','<=','>='].includes(x.v)){op=x.v;p++}
+   else if(isW('in')){op='in';p++}
+   else if(isW('not')&&T[p+1].k==='W'&&T[p+1].v==='in'){op='not in';p+=2}
+   else if(isW('is')){p++;if(isW('not')){p++;op='is not'}else op='is'}
+   if(!op)return a;
+   a=mk({t:'cmp',op,a,b:add()})}}
+ function add(){let a=mul();while(isO('+')||isO('-')){const op=T[p++].v;a=mk({t:'bin',op,a,b:mul()})}return a}
+ function mul(){let a=unary();while(isO('*')||isO('/')||isO('//')||isO('%')){const op=T[p++].v;a=mk({t:'bin',op,a,b:unary()})}return a}
+ function unary(){if(isO('-')||isO('+')){const op=T[p++].v;return mk({t:'neg',op,a:unary()})}return pow()}
+ function pow(){const a=post();if(isO('**')){p++;return mk({t:'bin',op:'**',a,b:unary()})}return a}
+ function post(){
+  let a=atom();
+  for(;;){
+   if(isO('.')){p++;const n=T[p];if(n.k!=='W')throw new Error('بعد از نقطه نام لازم است');p++;a=mk({t:'attr',a,n:n.v})}
+   else if(isO('(')){p++;const args=[];if(!isO(')')){for(;;){args.push(ternary());if(isO(',')){p++;if(isO(')'))break}else break}}eatO(')');a=mk({t:'call',f:a,args})}
+   else if(isO('[')){p++;let lo=null,hi=null,st=null,sl=false;
+    if(!isO(':'))lo=ternary();
+    if(isO(':')){sl=true;p++;if(!isO(']')&&!isO(':'))hi=ternary();if(isO(':')){p++;if(!isO(']'))st=ternary()}}
+    eatO(']');a=mk(sl?{t:'slice',a,lo,hi,st}:{t:'idx',a,i:lo})}
+   else return a}}
+ function atom(){
+  const x=T[p];
+  if(x.k==='N'){p++;return mk({t:'lit',v:x.v})}
+  if(x.k==='S'){p++;let s=x.v;while(T[p].k==='S'){s+=T[p].v;p++}return mk({t:'lit',v:s})}
+  if(x.k==='FS'){p++;return mk(pyFstr(x.v,depth))}
+  if(x.k==='F'){p++;return mk({t:'field',n:x.v})}
+  if(x.k==='W'){
+   p++;
+   if(x.v==='None')return mk({t:'lit',v:null});
+   if(x.v==='True')return mk({t:'lit',v:true});
+   if(x.v==='False')return mk({t:'lit',v:false});
+   if(['and','or','not','if','else','in','is'].includes(x.v))throw new Error('کلمه‌ی «'+x.v+'» در جای نامناسب است');
+   return mk({t:'name',n:x.v})}
+  if(x.k==='O'&&x.v==='('){
+   p++;if(isO(')')){p++;return mk({t:'list',a:[]})}
+   const e=ternary();
+   if(isO(',')){const a=[e];while(isO(',')){p++;if(isO(')'))break;a.push(ternary())}eatO(')');return mk({t:'list',a})}
+   eatO(')');return e}
+  if(x.k==='O'&&x.v==='['){p++;const a=[];if(!isO(']')){for(;;){a.push(ternary());if(isO(',')){p++;if(isO(']'))break}else break}}eatO(']');return mk({t:'list',a})}
+  throw new Error('عبارت ناقص یا نامعتبر است')}
+ const r=ternary();
+ if(T[p].k!=='E')throw new Error('بخش اضافه یا نامعتبر در انتهای عبارت');
+ return r}
+function pyFstr(s,depth){
+ const parts=[];let i=0,cur='';
+ while(i<s.length){
+  const c=s[i];
+  if(c==='{'&&s[i+1]==='{'){cur+='{';i+=2;continue}
+  if(c==='}'&&s[i+1]==='}'){cur+='}';i+=2;continue}
+  if(c==='{'){
+   if(cur){parts.push({lit:cur});cur=''}
+   let j=i+1,lv=0,inq=null,sp=-1;
+   for(;j<s.length;j++){const d=s[j];
+    if(inq){if(d===inq)inq=null;continue}
+    if(d==='"'||d==="'"){inq=d;continue}
+    if(d==='['||d==='(')lv++;else if(d===']'||d===')')lv--;
+    else if(d===':'&&lv===0&&sp<0)sp=j;
+    else if(d==='}'&&lv===0)break}
+   if(j>=s.length)throw new Error('در f-string آکولاد { بسته نشده است');
+   const ex=s.slice(i+1,sp<0?j:sp),spec=sp<0?'':s.slice(sp+1,j);
+   parts.push({e:pyParse(ex,depth+1),spec});i=j+1;continue}
+  cur+=c;i++}
+ if(cur)parts.push({lit:cur});
+ return{t:'fstr',parts}}
+/* ---- runtime ---- */
+const pyOwn=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
+const pyNone=v=>v===null||v===undefined;
+const pyTruthy=v=>!(pyNone(v)||v===false||v===0||v===''||(Array.isArray(v)&&!v.length));
+function pyStr(v){
+ if(pyNone(v))return'';if(v===true)return'True';if(v===false)return'False';
+ if(typeof v==='number'){if(!isFinite(v))return String(v);return Number.isInteger(v)?String(v):String(+v.toPrecision(14))}
+ if(Array.isArray(v))return'['+v.map(x=>typeof x==='string'?"'"+x+"'":pyStr(x)).join(', ')+']';
+ return String(v)}
+const pyNumLike=v=>typeof v==='number'||(typeof v==='string'&&/^\s*[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?\s*$/.test(v));
+function pyNum(v,what){
+ if(typeof v==='number')return v;
+ if(typeof v==='boolean')return v?1:0;
+ if(typeof v==='string'&&pyNumLike(v))return parseFloat(v);
+ throw new Error((what||'مقدار')+' عددی نیست: '+pyStr(v))}
+function pyFmt(v,spec){
+ spec=String(spec||'');if(!spec)return pyStr(v);
+ const m=/^(?:(.)?([<>^]))?([+-])?(0)?(\d+)?(,)?(?:\.(\d+))?([sdfeEgG%x])?$/.exec(spec);
+ if(!m)throw new Error('قالب‌بندی نامعتبر: '+spec);
+ const fill=m[1]||(m[4]?'0':' '),al=m[2]||(m[8]&&m[8]!=='s'?'>':'<'),w=+(m[5]||0),prec=m[7]==null?null:+m[7],ty=m[8];
+ let s;
+ if(ty==='f'||ty==='%'){let x=pyNum(v);if(ty==='%')x*=100;s=x.toFixed(prec==null?6:prec);if(ty==='%')s+='%'}
+ else if(ty==='d'){s=String(Math.trunc(pyNum(v)))}
+ else if(ty==='x'){s=Math.trunc(pyNum(v)).toString(16)}
+ else if(ty==='e'||ty==='E'){s=pyNum(v).toExponential(prec==null?6:prec);if(ty==='E')s=s.toUpperCase()}
+ else if(ty==='g'||ty==='G'){s=String(+pyNum(v).toPrecision(prec==null?6:prec))}
+ else if(typeof v==='number'&&prec!=null&&!ty){s=v.toFixed(prec)}
+ else{s=pyStr(v);if(prec!=null&&ty==='s')s=s.slice(0,prec)}
+ if(m[6]&&/^[-+]?\d/.test(s)){const q=s.split('.');q[0]=q[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');s=q.join('.')}
+ if(m[3]==='+'&&/^\d/.test(s))s='+'+s;
+ if(s.length<w){const pad=w-s.length;
+  if(m[4]&&!m[2]&&/^[-+]/.test(s))return s[0]+fill.repeat(pad)+s.slice(1);
+  s=al==='<'?s+fill.repeat(pad):al==='^'?fill.repeat(Math.floor(pad/2))+s+fill.repeat(pad-Math.floor(pad/2)):fill.repeat(pad)+s}
+ return s}
+function pyPercent(fmt,args){
+ let k=0;const a=Array.isArray(args)?args:[args];
+ return String(fmt).replace(/%([-+0 ]*)(\d+)?(?:\.(\d+))?([sdifxeEgG%])/g,(m,fl,w,pr,ty)=>{
+  if(ty==='%')return'%';
+  if(k>=a.length)throw new Error('تعداد مقدارها برای % کم است');
+  const v=a[k++];let sp='';
+  if(fl.includes('-'))sp+='<';if(fl.includes('0'))sp+='0';
+  sp=(fl.includes('-')?'<':'')+(fl.includes('0')&&!fl.includes('-')?'0':'')+(w||'')+(pr!=null?'.'+pr:'')+({i:'d'}[ty]||ty);
+  return pyFmt(v,sp)})}
+function pySlice(len,lo,hi,st){
+ st=st==null?1:Math.trunc(pyNum(st));if(!st)throw new Error('گام برش نمی‌تواند صفر باشد');
+ const nm=(v,d)=>{if(v==null)return d;v=Math.trunc(pyNum(v));if(v<0)v+=len;return v};
+ let a,b;
+ if(st>0){a=nm(lo,0);b=nm(hi,len);a=Math.max(0,Math.min(len,a));b=Math.max(0,Math.min(len,b))}
+ else{a=nm(lo,len-1);b=hi==null?-1:nm(hi,-1);a=Math.min(len-1,a);b=Math.max(-1,b)}
+ const out=[];if(st>0){for(let i=a;i<b;i+=st)out.push(i)}else{for(let i=a;i>b;i+=st)out.push(i)}
+ return out}
+const PY_MATH={pi:Math.PI,e:Math.E,sqrt:x=>{x=pyNum(x);if(x<0)throw new Error('جذر عدد منفی');return Math.sqrt(x)},floor:x=>Math.floor(pyNum(x)),ceil:x=>Math.ceil(pyNum(x)),fabs:x=>Math.abs(pyNum(x)),
+ log:(x,b)=>b==null?Math.log(pyNum(x)):Math.log(pyNum(x))/Math.log(pyNum(b)),log10:x=>Math.log10(pyNum(x)),sin:x=>Math.sin(pyNum(x)),cos:x=>Math.cos(pyNum(x)),tan:x=>Math.tan(pyNum(x)),
+ radians:x=>pyNum(x)*Math.PI/180,degrees:x=>pyNum(x)*180/Math.PI,pow:(a,b)=>Math.pow(pyNum(a),pyNum(b)),exp:x=>Math.exp(pyNum(x))};
+const PY_FN={
+ str:v=>pyStr(v),
+ int:(v,b)=>{if(typeof v==='string'&&b!=null)return parseInt(v,pyNum(b));const x=pyNum(v);return Math.trunc(x)},
+ float:v=>pyNum(v),
+ bool:v=>pyTruthy(v),
+ abs:v=>Math.abs(pyNum(v)),
+ len:v=>{if(typeof v==='string'||Array.isArray(v))return v.length;throw new Error('len فقط برای متن و فهرست است')},
+ round:(v,n)=>{const x=pyNum(v),d=n==null?0:Math.trunc(pyNum(n)),f=Math.pow(10,d);const r=Math.sign(x)*Math.round(Math.abs(x)*f+1e-9)/f;return d>0?+r.toFixed(d):r},
+ min:(...a)=>{const l=a.length===1&&Array.isArray(a[0])?a[0]:a;if(!l.length)throw new Error('min خالی است');return l.reduce((x,y)=>pyCmp(y,x)<0?y:x)},
+ max:(...a)=>{const l=a.length===1&&Array.isArray(a[0])?a[0]:a;if(!l.length)throw new Error('max خالی است');return l.reduce((x,y)=>pyCmp(y,x)>0?y:x)},
+ sum:l=>{if(!Array.isArray(l))throw new Error('sum فهرست می‌خواهد');return l.reduce((x,y)=>x+pyNum(y),0)},
+ format:(v,s)=>pyFmt(v,s),
+ chr:v=>String.fromCharCode(pyNum(v)),ord:v=>String(v).charCodeAt(0),
+ list:v=>typeof v==='string'?[...v]:Array.isArray(v)?v.slice():[],
+ sorted:v=>Array.isArray(v)?v.slice().sort(pyCmp):[...String(v)].sort(),
+ range:(a,b,c)=>{const o=[];let s=0,e,st=1;if(b==null)e=pyNum(a);else{s=pyNum(a);e=pyNum(b);if(c!=null)st=pyNum(c)}if(!st)throw new Error('گام صفر');if(Math.abs((e-s)/st)>10000)throw new Error('range بیش از حد بزرگ است');for(let i=s;st>0?i<e:i>e;i+=st)o.push(i);return o}};
+function pyCmp(a,b){
+ if(pyNone(a)||pyNone(b)){if(pyNone(a)&&pyNone(b))return 0;throw new Error('مقایسه با None ممکن نیست')}
+ if(pyNumLike(a)&&pyNumLike(b))return pyNum(a)-pyNum(b);
+ const x=pyStr(a),y=pyStr(b);return x<y?-1:x>y?1:0}
+const PY_SM={
+ upper:s=>()=>s.toUpperCase(),lower:s=>()=>s.toLowerCase(),
+ title:s=>()=>s.toLowerCase().replace(/(^|[^\p{L}\p{N}])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase()),
+ capitalize:s=>()=>s.charAt(0).toUpperCase()+s.slice(1).toLowerCase(),
+ strip:s=>c=>c==null?s.trim():s.replace(new RegExp('^['+pyEsc(c)+']+|['+pyEsc(c)+']+$','g'),''),
+ lstrip:s=>c=>c==null?s.replace(/^\s+/,''):s.replace(new RegExp('^['+pyEsc(c)+']+'),''),
+ rstrip:s=>c=>c==null?s.replace(/\s+$/,''):s.replace(new RegExp('['+pyEsc(c)+']+$'),''),
+ replace:s=>(a,b)=>{a=pyStr(a);b=pyStr(b);return a===''?s:s.split(a).join(b)},
+ zfill:s=>w=>{w=pyNum(w);return s.length>=w?s:(/^[-+]/.test(s)?s[0]+'0'.repeat(w-s.length)+s.slice(1):'0'.repeat(w-s.length)+s)},
+ startswith:s=>a=>s.startsWith(pyStr(a)),endswith:s=>a=>s.endsWith(pyStr(a)),
+ find:s=>a=>s.indexOf(pyStr(a)),count:s=>a=>{a=pyStr(a);return a===''?s.length+1:s.split(a).length-1},
+ split:s=>(sep,mx)=>{if(sep==null)return s.trim()===''?[]:s.trim().split(/\s+/);return s.split(pyStr(sep))},
+ join:s=>l=>{if(!Array.isArray(l))throw new Error('join فهرست می‌خواهد');return l.map(pyStr).join(s)},
+ isdigit:s=>()=>/^\d+$/.test(s),isalpha:s=>()=>/^\p{L}+$/u.test(s),
+ ljust:s=>(w,f)=>s.padEnd(pyNum(w),f==null?' ':pyStr(f)),rjust:s=>(w,f)=>s.padStart(pyNum(w),f==null?' ':pyStr(f)),
+ center:s=>(w,f)=>{w=pyNum(w);const pad=Math.max(0,w-s.length),l=Math.floor(pad/2);return (f==null?' ':pyStr(f)).repeat(l)+s+(f==null?' ':pyStr(f)).repeat(pad-l)},
+ format:s=>(...a)=>{let k=0;return s.replace(/\{\{|\}\}|\{(\d*)(?::([^}]*))?\}/g,(m,i,sp)=>{if(m==='{{')return'{';if(m==='}}')return'}';const idx=i===''||i==null?k++:+i;if(idx>=a.length)throw new Error('تعداد مقدارها برای format کم است');return pyFmt(a[idx],sp)})}};
+const pyEsc=c=>String(c).replace(/[\]\\^-]/g,'\\$&');
+function pyEval(n,ctx){
+ const E=x=>pyEval(x,ctx);
+ switch(n.t){
+  case'lit':return n.v;
+  case'field':return ctx.field(n.n);
+  case'name':if(n.n==='math')return PY_MATH;if(pyOwn(PY_FN,n.n))return PY_FN[n.n];
+   if(ctx.vars&&pyOwn(ctx.vars,n.n))return ctx.vars[n.n];throw new Error('نام ناشناخته: '+n.n);
+  case'list':return n.a.map(E);
+  case'if':return pyTruthy(E(n.c))?E(n.a):E(n.b);
+  case'or':{const a=E(n.a);return pyTruthy(a)?a:E(n.b)}
+  case'and':{const a=E(n.a);return pyTruthy(a)?E(n.b):a}
+  case'not':return !pyTruthy(E(n.a));
+  case'neg':{const v=pyNum(E(n.a));return n.op==='-'?-v:v}
+  case'cmp':{
+   const a=E(n.a),b=E(n.b);
+   switch(n.op){
+    case'==':return pyNone(a)||pyNone(b)?pyNone(a)&&pyNone(b):(pyNumLike(a)&&pyNumLike(b)?pyNum(a)===pyNum(b):a===b||pyStr(a)===pyStr(b));
+    case'!=':return !(pyNone(a)||pyNone(b)?pyNone(a)&&pyNone(b):(pyNumLike(a)&&pyNumLike(b)?pyNum(a)===pyNum(b):a===b||pyStr(a)===pyStr(b)));
+    case'<':return pyCmp(a,b)<0;case'>':return pyCmp(a,b)>0;case'<=':return pyCmp(a,b)<=0;case'>=':return pyCmp(a,b)>=0;
+    case'in':return Array.isArray(b)?b.some(x=>pyStr(x)===pyStr(a)):pyStr(b).includes(pyStr(a));
+    case'not in':return !(Array.isArray(b)?b.some(x=>pyStr(x)===pyStr(a)):pyStr(b).includes(pyStr(a)));
+    case'is':return pyNone(a)&&pyNone(b)||a===b;case'is not':return !(pyNone(a)&&pyNone(b)||a===b)}
+   break}
+  case'bin':{
+   const a=E(n.a),b=E(n.b),op=n.op;
+   if(op==='+'){
+    if((typeof a==='number'&&typeof b==='string'&&pyNumLike(b))||(typeof b==='number'&&typeof a==='string'&&pyNumLike(a)))return pyNum(a)+pyNum(b);
+    if(typeof a==='string'||typeof b==='string')return pyStr(a)+pyStr(b);
+    if(Array.isArray(a)&&Array.isArray(b))return a.concat(b);
+    if(pyNone(a)||pyNone(b))throw new Error('جمع با None ممکن نیست');
+    return pyNum(a)+pyNum(b)}
+   if(op==='%'&&typeof a==='string'&&!pyNumLike(a))return pyPercent(a,b);
+   if(op==='*'&&(typeof a==='string'&&!pyNumLike(a)||Array.isArray(a))){const k=Math.trunc(pyNum(b));if(k*(a.length||1)>10000)throw new Error('تکرار بیش از حد');return typeof a==='string'?a.repeat(Math.max(0,k)):[].concat(...Array(Math.max(0,k)).fill(a))}
+   const x=pyNum(a),y=pyNum(b);
+   if(op==='-')return x-y;if(op==='*')return x*y;
+   if(op==='/'){if(y===0)throw new Error('تقسیم بر صفر');return x/y}
+   if(op==='//'){if(y===0)throw new Error('تقسیم بر صفر');return Math.floor(x/y)}
+   if(op==='%'){if(y===0)throw new Error('باقیمانده بر صفر');return x-y*Math.floor(x/y)}
+   if(op==='**')return Math.pow(x,y);
+   break}
+  case'attr':{
+   const o=E(n.a);
+   if(o===PY_MATH){if(pyOwn(PY_MATH,n.n))return PY_MATH[n.n];throw new Error('math.'+n.n+' پشتیبانی نمی‌شود')}
+   if(typeof o==='string'){if(pyOwn(PY_SM,n.n))return PY_SM[n.n](o);throw new Error('متد متن «'+n.n+'» پشتیبانی نمی‌شود')}
+   if(Array.isArray(o)&&n.n==='index')return x=>{const i=o.findIndex(y=>pyStr(y)===pyStr(x));if(i<0)throw new Error('مقدار در فهرست نیست');return i};
+   if(o&&typeof o==='object'&&!Array.isArray(o)&&pyOwn(o,n.n))return o[n.n];
+   throw new Error('ویژگی «'+n.n+'» پشتیبانی نمی‌شود')}
+  case'call':{
+   const f=E(n.f);if(typeof f!=='function')throw new Error('این مقدار قابل فراخوانی نیست');
+   return f(...n.args.map(E))}
+  case'idx':{
+   const o=E(n.a);let i=E(n.i);
+   if(typeof o==='string'||Array.isArray(o)){i=Math.trunc(pyNum(i));if(i<0)i+=o.length;if(i<0||i>=o.length)throw new Error('اندیس خارج از محدوده');return o[i]}
+   throw new Error('اندیس‌گذاری فقط برای متن و فهرست است')}
+  case'slice':{
+   const o=E(n.a);if(typeof o!=='string'&&!Array.isArray(o))throw new Error('برش فقط برای متن و فهرست است');
+   const ix=pySlice(o.length,n.lo&&E(n.lo),n.hi&&E(n.hi),n.st&&E(n.st));
+   return typeof o==='string'?ix.map(i=>o[i]).join(''):ix.map(i=>o[i])}
+  case'fstr':return n.parts.map(p=>p.lit!==undefined?p.lit:pyFmt(E(p.e),p.spec)).join('');
+ }
+ throw new Error('عبارت پشتیبانی نمی‌شود')}
+function pyFields(ast,out){
+ out=out||new Set();
+ const w=n=>{if(!n||typeof n!=='object')return;if(Array.isArray(n)){n.forEach(w);return}
+  if(n.t==='field')out.add(n.n);
+  for(const k in n){if(k!=='t'&&n[k]&&typeof n[k]==='object')w(n[k])}};
+ w(ast);return out}
+function pyCompile(src){const ast=pyParse(String(src).trim());return{ast,fields:[...pyFields(ast)],run:ctx=>pyEval(ast,ctx)}}
+
+/* ---------- Labels (text from a column or a Python-style calculated expression) drawn on a canvas layer ---------- */
+const LAB_FONTS=[['Tahoma','Tahoma'],['Vazirmatn','وزیرمتن (در صورت نصب بودن)'],['Segoe UI','Segoe UI'],['Arial','Arial'],['Verdana','Verdana'],['Georgia','Georgia'],['Times New Roman','Times New Roman'],['Courier New','Courier New'],['Noto Naskh Arabic','Noto Naskh Arabic'],['sans-serif','پیش‌فرض دستگاه'],['serif','Serif'],['monospace','Monospace']];
+const LAB_TXT=['#111111','#ffffff','#c0392b','#d35400','#f1c40f','#27ae60','#16a085','#2980b9','#8e44ad','#e91e63','#795548','#7f8c8d'];
+const LAB_HALO=['none','#ffffff','#000000','#ffeb3b','#e0e0e0'];
+const LAB_EX=[['ادغام نام و سایز','!NAME! + " - " + str(!SIZE!)'],['f-string','f"{!NAME!} ({!SIZE!} mm)"'],['قالب %','"%s / %d" % (!NAME!, !SIZE!)'],['حروف بزرگ + برش','!NAME!.upper()[0:3]'],['شرطی','"بزرگ" if !SIZE! >= 200 else "کوچک"'],['طول خط (متر)','str(round(!shape.length!, 1)) + " m"']];
+const labDef=()=>({on:true,src:'col',field:'',expr:'',font:'Tahoma',size:13,bold:false,color:'#111111',halo:'#ffffff',minZoom:15});
+function cleanLab(x){
+ if(!x||typeof x!=='object')return null;
+ const d=labDef(),hex=v=>typeof v==='string'&&/^#[0-9a-f]{6}$/i.test(v),fo=LAB_FONTS.some(f=>f[0]===x.font);
+ return{on:!!x.on,src:x.src==='expr'?'expr':'col',field:typeof x.field==='string'?x.field.slice(0,200):'',expr:typeof x.expr==='string'?x.expr.slice(0,1500):'',
+  font:fo?x.font:d.font,size:Math.max(6,Math.min(48,+x.size||d.size)),bold:!!x.bold,
+  color:x.color==='auto'||hex(x.color)?x.color:d.color,halo:x.halo==='none'||hex(x.halo)?x.halo:d.halo,minZoom:Math.max(0,Math.min(22,isFinite(+x.minZoom)?+x.minZoom:d.minZoom))}}
+/* anchor point of a feature's label: point itself, middle of a line, centroid of a polygon */
+function geomAnchor(g){
+ if(!g)return null;
+ const t=g.type,c=g.coordinates;
+ if(t==='Point')return c;
+ if(t==='MultiPoint')return c[0]||null;
+ const lineMid=l=>{if(l.length<2)return l[0]||null;let tot=0;const d=[];for(let i=1;i<l.length;i++){const s=Math.hypot(l[i][0]-l[i-1][0],l[i][1]-l[i-1][1]);d.push(s);tot+=s}let h=tot/2;for(let i=0;i<d.length;i++){if(h<=d[i]||i===d.length-1){const f=d[i]?h/d[i]:0;return[l[i][0]+(l[i+1][0]-l[i][0])*f,l[i][1]+(l[i+1][1]-l[i][1])*f]}h-=d[i]}return l[0]};
+ const len=l=>{let s=0;for(let i=1;i<l.length;i++)s+=Math.hypot(l[i][0]-l[i-1][0],l[i][1]-l[i-1][1]);return s};
+ const ringC=r=>{let a=0,x=0,y=0;for(let i=0;i<r.length-1;i++){const k=r[i][0]*r[i+1][1]-r[i+1][0]*r[i][1];a+=k;x+=(r[i][0]+r[i+1][0])*k;y+=(r[i][1]+r[i+1][1])*k}
+  if(Math.abs(a)<1e-18){const xs=r.map(p=>p[0]),ys=r.map(p=>p[1]);return[(Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2,0]}return[x/(3*a),y/(3*a),Math.abs(a/2)]};
+ if(t==='LineString')return lineMid(c);
+ if(t==='MultiLineString'){let b=null,bl=-1;c.forEach(l=>{const L=len(l);if(L>bl){bl=L;b=l}});return b?lineMid(b):null}
+ if(t==='Polygon')return c[0]&&c[0].length>2?ringC(c[0]).slice(0,2):null;
+ if(t==='MultiPolygon'){let b=null,ba=-1;c.forEach(p=>{if(p[0]&&p[0].length>2){const r=ringC(p[0]);if(r[2]>ba){ba=r[2];b=r}}});return b?b.slice(0,2):null}
+ if(t==='GeometryCollection')for(const x of g.geometries){const a=geomAnchor(x);if(a)return a}
+ return null}
+/* geometry-derived pseudo fields: !shape.length! !shape.area! $length $area $x $y $id ... (meters / square meters, local planar projection) */
+function shapeField(f,k,idx){
+ const g=f.geometry;if(!g)throw new Error('عارضه هندسه ندارد');
+ if(k==='$id')return idx+1;
+ const a=geomAnchor(g),pr=gProj(a[0],a[1]),P=gParts(g,pr);
+ const ringA=r=>{let s=0;for(let i=0;i<r.length-1;i++)s+=r[i][0]*r[i+1][1]-r[i+1][0]*r[i][1];return s/2};
+ if(k==='shape.length'||k==='$length'){let L=0;gLines(P).forEach(l=>{for(let i=1;i<l.length;i++)L+=Math.hypot(l[i][0]-l[i-1][0],l[i][1]-l[i-1][1])});return L}
+ if(k==='shape.area'||k==='$area'){let A=0;P.polys.forEach(pl=>{pl.forEach((r,i)=>{A+=(i?-1:1)*Math.abs(ringA(r))})});return A}
+ if(k==='shape.centroid.x'||k==='shape.x'||k==='$x')return a[0];
+ if(k==='shape.centroid.y'||k==='shape.y'||k==='$y')return a[1];
+ const first=()=>{let c=g.coordinates;while(Array.isArray(c[0]))c=c[0];return c},last=()=>{let c=g.coordinates;while(Array.isArray(c[0]))c=c[c.length-1];return c};
+ if(k==='shape.firstpoint.x')return first()[0];if(k==='shape.firstpoint.y')return first()[1];
+ if(k==='shape.lastpoint.x')return last()[0];if(k==='shape.lastpoint.y')return last()[1];
+ if(k==='shape.type')return /Point/.test(g.type)?'POINT':/Line/.test(g.type)?'POLYLINE':'POLYGON';
+ throw new Error('ستون «'+k+'» پیدا نشد')}
+function labField(f,idx){
+ const p=f.properties||{};let low=null;
+ return name=>{
+  if(Object.prototype.hasOwnProperty.call(p,name))return p[name];
+  const k=String(name).toLowerCase();
+  if(k.startsWith('shape.')||k[0]==='$')return shapeField(f,k,idx);
+  if(!low){low={};for(const x in p)low[x.toLowerCase()]=x}
+  if(Object.prototype.hasOwnProperty.call(low,k))return p[low[k]];
+  if(k==='oid'||k==='fid'||k==='objectid')return idx+1;
+  throw new Error('ستون «'+name+'» پیدا نشد')}}
+function labPreview(L_,src){
+ let c;try{c=pyCompile(src)}catch(e){return{err:e.message}}
+ const fs=L_.geo.features,lines=[];let errs=0,first='';
+ for(let i=0;i<Math.min(fs.length,400);i++){
+  try{const v=c.run({field:labField(fs[i],i)});if(lines.length<3)lines.push(pyStr(v))}catch(e){errs++;if(!first)first=e.message}}
+ return{lines,errs,first,fields:c.fields}}
+/* collision-free placement: items=[{x,y,w,h}] in screen px (already filtered to the view); greedy grid test */
+function labPlace(items,maxN,cell){
+ cell=cell||48;const grid=new Map(),out=[];
+ for(const it of items){
+  if(out.length>=maxN)break;
+  const x0=Math.floor((it.x-it.w/2)/cell),x1=Math.floor((it.x+it.w/2)/cell),y0=Math.floor((it.y-it.h/2)/cell),y1=Math.floor((it.y+it.h/2)/cell);
+  let hit=false;
+  for(let gx=x0;gx<=x1&&!hit;gx++)for(let gy=y0;gy<=y1&&!hit;gy++){
+   const l=grid.get(gx+','+gy);if(l)for(const r of l){if(!(it.x+it.w/2<r.x-r.w/2||it.x-it.w/2>r.x+r.w/2||it.y+it.h/2<r.y-r.h/2||it.y-it.h/2>r.y+r.h/2)){hit=true;break}}}
+  if(hit)continue;
+  for(let gx=x0;gx<=x1;gx++)for(let gy=y0;gy<=y1;gy++){const k=gx+','+gy;(grid.get(k)||grid.set(k,[]).get(k)).push(it)}
+  out.push(it)}
+ return out}
+const LabelLayer=L.Layer.extend({
+ initialize(L_){this.L_=L_;this._items=null},
+ onAdd(map){
+  if(!map.getPane('labelPane')){const p=map.createPane('labelPane');p.style.zIndex=450;p.style.pointerEvents='none'}
+  const c=this._c=L.DomUtil.create('canvas','wg-labels');c.style.pointerEvents='none';c.style.position='absolute';
+  map.getPane('labelPane').appendChild(c);
+  map.on('moveend zoomend resize',this._draw,this);map.on('zoomstart',this._hide,this);this._draw()},
+ onRemove(map){map.off('moveend zoomend resize',this._draw,this);map.off('zoomstart',this._hide,this);L.DomUtil.remove(this._c);this._c=null},
+ invalidate(){this._items=null;this._draw()},
+ _hide(){if(this._c)this._c.style.visibility='hidden'},
+ _build(){
+  const L_=this.L_,lab=L_.lab,items=[];let c=null;
+  if(lab.src==='expr'){try{c=pyCompile(lab.expr)}catch(e){this._err=e.message;return items}}
+  L_.geo.features.forEach((f,i)=>{
+   let t='';
+   try{t=c?pyStr(c.run({field:labField(f,i)})):pyStr(f.properties&&f.properties[lab.field])}catch(e){t=''}
+   if(!t)return;const a=geomAnchor(f.geometry);if(!a||!isFinite(a[0])||!isFinite(a[1]))return;
+   items.push({lat:a[1],lng:a[0],t:t.length>80?t.slice(0,80):t,f,pt:!!f.geometry&&/Point/.test(f.geometry.type)})});
+  return items},
+ _draw(){
+  const m=this._map,L_=this.L_,lab=L_&&L_.lab,c=this._c;if(!m||!c||!lab)return;
+  const sz=m.getSize(),dpr=window.devicePixelRatio||1;
+  c.width=Math.round(sz.x*dpr);c.height=Math.round(sz.y*dpr);c.style.width=sz.x+'px';c.style.height=sz.y+'px';
+  L.DomUtil.setPosition(c,m.containerPointToLayerPoint([0,0]));c.style.visibility='visible';
+  const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,sz.x,sz.y);
+  if(!lab.on||m.getZoom()<lab.minZoom)return;
+  if(!this._items)this._items=this._build();
+  const b=m.getBounds().pad(0.05),fs=lab.size,font=(lab.bold?'bold ':'')+fs+'px "'+lab.font+'",sans-serif';
+  ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
+  const dy=fs/2+(L_.icon==='circle'?10:(ICONS[L_.icon]&&ICONS[L_.icon][2]?6:16)),vis=[];
+  for(const it of this._items){
+   if(!b.contains([it.lat,it.lng]))continue;
+   if(symHidden(L_,it.f))continue;
+   const p=m.latLngToContainerPoint([it.lat,it.lng]);
+   vis.push({x:p.x,y:p.y+(it.pt?dy:0),w:ctx.measureText(it.t).width+6,h:fs+4,it})}
+  const placed=labPlace(vis,1200);
+  for(const v of placed){
+   const it=v.it;
+   if(lab.halo!=='none'){ctx.lineWidth=Math.max(3,fs/4);ctx.strokeStyle=lab.halo;ctx.strokeText(it.t,v.x,v.y)}
+   ctx.fillStyle=lab.color==='auto'?(symColor(L_,it.f)||L_.color):lab.color;ctx.fillText(it.t,v.x,v.y)}}
+});
+function labApply(L_){
+ const on=!!(L_.lab&&L_.lab.on);
+ if(!on){if(L_.labL&&map.hasLayer(L_.labL))map.removeLayer(L_.labL);saveL(L_);return}
+ if(!L_.labL)L_.labL=new LabelLayer(L_);
+ if(map.hasLayer(L_.lyr)&&!map.hasLayer(L_.labL))L_.labL.addTo(map);else L_.labL.invalidate();
+ saveL(L_)}
+async function labCalcCreate(L_,name,src,after){
+ name=String(name||'').trim();
+ if(!name)return toast('نام ستون جدید را بنویسید');
+ if(name.length>60||UKEYS.includes(name))return toast('نام ستون نامعتبر یا رزروشده است');
+ let c;try{c=pyCompile(src)}catch(e){return toast('خطای عبارت: '+e.message,6000)}
+ const fs=L_.geo.features,exists=fs.some(f=>f.properties&&Object.prototype.hasOwnProperty.call(f.properties,name));
+ if(!await dlg((exists?'ستون «'+name+'» وجود دارد و مقدارهای آن بازنویسی می‌شود.\n':'')+'ستون «'+name+'» برای '+fs.length+' عارضه ساخته شود؟'))return;
+ let errs=0,first='';
+ fs.forEach((f,i)=>{f.properties=f.properties||{};let v=null;
+  try{v=c.run({field:labField(f,i)});if(typeof v==='boolean'||v===undefined)v=v===undefined?null:v;else if(Array.isArray(v))v=pyStr(v)}catch(e){errs++;if(!first)first=e.message;v=null}
+  f.properties[name]=v});
+ saveL(L_);if(L_.labL)L_.labL.invalidate();
+ toast('ستون «'+name+'» ساخته شد'+(errs?` | ${errs} عارضه خطا داشت (${first})`:''),6000);
+ if(after)after()}
+function labPanel(L_,box){
+ box.innerHTML='';
+ const fields=symFields(L_),lab=L_.lab||(L_.lab=Object.assign(labDef(),{on:false,field:fields[0]||''}));
+ const ap=()=>labApply(L_);
+ const row=(...ch)=>{const r=document.createElement('div');r.className='row';r.style.alignItems='center';ch.forEach(x=>x&&r.appendChild(x));return r};
+ const lbl=(t,el)=>{const l=document.createElement('label');l.style.fontSize='13px';l.append(t+' ',el);return l};
+ const mkSel=(opts,val,fn)=>{const s=document.createElement('select');opts.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(v===val)o.selected=true;s.appendChild(o)});s.onchange=()=>fn(s.value);return s};
+ // on/off
+ const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!lab.on;
+ cb.onchange=()=>{lab.on=cb.checked;if(lab.on&&lab.src==='col'&&!lab.field)lab.field=fields[0]||'';ap();setT()};
+ const t0=document.createElement('label');t0.style.fontWeight='700';t0.append(cb,' نمایش لیبل روی نقشه');
+ box.appendChild(row(t0));
+ // source
+ const srcOpts=fields.map(f=>[f,f]).concat([['__expr__','✎ عبارت محاسباتی (Python)']]);
+ const srcSel=mkSel(srcOpts,lab.src==='expr'?'__expr__':(lab.field||fields[0]||''),v=>{if(v==='__expr__')lab.src='expr';else{lab.src='col';lab.field=v}ap();ex.hidden=lab.src!=='expr'});
+ box.appendChild(row(lbl('متن لیبل از:',srcSel)));
+ // expression editor
+ const ex=document.createElement('div');ex.hidden=lab.src!=='expr';
+ const chips=document.createElement('div');chips.style.cssText='display:flex;flex-wrap:wrap;gap:4px;margin:4px 0';
+ const ta=document.createElement('textarea');ta.rows=3;ta.dir='ltr';ta.spellcheck=false;ta.value=lab.expr;ta.placeholder='!NAME! + " - " + str(!SIZE!)';ta.style.cssText='width:100%;box-sizing:border-box;font-family:monospace;font-size:13px';
+ fields.slice(0,60).forEach(f=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=f;b.onclick=()=>{const s=ta.selectionStart??ta.value.length,e=ta.selectionEnd??s,ins='!'+f+'!';ta.value=ta.value.slice(0,s)+ins+ta.value.slice(e);ta.focus();ta.selectionStart=ta.selectionEnd=s+ins.length;pv()};chips.appendChild(b)});
+ const exb=document.createElement('div');exb.style.cssText='display:flex;flex-wrap:wrap;gap:4px;margin:4px 0';
+ LAB_EX.forEach(([t,s])=>{const b=document.createElement('button');b.type='button';b.className='chip ex';b.textContent=t;b.onclick=()=>{ta.value=s;pv()};exb.appendChild(b)});
+ const pvEl=document.createElement('div');pvEl.style.cssText='font-size:12px;margin:4px 0;color:var(--mt);word-break:break-word';
+ let pvT=0;function pv(){clearTimeout(pvT);pvT=setTimeout(()=>{const s=ta.value.trim();if(!s){pvEl.textContent='';return}const r=labPreview(L_,s);
+  pvEl.textContent=r.err?'❌ '+r.err:'پیش‌نمایش: '+(r.lines.length?r.lines.map(x=>'«'+x+'»').join('  ،  '):'—')+(r.errs?`  |  ${r.errs} خطا (${r.first})`:'');
+  pvEl.style.color=r.err||r.errs?'#c0392b':'var(--mt)'},250)}
+ ta.oninput=pv;
+ const apb=document.createElement('button');apb.type='button';apb.className='btn g';apb.style.fontSize='12px';apb.textContent='اعمال برای لیبل';
+ apb.onclick=()=>{try{pyCompile(ta.value)}catch(e){return toast('خطای عبارت: '+e.message,6000)}lab.src='expr';lab.expr=ta.value.trim();lab.on=true;cb.checked=true;ap()};
+ const nm=document.createElement('input');nm.type='text';nm.placeholder='نام ستون جدید';nm.style.cssText='flex:1;min-width:90px';
+ const crb=document.createElement('button');crb.type='button';crb.className='btn';crb.style.fontSize='12px';crb.textContent='ایجاد ستون دائمی';
+ crb.onclick=()=>labCalcCreate(L_,nm.value,ta.value,()=>{labPanel(L_,box)});
+ const hint=document.createElement('div');hint.style.cssText='font-size:11px;color:var(--mt)';
+ hint.textContent='ستون را با !نام_ستون! بنویسید؛ مثل ArcGIS. «اعمال برای لیبل» فقط متن لیبل را می‌سازد و داده را تغییر نمی‌دهد؛ «ایجاد ستون دائمی» ستونی با همین مقدارها به جدول مشخصات همه‌ی عارضه‌ها اضافه می‌کند.';
+ ex.append(chips,ta,exb,pvEl,row(apb),row(nm,crb),hint);box.appendChild(ex);pv();
+ // style
+ const fontSel=mkSel(LAB_FONTS,lab.font,v=>{lab.font=v;ap()});
+ const size=document.createElement('input');size.type='number';size.min=6;size.max=48;size.value=lab.size;size.style.width='64px';size.onchange=()=>{lab.size=Math.max(6,Math.min(48,+size.value||13));size.value=lab.size;ap()};
+ const bold=document.createElement('input');bold.type='checkbox';bold.checked=lab.bold;bold.onchange=()=>{lab.bold=bold.checked;ap()};
+ box.appendChild(row(lbl('فونت:',fontSel)));
+ box.appendChild(row(lbl('اندازه:',size),lbl('ضخیم',bold)));
+ const pal=(title,colors,cur,set,extra)=>{
+  const w=document.createElement('div');w.style.cssText='margin:6px 0';const h=document.createElement('div');h.style.cssText='font-size:13px;margin-bottom:3px';h.textContent=title;w.appendChild(h);
+  const sw=document.createElement('div');sw.style.cssText='display:flex;flex-wrap:wrap;gap:6px;align-items:center';
+  const paint=()=>sw.querySelectorAll('button.sw').forEach(b=>b.classList.toggle('on',b.dataset.c===cur()));
+  colors.forEach(c=>{const b=document.createElement('button');b.type='button';b.className='sw';b.dataset.c=c;b.title=c==='none'?'بدون هاله':c==='auto'?'هم‌رنگ عارضه':c;
+   if(c==='none'){b.textContent='∅'}else if(c==='auto'){b.textContent='A';b.style.background='linear-gradient(135deg,#e6194b,#4363d8,#3cb44b)';b.style.color='#fff'}else b.style.background=c;
+   b.onclick=()=>{set(c);paint();ap()};sw.appendChild(b)});
+  const ci=document.createElement('input');ci.type='color';ci.className='swc';ci.value=/^#/.test(cur())?cur():'#000000';ci.onchange=()=>{set(ci.value);paint();ap()};sw.appendChild(ci);
+  w.appendChild(sw);paint();return w};
+ box.appendChild(pal('رنگ متن (پالت):',LAB_TXT.concat(['auto']),()=>lab.color,v=>{lab.color=v}));
+ box.appendChild(pal('رنگ هاله‌ی دور متن:',LAB_HALO,()=>lab.halo,v=>{lab.halo=v}));
+ const zr=document.createElement('input');zr.type='range';zr.min=8;zr.max=20;zr.step=1;zr.value=lab.minZoom;const zv=document.createElement('b');zv.textContent=lab.minZoom;
+ zr.oninput=()=>{zv.textContent=zr.value};zr.onchange=()=>{lab.minZoom=+zr.value;ap()};
+ const zl=document.createElement('label');zl.style.fontSize='13px';zl.append('حداقل زوم نمایش لیبل: ',zv,' ',zr);box.appendChild(row(zl));
+ const note=document.createElement('div');note.style.cssText='font-size:11px;color:var(--mt)';note.textContent='لیبل‌های هم‌پوشان خودکار حذف می‌شوند (حداکثر ۱۲۰۰ لیبل در هر نما). برای دیدن لیبل‌های بیشتر، زوم کنید.';box.appendChild(note);
+ function setT(){const el=document.getElementById('labt-'+L_.id);if(el)el.textContent=L_.lab&&L_.lab.on?'لیبل: '+(L_.lab.src==='expr'?'عبارت محاسباتی':'ستون «'+L_.lab.field+'»'):''}
+ setT()}
+
+/* ---------- Shapefile: .shp + .dbf (+ .prj, .cpg) or a .zip containing them -> GeoJSON layer(s) ---------- */
+const SHP_BASE={1:1,11:1,21:1,3:3,13:3,23:3,5:5,15:5,25:5,8:8,18:8,28:8};
+function shpRingArea(r){let a=0;for(let i=0;i<r.length-1;i++)a+=r[i][0]*r[i+1][1]-r[i+1][0]*r[i][1];return a/2}
+function shpInRing(p,r){let s=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const a=r[i],b=r[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])s=!s}return s}
+function shpPolys(rings){
+ const outers=[],holes=[];
+ rings.forEach(r=>{if(r.length<4)return;(shpRingArea(r)<=0?outers:holes).push(r)});
+ if(!outers.length&&!holes.length)return null;
+ if(!outers.length)holes.splice(0).forEach(h=>outers.push(h.slice().reverse()));
+ const polys=outers.map(r=>[r.slice().reverse()]);
+ holes.forEach(h=>{
+  let best=-1,ba=Infinity;
+  outers.forEach((o,i)=>{if(h.slice(0,3).some(pt=>shpInRing(pt,o))){const a=Math.abs(shpRingArea(o));if(a<ba){ba=a;best=i}}});
+  const hr=h.slice().reverse();if(best>=0)polys[best].push(hr);else polys.push([hr])});
+ return polys.length===1?{type:'Polygon',coordinates:polys[0]}:{type:'MultiPolygon',coordinates:polys}}
+/* ArrayBuffer -> {type, geoms:[GeoJSON geometry | null]} (raw coordinates, 2D only) */
+function shpRead(buf){
+ const dv=new DataView(buf),len=buf.byteLength;
+ if(len<100||dv.getInt32(0,false)!==9994)throw new Error('فایل .shp معتبر نیست');
+ const fileType=dv.getInt32(32,true),geoms=[];let o=100,skipped=0;
+ while(o+8<=len){
+  const cl=dv.getInt32(o+4,false)*2;o+=8;const end=o+cl;if(cl<4||end>len)break;
+  const t=dv.getInt32(o,true),b=SHP_BASE[t];let g=null;
+  if(t===0){g=null}
+  else if(!b){skipped++}
+  else if(b===1){g={type:'Point',coordinates:[dv.getFloat64(o+4,true),dv.getFloat64(o+12,true)]}}
+  else if(b===8){const n=dv.getInt32(o+36,true),c=[];for(let i=0;i<n;i++)c.push([dv.getFloat64(o+40+16*i,true),dv.getFloat64(o+48+16*i,true)]);g=n?(n===1?{type:'Point',coordinates:c[0]}:{type:'MultiPoint',coordinates:c}):null}
+  else{
+   const np=dv.getInt32(o+36,true),n=dv.getInt32(o+40,true),parts=[];
+   for(let i=0;i<np;i++)parts.push(dv.getInt32(o+44+4*i,true));
+   const pb=o+44+4*np,pts=[];for(let i=0;i<n;i++)pts.push([dv.getFloat64(pb+16*i,true),dv.getFloat64(pb+16*i+8,true)]);
+   const rings=parts.map((s,i)=>pts.slice(s,i+1<np?parts[i+1]:n)).filter(r=>r.length);
+   if(b===3){const ls=rings.filter(r=>r.length>1);g=!ls.length?null:ls.length===1?{type:'LineString',coordinates:ls[0]}:{type:'MultiLineString',coordinates:ls}}
+   else g=shpPolys(rings)}
+  geoms.push(g);o=end}
+ return{type:fileType,geoms,skipped}}
+function dbfEncoding(cpg,u8,start){
+ const c=String(cpg||'').trim().toUpperCase();
+ if(c){if(/UTF-?8|65001/.test(c))return'utf-8';if(/1256|ARABIC/.test(c))return'windows-1256';if(/1252|LATIN1|ISO-?8859-1/.test(c))return'windows-1252'}
+ try{new TextDecoder('utf-8',{fatal:true}).decode(u8.subarray(start));return'utf-8'}catch(e){return'windows-1256'}}
+/* ArrayBuffer -> {fields:[names], rows:[object|null(deleted)]} */
+function dbfRead(buf,cpg){
+ const dv=new DataView(buf),u8=new Uint8Array(buf);
+ if(buf.byteLength<33)throw new Error('فایل .dbf معتبر نیست');
+ const n=dv.getUint32(4,true),hl=dv.getUint16(8,true),rl=dv.getUint16(10,true),enc=dbfEncoding(cpg,u8,hl),dec=new TextDecoder(enc);
+ const fields=[];
+ for(let o=32;o+32<=hl&&u8[o]!==0x0D;o+=32){
+  let e=o;while(e<o+11&&u8[e])e++;
+  fields.push({name:dec.decode(u8.subarray(o,e)).trim()||('F'+(fields.length+1)),type:String.fromCharCode(u8[o+11]),len:u8[o+16]})}
+ const seen=new Set();fields.forEach(f=>{let nm=f.name,k=2;while(seen.has(nm))nm=f.name+'_'+(k++);seen.add(nm);f.name=nm});
+ const rows=[];
+ for(let i=0;i<n;i++){
+  const p=hl+i*rl;if(p+rl>buf.byteLength)break;
+  if(u8[p]===0x2A){rows.push(null);continue}
+  let q=p+1;const r={};
+  fields.forEach(f=>{
+   const raw=dec.decode(u8.subarray(q,q+f.len));q+=f.len;let v=raw.replace(/\0/g,'').trim();
+   if(f.type==='N'||f.type==='F'){v=v===''||/^\*+$/.test(v)?null:(isFinite(+v)?+v:v)}
+   else if(f.type==='D'){v=/^\d{8}$/.test(v)?v.slice(0,4)+'-'+v.slice(4,6)+'-'+v.slice(6,8):(v||null)}
+   else if(f.type==='L'){v=/^[TtYy]$/.test(v)?true:/^[FfNn]$/.test(v)?false:null}
+   else if(f.type==='M'||f.type==='B'||f.type==='G'||f.type==='P'){v=''}
+   r[f.name]=v});
+  rows.push(r)}
+ return{fields:fields.map(f=>f.name),rows}}
+/* .prj text -> coordinate system info */
+function prjInfo(txt){
+ const t=String(txt||'').toUpperCase().replace(/\s+/g,' ');
+ if(!t.trim())return{kind:'none'};
+ if(!/^PROJCS|^PROJCRS|PROJCS\[|PROJCRS\[/.test(t))return{kind:'geo',warn:/ED_?1950|EUROPEAN_DATUM|ED50/.test(t)?'datum':''};
+ const warn=/ED_?1950|EUROPEAN_DATUM|ED50|NAHRWAN|CLARKE/.test(t)?'datum':'';
+ let m=/UTM[_ ]ZONE[_ ]?(\d{1,2})\s*([NS])?/.exec(t)||/UTM[_ ]?(\d{1,2})\s*([NS])\b/.exec(t);
+ if(m)return{kind:'utm',zone:+m[1],south:m[2]==='S'||/SOUTH/.test(t.slice(m.index,m.index+30)),warn};
+ m=/AUTHORITY\["EPSG","(32[67]\d\d)"\]\s*\]\s*$/.exec(t)||/EPSG","(32[67]\d\d)"/.exec(t);
+ if(m){const c=+m[1];if((c>=32601&&c<=32660)||(c>=32701&&c<=32760))return{kind:'utm',zone:c%100,south:c>=32700,warn}}
+ if(/MERCATOR_AUXILIARY_SPHERE|WEB_MERCATOR|PSEUDO[-_ ]MERCATOR|EPSG","3857"|900913/.test(t))return{kind:'merc',warn};
+ m=/TRANSVERSE_MERCATOR/.test(t)&&/CENTRAL_MERIDIAN"?,\s*(-?[\d.]+)/.exec(t);
+ const k0=/SCALE_FACTOR"?,\s*([\d.]+)/.exec(t);
+ if(m&&k0&&Math.abs(+k0[1]-.9996)<1e-6&&/FALSE_EASTING"?,\s*500000/.test(t)){const cm=+m[1],z=Math.round((cm+183)/6);if(z>=1&&z<=60)return{kind:'utm',zone:z,south:/FALSE_NORTHING"?,\s*10000000/.test(t),warn}}
+ const nm=/PROJCS\["([^"]+)"/.exec(t);
+ return{kind:'unknown',name:nm?nm[1]:'نامشخص'}}
+function shpTf(info,utm){
+ const r7=v=>Math.round(v*1e7)/1e7;
+ if(info.kind==='utm')return(x,y)=>{const z0=utm.Z;utm.Z=info.zone;try{const r=utm.inv(x,info.south?y-1e7:y);return[r7(r.lon),r7(r.lat)]}finally{utm.Z=z0}};
+ if(info.kind==='merc'){const R=20037508.342789244;return(x,y)=>[r7(x*180/R),r7(Math.atan(Math.exp(y*Math.PI/R))*360/Math.PI-90)]}
+ return(x,y)=>[r7(x),r7(y)]}
+function shpBBox(geoms){let a=1/0,b=1/0,c=-1/0,d=-1/0,n=0;
+ const w=x=>{if(typeof x[0]==='number'){n++;if(x[0]<a)a=x[0];if(x[0]>c)c=x[0];if(x[1]<b)b=x[1];if(x[1]>d)d=x[1]}else x.forEach(w)};
+ geoms.forEach(g=>{if(g)w(g.coordinates)});return n?[a,b,c,d]:null}
+/* {shp:ArrayBuffer, dbf?:ArrayBuffer, prj?:string, cpg?:string} -> {geo, info:string} */
+function shpToGeo(parts,utm){
+ const sh=shpRead(parts.shp);
+ if(!sh.geoms.length)throw new Error('هیچ عارضه‌ای در شیپ‌فایل نیست');
+ if(sh.geoms.length>500000)throw new Error('بیش از ۵۰۰ هزار عارضه؛ لایه را در QGIS برش دهید');
+ const db=parts.dbf?dbfRead(parts.dbf,parts.cpg):null;
+ let pi=prjInfo(parts.prj),note=[];
+ if(pi.kind==='unknown')throw new Error('سیستم مختصات «'+pi.name+'» پشتیبانی نمی‌شود؛ در QGIS لایه را با WGS84 یا UTM ذخیره کنید');
+ const bb=shpBBox(sh.geoms);if(!bb)throw new Error('هندسه‌ی معتبری در شیپ‌فایل پیدا نشد');
+ const deg=Math.abs(bb[0])<=180&&Math.abs(bb[2])<=180&&Math.abs(bb[1])<=90&&Math.abs(bb[3])<=90;
+ if(pi.kind==='none'){
+  if(deg)pi={kind:'geo'};
+  else if(bb[0]>=1e5&&bb[2]<=9e5&&bb[1]>=0&&bb[3]<=1e7){pi={kind:'utm',zone:39,south:false};note.push('فایل .prj نبود؛ مختصات UTM زون 39N فرض شد')}
+  else throw new Error('فایل .prj نیست و سیستم مختصات از روی اعداد قابل حدس نیست')}
+ if(pi.kind==='geo'&&!deg)throw new Error('مختصات خارج از محدوده درجه است ولی .prj جغرافیایی است');
+ if(pi.warn==='datum')note.push('datum غیر از WGS84 (مثل ED50)؛ ممکن است تا چند ده متر جابه‌جایی داشته باشد');
+ if(sh.skipped)note.push(sh.skipped+' عارضه‌ی نوع MultiPatch نادیده گرفته شد');
+ const tf=shpTf(pi,utm),mapC=c=>typeof c[0]==='number'?tf(c[0],c[1]):c.map(mapC);
+ const feats=[];let nullG=0;
+ sh.geoms.forEach((g,i)=>{
+  const row=db?db.rows[i]:{};if(db&&row===null)return;
+  if(!g){nullG++;return}
+  feats.push({type:'Feature',properties:row||{},geometry:{type:g.type,coordinates:mapC(g.coordinates)}})});
+ if(!feats.length)throw new Error('هیچ عارضه‌ی دارای هندسه پیدا نشد');
+ if(nullG)note.push(nullG+' رکورد بدون هندسه نادیده گرفته شد');
+ const kind={utm:'UTM زون '+pi.zone+(pi.south?'S':'N')+' ← WGS84',merc:'Web Mercator ← WGS84',geo:'درجه (WGS84)'}[pi.kind];
+ return{geo:{type:'FeatureCollection',features:feats},info:feats.length+' عارضه ('+kind+')'+(note.length?' | '+note.join(' | '):'')}}
+/* group zip entries -> [{base, shp, dbf, prj, cpg}] (names compared case-insensitively) */
+function shpGroup(names){
+ const g={};
+ names.forEach(n=>{const m=/^(.*)\.(shp|dbf|prj|cpg)$/i.exec(n);if(!m||/(^|\/)__MACOSX\//.test(n)||/(^|\/)\._/.test(n))return;
+  const k=m[1].toLowerCase();(g[k]=g[k]||{base:m[1].split('/').pop()})[m[2].toLowerCase()]=n});
+ return Object.values(g).filter(x=>x.shp)}
+async function shpZipLoad(f){
+ const z=await JSZip.loadAsync(await f.arrayBuffer());
+ const groups=shpGroup(Object.keys(z.files).filter(n=>!z.files[n].dir));
+ if(!groups.length)throw new Error('داخل zip فایل .shp پیدا نشد');
+ let ok=0,lastErr=null;
+ for(const g of groups){
+  try{
+   const parts={shp:await z.files[g.shp].async('arraybuffer'),dbf:g.dbf?await z.files[g.dbf].async('arraybuffer'):null,prj:g.prj?await z.files[g.prj].async('string'):'',cpg:g.cpg?await z.files[g.cpg].async('string'):''};
+   const r=shpToGeo(parts,UTM);checkCoords(r.geo);
+   const nm=groups.length>1?f.name.replace(/\.zip$/i,'')+' – '+g.base:f.name;
+   addLayer(nm,r.geo);toast(nm+': '+r.info,7000);ok++
+  }catch(e){lastErr=new Error(g.base+': '+e.message);toast(lastErr.message,7000)}}
+ if(!ok&&lastErr)throw lastErr}
+async function shpLoadLoose(o,key){
+ try{
+  if(!o.shp)throw new Error('همراه فایل‌های .dbf/.prj باید فایل .shp هم انتخاب شود');
+  const r=shpToGeo({shp:await o.shp.arrayBuffer(),dbf:o.dbf?await o.dbf.arrayBuffer():null,prj:o.prj?await o.prj.text():'',cpg:o.cpg?await o.cpg.text():''},UTM);
+  checkCoords(r.geo);addLayer(o.shp.name,r.geo);toast(o.shp.name+': '+r.info+(o.dbf?'':' | بدون .dbf (بدون ستون مشخصات)'),7000)
+ }catch(e){toast(key+': '+e.message,7000)}}
+
+function rebuild(L_){L_.lyr.clearLayers();L_.lyr.addData(L_.geo);if(L_.labL)L_.labL.invalidate();saveL(L_);renderList()}
 function mkLayer(name,geo,user,sv){
  const id=sv?sv.id:++lid;
  const L_={id,name,geo,color:sv?sv.color:(user?'#c0392b':colors[(id-1)%colors.length]),icon:sv?sv.icon:(user?'pin':'circle'),on:sv?sv.on!==false:true,user:!!user,res:!!(sv&&sv.res)};
  L_.sym=sv&&sv.sym?cleanSym(sv.sym):null;
+ L_.lab=sv&&sv.lab?cleanLab(sv.lab):null;
  L_.lyr=L.geoJSON(geo,{
   filter:f=>!symHidden(L_,f),
   style:f=>({color:symColor(L_,f)||L_.color,weight:3,fillOpacity:.25}),
@@ -1469,6 +2088,8 @@ function mkLayer(name,geo,user,sv){
    if(user&&f.properties&&f.properties['نام'])m.bindTooltip(esc(f.properties['نام']),{permanent:true,direction:'top',offset:[0,-2]});return m}});
  /* popups are bound lazily on first tap (thousands of pre-built popups slowed loading) */
  L_.lyr.on('click',e=>{const l=e.layer;if(!l||!l.feature||(l.getPopup&&l.getPopup()))return;const f=l.feature;l.bindPopup(()=>popEl(L_,f));l.openPopup(e.latlng)});
+ L_.lyr.on('add',()=>{if(L_.lab&&L_.lab.on){L_.labL=L_.labL||new LabelLayer(L_);L_.labL.addTo(map)}});
+ L_.lyr.on('remove',()=>{if(L_.labL&&map.hasLayer(L_.labL))map.removeLayer(L_.labL)});
  layers.push(L_);ctl.addOverlay(L_.lyr,esc(name));if(L_.on)L_.lyr.addTo(map);
  return L_}
 function addLayer(name,geo){
@@ -1498,16 +2119,19 @@ function renderList(){
   const s=stats(L_.geo),d=document.createElement('div');d.className='lay';
   d.innerHTML=`<b>${esc(L_.name)}${L_.res?' <span class="pill">نتیجه تحلیل</span>':''}</b><div style="font-size:12px">نقطه ${s.p} | خط ${s.l} | چندضلعی ${s.a}</div>
   <div class="row"><label><input type="checkbox" ${L_.on?'checked':''}> نمایش</label><input type="color" value="${L_.color}">
-  ${s.p?`<button type="button" class="icb"></button>`:''}<button type="button" class="icb symb">🎨 رنگ‌بندی</button></div>
+  ${s.p?`<button type="button" class="icb"></button>`:''}<button type="button" class="icb symb">🎨 رنگ‌بندی</button><button type="button" class="icb labb">🏷 لیبل</button></div>
   <div class="icgrid" hidden></div>
   <div class="symt" id="symt-${L_.id}" style="font-size:12px;color:var(--mt)"></div><div class="sympanel" hidden></div>
+  <div class="symt" id="labt-${L_.id}" style="font-size:12px;color:var(--mt)"></div><div class="labpanel" hidden></div>
   <div class="row"><button class="btn g">زوم</button><button class="btn r">حذف</button></div>`;
   const cb=d.querySelector('input[type=checkbox]'),cl=d.querySelector('input[type=color]'),icb=d.querySelector('.icb'),icg=d.querySelector('.icgrid'),[bz,bd]=d.querySelectorAll('button.btn');
   const fillIc=()=>{if(!icb)return;icb.innerHTML=icSvg(L_.icon,L_.color,26)+'<span>'+ICONS[L_.icon][0]+'</span> ▾';icg.innerHTML=Object.keys(ICONS).map(k=>`<button type="button" data-k="${k}" class="${k===L_.icon?'on':''}">${icSvg(k,L_.color,32)}<span>${ICONS[k][0]}</span></button>`).join('')};fillIc();
   cb.onchange=()=>{cb.checked?L_.lyr.addTo(map):map.removeLayer(L_.lyr)};
   cl.onchange=()=>{L_.color=cl.value;rebuild(L_);fillIc()};
   if(icb){icb.onclick=()=>{icg.hidden=!icg.hidden};icg.onclick=e=>{const b=e.target.closest('button');if(!b)return;L_.icon=b.dataset.k;rebuild(L_);fillIc();icg.hidden=true}}
-  {const sb=d.querySelector('.symb'),sp=d.querySelector('.sympanel'),st=d.querySelector('.symt');if(L_.sym)st.textContent='رنگ‌بندی بر اساس ستون «'+L_.sym.field+'»';sb.onclick=()=>{sp.hidden=!sp.hidden;if(!sp.hidden)symPanel(L_,sp)}}
+  {const sb=d.querySelector('.symb'),sp=d.querySelector('.sympanel'),st=d.querySelector('.symt');if(L_.sym)st.textContent='رنگ‌بندی بر اساس ستون «'+L_.sym.field+'»';sb.onclick=()=>{sp.hidden=!sp.hidden;if(!sp.hidden)symPanel(L_,sp)};
+  const lb=d.querySelector('.labb'),lp=d.querySelector('.labpanel'),lt=d.querySelector('[id^=labt-]');if(L_.lab&&L_.lab.on)lt.textContent='لیبل: '+(L_.lab.src==='expr'?'عبارت محاسباتی':'ستون «'+L_.lab.field+'»');
+  lb.onclick=()=>{lp.hidden=!lp.hidden;if(!lp.hidden)labPanel(L_,lp)}}
   bz.onclick=()=>zoomLayer(L_);
   bd.onclick=async()=>{if(await dlg('لایه «'+L_.name+'» حذف شود؟')){removeLayerObj(L_);renderList()}};
   el.appendChild(d)})}
@@ -2561,7 +3185,7 @@ async function bkInfo(){
  try{const e=await navigator.storage.estimate();h+=` | فضای مصرفی مرورگر: <b>${(e.usage/1048576).toFixed(1)} MB</b>`}catch(_){}
  try{const ps=await PH.stats(),u=PH.usedIds();h+=`<br>مخزن عکس: <b>${ps.n}</b> عکس (${(ps.bytes/1048576).toFixed(1)} MB)`+(ps.n>u.size?` — <span style="color:#a5281b">${ps.n-u.size} عکس بی‌مصرف</span>`:'')}catch(_){}
  $('bkInfo').innerHTML=h}
-const bkSer=L_=>({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res,sym:L_.sym||null});
+const bkSer=L_=>({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res,sym:L_.sym||null,lab:L_.lab||null});
 $('bkMake').onclick=async()=>{
  try{
   let all=await DB.all();if(!all.length&&layers.length)all=layers.map(bkSer);
@@ -2575,7 +3199,7 @@ $('bkMake').onclick=async()=>{
  }catch(e){toast('پشتیبان‌گیری ناموفق: '+e.message,7000)}};
 function removeLayerObj(L_,dbDel){
  const i=layers.indexOf(L_);if(i>=0)layers.splice(i,1);
- try{map.removeLayer(L_.lyr);ctl.removeLayer(L_.lyr)}catch(e){}
+ try{if(L_.labL)map.removeLayer(L_.labL);map.removeLayer(L_.lyr);ctl.removeLayer(L_.lyr)}catch(e){}
  if(L_===userL)userL=null;if(L_===editL)editL=null;if(dbDel!==false)DB.del(L_.id)}
 $('bkRestore').onclick=()=>$('bkFile').click();
 $('bkFile').onchange=async e=>{
@@ -2606,7 +3230,7 @@ $('bkFile').onchange=async e=>{
      l.geo.features.forEach(ft=>{if(!have.has(key(ft))){ex.geo.features.push(ft);n++}});
      if(n){rebuild(ex);merged+=n}continue}}
    let id=(replace&&Number.isFinite(+l.id)&&!used.has(+l.id))?+l.id:++lid;used.add(id);lid=Math.max(lid,id);
-   const sv={id,color:/^#[0-9a-f]{6}$/i.test(l.color)?l.color:'#1f6f5c',icon:ICONS[l.icon]?l.icon:'circle',on:l.on!==false,res:!!l.res,sym:cleanSym(l.sym)};
+   const sv={id,color:/^#[0-9a-f]{6}$/i.test(l.color)?l.color:'#1f6f5c',icon:ICONS[l.icon]?l.icon:'circle',on:l.on!==false,res:!!l.res,sym:cleanSym(l.sym),lab:cleanLab(l.lab)};
    const L_=mkLayer(nm,l.geo,user,sv);saveL(L_);added++}
   userL=layers.find(l=>l.user&&l.name==='نشانگرهای من')||null;editL=layers.find(l=>l.user&&l.name==='ویرایش‌ها')||null;
   renderList();bkInfo();PH.migAll().catch(()=>{});
@@ -3063,7 +3687,7 @@ function uiBuild(){
  ['bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
  ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
  bar.appendChild($('bMore'))}
-const APP_VER='1.05.24'; /* major.minor.counter — the last number grows by 1 with every change */
+const APP_VER='1.05.25'; /* major.minor.counter — the last number grows by 1 with every change */
 $('verLbl').textContent='نسخه سامانه : '+APP_VER.replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
 $('bMore').onclick=()=>openSheet('sMore');
 $('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');$('bGd').onclick=()=>openSheet('sGuide');
