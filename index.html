@@ -7,9 +7,9 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f5f4e">
 <script>try{var __t=JSON.parse(localStorage.getItem("webgis_settings")||"{}").theme,__h=new Date().getHours();document.documentElement.dataset.theme=(__t==="dark"||(__t==="auto"&&(__h<6||__h>=18)))?"dark":"light"}catch(e){}</script>
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.25">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.25">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.25">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.26">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.26">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.26">
 <link rel="stylesheet" href="lib/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'">
 <style>
 :root{--bg:#f4f6f3;--fg:#17261f;--pri:#1f6f5c;--pri2:#e8f1ee;--bd:#cfd9d3}
@@ -302,19 +302,26 @@ return new Promise(function(r){res=r})}})();
 <div style="position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);left:0;right:0;display:flex;gap:10px;justify-content:center"><label class="btn g">از عکس<input type="file" id="scanF" accept="image/*" hidden></label><button class="btn r" id="scanX">بستن</button></div></div>
 
 <div id="sSearch" class="sheet"><h3>جستجو و مختصات</h3>
-<div class="seg" id="srTabs"><button data-p="sr" class="on">جستجو در لایه‌ها</button><button data-p="go">مختصات و ناوبری</button></div>
+<div class="seg" id="srTabs"><button data-p="sr" class="on">جستجو در لایه‌ها</button><button data-p="ad">نشانی و مکان</button><button data-p="go">مختصات و ناوبری</button></div>
 <div id="srPane">
 <div class="row"><select id="sLay" style="direction:rtl"></select></div>
 <div class="row"><select id="sCol" style="direction:rtl"></select><select id="sMode" style="direction:rtl"><option value="c">شامل (Contains)</option><option value="e">دقیقاً برابر</option><option value="s">شروع با</option></select></div>
 <div class="row"><input type="text" id="sQ" placeholder="متن یا شماره..." style="direction:rtl"><button class="btn" id="sDo">جستجو</button><button class="btn g" id="sScanBtn">اسکن</button><button class="btn r" id="sClr">پاک کردن</button></div>
 <div id="sScanned" style="display:none"></div>
 <div id="sInfo" style="font-size:12px;color:#666;margin-bottom:4px"></div><div id="sRes"></div></div>
+<div id="adPane" style="display:none">
+<div class="row"><input type="search" id="adQ" placeholder="مثلاً: خیابان نامجو رشت — یا مختصات: 37.28, 49.58" enterkeyhint="search" style="flex:1;min-width:0;padding:10px;border:1px solid var(--bd);border-radius:10px;font:inherit;background:var(--sf);color:var(--fg)"><button class="btn" id="adGo">جستجو</button></div>
+<div id="adSt" style="font-size:12px;color:var(--mt);margin:4px 0"></div>
+<div id="adRes"></div>
+<div class="row"><button class="btn g" id="adClr" style="font-size:12px">پاک کردن علامت‌های نقشه</button></div>
+<div style="font-size:11px;color:var(--mt);margin-top:6px">جستجو در نشانی‌ها و مکان‌های ایران (با تمرکز بر گیلان در حالت پیش‌فرض) با داده‌ی © OpenStreetMap contributors؛ نیازمند اینترنت است. برای رعایت قوانین سرویس، جستجو فقط با زدن دکمه (نه هنگام تایپ) انجام می‌شود. تمرکز جستجو در «تنظیمات» قابل تغییر است.</div>
+</div>
 <div id="goPane" style="display:none">
 <div class="row"><select id="fmt"><option value="ll">طول/عرض (درجه)</option><option value="utm">UTM زون 39N (گیلان)</option></select></div>
 <div class="row" id="inLL"><input type="number" id="iLat" step="any" placeholder="عرض مثلاً 37.28"><input type="number" id="iLon" step="any" placeholder="طول مثلاً 49.58"></div>
 <div class="row" id="inUTM" style="display:none"><input type="number" id="iE" placeholder="Easting"><input type="number" id="iN" placeholder="Northing"></div>
 <div class="row"><button class="btn" id="goBtn">رفتن به نقطه</button><button class="btn g" id="clrBtn">حذف نشانگر</button></div>
-<div id="navInfo" style="font-size:13px"></div>
+<div id="goAddr" style="font-size:13px;margin:6px 0"></div><div id="navInfo" style="font-size:13px"></div>
 <select id="cpFmt" style="display:none"><option value="ll">ll</option><option value="xy">xy</option><option value="url">url</option><option value="none">none</option></select>
 </div></div>
 
@@ -401,6 +408,9 @@ return new Promise(function(r){res=r})}})();
 <div class="setsec">عمومی</div>
 <label>نام یا کد ثبت‌کننده (روی هر عارضه ثبت می‌شود)<input type="text" data-k="user"></label>
 <label>ضربه روی نقشه (نمایش و کپی مختصات)<select data-k="cp"><option value="ll">کپی: عرض, طول (استاندارد)</option><option value="xy">کپی: طول, عرض</option><option value="url">کپی: لینک Google Maps</option><option value="none">بدون عملیات (ضربه کاری انجام ندهد)</option></select></label>
+<label>تمرکز جستجوی نشانی<select data-k="geoBias"><option value="gilan">گیلان (اول داخل گیلان، اگر نبود کل ایران)</option><option value="view">اطراف نمای فعلی نقشه</option><option value="iran">کل ایران</option></select></label>
+<label><input type="checkbox" data-k="geoTap"> نمایش نشانی با لمس نقشه و با وارد کردن مختصات (نیازمند اینترنت)</label>
+<label>نشانی سرویس نشانی‌یابی (اختیاری؛ سازگار با Nominatim و فقط https)<input type="text" data-k="geoUrl" dir="ltr" placeholder="https://nominatim.openstreetmap.org"></label>
 <div class="setsec">برداشت مسیر</div>
 <label>حداکثر خطای GPS برای ثبت نقطه (متر)<input type="number" data-k="tkAcc" min="5" max="200" step="1"></label>
 <label>حداقل فاصله بین نقاط ثبت‌شده (متر)<input type="number" data-k="tkStep" min="1" max="50" step="1"></label>
@@ -713,7 +723,7 @@ $('bS').onclick=()=>openSheet('sSave');
 $('bE').onclick=()=>openSheet('sEdit');
 $('bB').onclick=()=>openSheet('sBackup');
 $('tSearch').onclick=()=>{srTab('sr');openSheet('sSearch')};
-function srTab(p){$('srPane').style.display=p==='sr'?'':'none';$('goPane').style.display=p==='go'?'':'none';document.querySelectorAll('#srTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p))}
+function srTab(p){$('srPane').style.display=p==='sr'?'':'none';$('adPane').style.display=p==='ad'?'':'none';$('goPane').style.display=p==='go'?'':'none';document.querySelectorAll('#srTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p))}
 $('srTabs').onclick=e=>{const b=e.target.closest('button');if(b)srTab(b.dataset.p)};
 $('sScanBtn').onclick=()=>startScan();
 
@@ -737,7 +747,140 @@ $('bM').onclick=ev=>{if(ev&&ev.preventDefault)ev.preventDefault();
   {enableHighAccuracy:true,maximumAge:2000,timeout:20000})};
 
 /* ---------- Go to / navigation ---------- */
+/* ---------- Address search + reverse geocoding (OpenStreetMap Nominatim; needs internet, throttled to 1 request/s, cached) ---------- */
+const GEO_BASE='https://nominatim.openstreetmap.org',GILAN={w:48.45,e:50.65,s:36.55,n:38.60};
+const geoBase=()=>{const u=String((typeof S!=='undefined'&&S.geoUrl)||'').trim().replace(/\/+$/,'');return /^https:\/\/[^\s]+$/.test(u)?u:GEO_BASE};
+const geoNorm=q=>String(q||'').replace(/[يى]/g,'ی').replace(/ك/g,'ک').replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[\u200c\u200f\u200e]/g,' ').replace(/\s+/g,' ').trim();
+/* "37.28, 49.58" (lat,lon in any order for Iran) -> {lat,lon} | null */
+function geoCoords(q){
+ const m=/^\s*(-?\d{1,3}(?:[.,٫]\d+)?)\s*[,،;\s]\s*(-?\d{1,3}(?:[.,٫]\d+)?)\s*$/.exec(geoNorm(q).replace(/٫/g,'.'));
+ if(!m)return null;
+ let a=parseFloat(m[1].replace(',','.')),b=parseFloat(m[2].replace(',','.'));
+ if(!isFinite(a)||!isFinite(b))return null;
+ if(a>=44&&a<=64&&b>=24&&b<=40){const t=a;a=b;b=t}
+ return Math.abs(a)<=90&&Math.abs(b)<=180?{lat:a,lon:b}:null}
+const GEO_T={highway:{motorway:'آزادراه',trunk:'بزرگراه',primary:'خیابان اصلی',secondary:'خیابان',tertiary:'خیابان',residential:'خیابان / کوچه',service:'راه فرعی',living_street:'کوچه',pedestrian:'گذر پیاده',footway:'مسیر پیاده',path:'مسیر',track:'جاده خاکی',unclassified:'جاده',road:'جاده',bus_stop:'ایستگاه اتوبوس'},
+ place:{city:'شهر',town:'شهر',village:'روستا',hamlet:'آبادی',suburb:'محله',neighbourhood:'محله',quarter:'محله',square:'میدان',island:'جزیره',county:'شهرستان',state:'استان',region:'منطقه',locality:'محل',isolated_dwelling:'خانه'},
+ boundary:{administrative:'محدوده اداری'},waterway:{river:'رودخانه',stream:'آبراه',canal:'کانال',drain:'زهکش'},natural:{water:'آب',wood:'جنگل',beach:'ساحل',peak:'قله',bay:'خلیج'},
+ railway:{station:'ایستگاه راه‌آهن',rail:'راه‌آهن'},amenity:{hospital:'بیمارستان',school:'مدرسه',university:'دانشگاه',bank:'بانک',pharmacy:'داروخانه',fuel:'پمپ بنزین',restaurant:'رستوران',mosque:'مسجد',police:'پلیس',fire_station:'آتش‌نشانی',parking:'پارکینگ'},
+ building:{},landuse:{},shop:{},tourism:{}};
+const GEO_CAT={building:'ساختمان',landuse:'کاربری زمین',shop:'فروشگاه',tourism:'گردشگری',amenity:'مکان',leisure:'تفریحی',man_made:'سازه',office:'اداره',aeroway:'فرودگاه',place:'مکان',highway:'راه'};
+const geoType=r=>{const c=r.category||r.class,t=r.type;return(GEO_T[c]&&GEO_T[c][t])||GEO_CAT[c]||t||''};
+function geoShort(a){a=a||{};return[a.road||a.pedestrian||a.footway,a.neighbourhood||a.suburb||a.quarter,a.village||a.town||a.city||a.county,a.state].filter((x,i,l)=>x&&l.indexOf(x)===i).join('، ')}
+function geoItem(r){
+ const a=r.address||{},nm=(r.name&&String(r.name).trim())||a.road||a.pedestrian||a.neighbourhood||a.suburb||a.village||a.town||a.city||String(r.display_name||'').split(',')[0]||'—';
+ const bb=Array.isArray(r.boundingbox)?r.boundingbox.map(Number):null;
+ return{name:nm,type:geoType(r),addr:geoShort(a)||r.display_name||'',lat:+r.lat,lon:+r.lon,bbox:bb&&bb.every(isFinite)?[[bb[0],bb[2]],[bb[1],bb[3]]]:null,geom:r.geojson&&r.geojson.type&&r.geojson.type!=='Point'?r.geojson:null}}
+/* --- tiny LRU cache in localStorage (search 40 entries, reverse 120) --- */
+function geoCache(kind,key,val){
+ let o;try{o=JSON.parse(localStorage.getItem('webgis_geo'))||{}}catch(e){o={}}
+ const bag=o[kind]=o[kind]||{};
+ if(val===undefined){const e=bag[key];return e?e.v:undefined}
+ bag[key]={t:Date.now(),v:val};
+ const ks=Object.keys(bag),mx=kind==='s'?40:120;
+ if(ks.length>mx)ks.sort((x,y)=>bag[x].t-bag[y].t).slice(0,ks.length-mx).forEach(k=>delete bag[k]);
+ try{localStorage.setItem('webgis_geo',JSON.stringify(o))}catch(e){try{localStorage.removeItem('webgis_geo')}catch(_){}}}
+let geoLast=0,geoChain=Promise.resolve();
+function geoFetch(url){
+ return geoChain=geoChain.catch(()=>{}).then(async()=>{
+  const w=geoLast+1100-Date.now();if(w>0)await new Promise(r=>setTimeout(r,w));geoLast=Date.now();
+  let r;try{r=await fetch(url,{headers:{Accept:'application/json'}})}catch(e){throw new Error('اتصال به سرویس نشانی برقرار نشد (اینترنت را بررسی کنید)')}
+  if(!r.ok)throw new Error(r.status===429?'سرویس نشانی موقتاً شلوغ است؛ چند دقیقه بعد دوباره امتحان کنید':'خطای سرویس نشانی ('+r.status+')');
+  return r.json()})}
+const geoVb=b=>b.w.toFixed(4)+','+b.n.toFixed(4)+','+b.e.toFixed(4)+','+b.s.toFixed(4);
+/* returns {items, note, cached} */
+async function geoSearch(q){
+ const qn=geoNorm(q);if(qn.length<2)throw new Error('عبارت جستجو کوتاه است');
+ const bias=(typeof S!=='undefined'&&S.geoBias)||'gilan';
+ let view=null;
+ if(bias==='view'){const b=map.getBounds();view={w:b.getWest(),e:b.getEast(),s:b.getSouth(),n:b.getNorth()}}
+ const key=qn+'|'+bias+(view?'|'+[view.w,view.e,view.s,view.n].map(v=>v.toFixed(1)).join(','):'');
+ const hit=geoCache('s',key);
+ if(hit)return{items:hit.items,note:hit.note,cached:true};
+ if(typeof navigator!=='undefined'&&navigator.onLine===false)throw new Error('اینترنت قطع است و این جستجو قبلاً ذخیره نشده است');
+ const base=geoBase(),common='format=jsonv2&limit=10&addressdetails=1&accept-language=fa&countrycodes=ir&dedupe=1&polygon_geojson=1&polygon_threshold=0.0003&q='+encodeURIComponent(qn);
+ let res=[],note='';
+ if(bias==='gilan'){
+  res=await geoFetch(base+'/search?'+common+'&viewbox='+geoVb(GILAN)+'&bounded=1');
+  if(!res.length){res=await geoFetch(base+'/search?'+common+'&viewbox='+geoVb(GILAN)+'&bounded=0');if(res.length)note='در گیلان پیدا نشد؛ نتایج از سراسر ایران است'}}
+ else if(bias==='view')res=await geoFetch(base+'/search?'+common+'&viewbox='+geoVb(view)+'&bounded=0');
+ else res=await geoFetch(base+'/search?'+common);
+ const items=res.map(geoItem).filter(x=>isFinite(x.lat)&&isFinite(x.lon));
+ const small=items.map(x=>x.geom&&JSON.stringify(x.geom).length>6000?{...x,geom:null}:x);
+ geoCache('s',key,{items:small,note});
+ return{items,note,cached:false}}
+/* returns {title, addr, display} | null (offline / no result) */
+async function geoReverse(lat,lon){
+ const key=lat.toFixed(4)+','+lon.toFixed(4),hit=geoCache('r',key);
+ if(hit)return hit;
+ if(typeof navigator!=='undefined'&&navigator.onLine===false)return null;
+ const r=await geoFetch(geoBase()+'/reverse?format=jsonv2&lat='+lat.toFixed(6)+'&lon='+lon.toFixed(6)+'&zoom=18&addressdetails=1&accept-language=fa');
+ if(!r||r.error)return null;
+ const a=r.address||{},title=(r.name&&String(r.name).trim())||[a.road||a.pedestrian,a.house_number].filter(Boolean).join(' ')||a.neighbourhood||a.suburb||a.village||a.town||a.city||'',
+  out={title,addr:geoShort(a),display:r.display_name||''};
+ geoCache('r',key,out);return out}
+
 let tgt=null,tgtM=null,tgtL=null;
+
+/* ---- address UI: search tab, result popup, address for tapped / typed coordinates ---- */
+const geoHL=L.layerGroup().addTo(map);let geoMk=null,adTok=0,tapTok=0;
+function geoClear(){geoHL.clearLayers();if(geoMk){map.removeLayer(geoMk);geoMk=null}}
+function geoPopEl(lat,lon,title,addr){
+ const el=document.createElement('div');el.style.cssText='min-width:200px;font-size:13px;line-height:1.7';
+ const h=document.createElement('div');h.className='gp-t';h.style.fontWeight='700';h.textContent=title||'';
+ const a=document.createElement('div');a.className='gp-a';a.textContent=addr||'';
+ const c=document.createElement('div');c.dir='ltr';c.style.cssText='font-size:12px;color:var(--mt)';
+ let u={E:0,N:0};try{u=UTM.fwd(lat,lon)}catch(e){}
+ c.textContent=lat.toFixed(6)+', '+lon.toFixed(6)+'  |  UTM '+Math.round(u.E)+' / '+Math.round(u.N);
+ const row=document.createElement('div');row.style.cssText='display:flex;gap:6px;margin-top:6px';
+ const mk=(t,fn)=>{const b=document.createElement('button');b.type='button';b.className='btn g';b.style.cssText='font-size:12px;padding:5px 8px';b.textContent=t;b.onclick=fn;row.appendChild(b)};
+ mk('کپی مختصات',async()=>toast(await copyText(cpText(lat,lon))?'📋 کپی شد':'کپی ممکن نشد'));
+ mk('هدف ناوبری',()=>{tgt=[lat,lon];if(tgtL){map.removeLayer(tgtL);tgtL=null}updNav();toast('هدف ناوبری تعیین شد (جستجو ← مختصات و ناوبری)',3500)});
+ el.append(h,a,c,row);return el}
+/* fills title/address of a popup element from reverse geocoding (only when the setting is on and online) */
+async function geoAddrInto(el,lat,lon,after,force){
+ if(!force&&!S.geoTap)return;
+ const a=el.querySelector('.gp-a'),h=el.querySelector('.gp-t');if(!a)return;
+ const prev=a.textContent;a.textContent='در حال دریافت نشانی ...';a.style.opacity='.6';
+ try{
+  const r=await geoReverse(lat,lon);
+  a.style.opacity='';
+  if(!r){a.textContent=navigator.onLine===false?'نشانی در حالت آفلاین در دسترس نیست':'برای این نقطه نشانی پیدا نشد'}
+  else{if(r.title&&(!h.textContent||h.dataset.def))h.textContent=r.title;a.textContent=r.addr||r.display||prev}
+  if(after)after(r)
+ }catch(e){a.style.opacity='';a.textContent=prev||e.message}}
+function geoShow(it,typed){
+ geoClear();
+ if(it.geom)try{L.geoJSON(it.geom,{style:{color:'#e91e63',weight:6,opacity:.85,fillColor:'#e91e63',fillOpacity:.15},interactive:false}).addTo(geoHL)}catch(e){}
+ const pe=geoPopEl(it.lat,it.lon,it.name,it.addr);if(typed)pe.querySelector('.gp-t').dataset.def='1';
+ geoMk=L.marker([it.lat,it.lon]).addTo(map).bindPopup(pe,{maxWidth:300});
+ try{if(it.bbox)map.fitBounds(it.bbox,{padding:[40,40],maxZoom:18});else map.setView([it.lat,it.lon],17)}catch(e){map.setView([it.lat,it.lon],17)}
+ setTimeout(()=>{if(geoMk)geoMk.openPopup()},350);
+ if(typeof sheetPeek==='function')sheetPeek('sSearch',true);
+ if(typed)geoAddrInto(pe,it.lat,it.lon,null,true)}
+function adRender(r){
+ const st=$('adSt'),res=$('adRes');res.innerHTML='';st.style.color='var(--mt)';
+ if(!r.items.length){st.textContent='نتیجه‌ای پیدا نشد؛ نام را کوتاه‌تر یا با نام شهر بنویسید (مثلاً «نامجو رشت»).';return}
+ st.textContent=r.items.length+' نتیجه'+(r.cached?' (از حافظه‌ی گوشی)':'')+(r.note?' — '+r.note:'');
+ r.items.forEach(it=>{
+  const b=document.createElement('button');b.className='idrow';
+  let d='';if(myPos){try{const m=turf.distance(turf.point([myPos[1],myPos[0]]),turf.point([it.lon,it.lat]),{units:'meters'});d=' • فاصله از شما: '+fmtD(m)}catch(e){}}
+  const t1=document.createElement('b');t1.textContent=it.name;
+  const t2=document.createElement('small');t2.textContent=it.type?'  ('+it.type+')':'';
+  const t3=document.createElement('small');t3.textContent=(it.addr||'')+d;
+  b.append(t1,t2,document.createElement('br'),t3);
+  b.onclick=()=>geoShow(it,false);res.appendChild(b)})}
+async function adGo(){
+ const q=$('adQ').value.trim();if(!q)return;
+ const c=geoCoords(q);
+ if(c){$('adSt').textContent='';$('adRes').innerHTML='';geoShow({name:'نقطه‌ی واردشده',type:'',addr:'',lat:c.lat,lon:c.lon,bbox:null,geom:null},true);return}
+ const my=++adTok,st=$('adSt');$('adRes').innerHTML='';st.style.color='var(--mt)';st.textContent='در حال جستجو ...';$('adGo').disabled=true;
+ try{const r=await geoSearch(q);if(my===adTok)adRender(r)}
+ catch(e){if(my===adTok){st.textContent='❌ '+e.message;st.style.color='#c0392b'}}
+ finally{if(my===adTok)$('adGo').disabled=false}}
+$('adGo').onclick=adGo;$('adQ').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();adGo()}};
+$('adClr').onclick=()=>{geoClear();$('adRes').innerHTML='';$('adSt').textContent=''};
+
 $('fmt').onchange=()=>{const u=$('fmt').value==='utm';$('inLL').style.display=u?'none':'flex';$('inUTM').style.display=u?'flex':'none';updCoord()};
 $('goBtn').onclick=()=>{
  let lat,lon;
@@ -747,9 +890,11 @@ $('goBtn').onclick=()=>{
  else{lat=parseFloat($('iLat').value);lon=parseFloat($('iLon').value);
   if(!(Math.abs(lat)<=90&&Math.abs(lon)<=180))return toast('عرض باید ±90 و طول ±180 باشد. ترتیب: عرض، سپس طول')}
  tgt=[lat,lon];if(tgtM)map.removeLayer(tgtM);if(tgtL)map.removeLayer(tgtL);
- tgtM=L.marker(tgt).addTo(map).bindPopup(fmtPt(lat,lon)+'<br>'+(()=>{const u=UTM.fwd(lat,lon);return `UTM: ${u.E.toFixed(0)} / ${u.N.toFixed(0)}`})()).openPopup();
+ const pe=geoPopEl(lat,lon,'نقطه‌ی هدف','');pe.querySelector('.gp-t').dataset.def='1';$('goAddr').textContent='';
+  tgtM=L.marker(tgt).addTo(map).bindPopup(pe,{maxWidth:300}).openPopup();
+  geoAddrInto(pe,lat,lon,r=>{$('goAddr').textContent=r?'نشانی: '+[r.title,r.addr].filter((x,i,l)=>x&&l.indexOf(x)===i).join(' — '):''});
  map.setView(tgt,15);updNav()};
-$('clrBtn').onclick=()=>{[tgtM,tgtL].forEach(l=>l&&map.removeLayer(l));tgt=tgtM=tgtL=null;$('navInfo').textContent=''};
+$('clrBtn').onclick=()=>{[tgtM,tgtL].forEach(l=>l&&map.removeLayer(l));tgt=tgtM=tgtL=null;$('navInfo').textContent='';$('goAddr').textContent=''};
 function updNav(){
  if(!tgt||!myPos)return;
  const a=turf.point([myPos[1],myPos[0]]),b=turf.point([tgt[1],tgt[0]]);
@@ -3038,6 +3183,7 @@ map.on('click',async e=>{
   if(clickMk)map.removeLayer(clickMk);
   clickMk=L.circleMarker(e.latlng,{radius:7,color:'#fff',weight:2,fillColor:'#c0392b',fillOpacity:.95,interactive:false}).addTo(map);
   clearTimeout(clickMk._t);const m=clickMk;setTimeout(()=>{if(m===clickMk){map.removeLayer(m);clickMk=null}},6000)}
+ if(S.geoTap){const my=++tapTok,ll=e.latlng;setTimeout(()=>{if(my!==tapTok)return;const pe=geoPopEl(ll.lat,ll.lng,'','');L.popup({maxWidth:300}).setLatLng(ll).setContent(pe).openOn(map);geoAddrInto(pe,ll.lat,ll.lng)},650)}
  });
 
 /* ---------- Routing ---------- */
@@ -3389,7 +3535,7 @@ function fxNode(c,p){
  c.splice(best.i,0,[p[0],p[1]]);return true}
 
 /* ---------- Settings (user-defined options; other menus only operate) ---------- */
-const SET_DEF={theme:'light',user:'',cp:'ll',obs:['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'],
+const SET_DEF={theme:'light',user:'',cp:'ll',geoBias:'gilan',geoTap:true,geoUrl:'',obs:['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'],
  tkAcc:30,tkStep:4,tkWake:true,fxEnd:1,fxPt:2,
  prxDist:30,prxMode:'enter',prxSound:'two',prxVol:.8,prxVib:true,prxHold:60,prxWake:true};
 const S=(()=>{let o={};try{o=JSON.parse(localStorage.getItem('webgis_settings'))||{}}catch(e){}return Object.assign({},SET_DEF,o,{obs:Array.isArray(o.obs)&&o.obs.length?o.obs:SET_DEF.obs})})();
@@ -3687,7 +3833,7 @@ function uiBuild(){
  ['bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
  ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
  bar.appendChild($('bMore'))}
-const APP_VER='1.05.25'; /* major.minor.counter — the last number grows by 1 with every change */
+const APP_VER='1.05.26'; /* major.minor.counter — the last number grows by 1 with every change */
 $('verLbl').textContent='نسخه سامانه : '+APP_VER.replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
 $('bMore').onclick=()=>openSheet('sMore');
 $('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');$('bGd').onclick=()=>openSheet('sGuide');
