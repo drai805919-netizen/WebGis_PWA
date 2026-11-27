@@ -226,14 +226,6 @@ html[data-theme=dark] .gh i{background:#5a606b}
 #bar{background:#4a5263!important;border-top:1px solid #6a7283!important}
 #bar button{color:#d3d8e2!important}#bar button.on{color:#a9ccff!important}
 html[data-theme=dark] #bar{background:#2e333d!important;border-top-color:#444b58!important}
-#bar button span{color:#fff!important;font-weight:600}
-html[data-theme=dark] #bar button{color:var(--pri)!important}
-html[data-theme=dark] #bar button .ic{color:var(--pri)!important}
-html[data-theme=dark] #bar button.on,html[data-theme=dark] #bar button.on .ic{color:#9cc2ff!important}
-html[data-theme=dark] #bar button.on span{color:#fff!important;font-weight:800}
-html[data-theme=dark] #top,html[data-theme=dark] #top .pill,html[data-theme=dark] #top button.pill,html[data-theme=dark] #top span{color:#fff!important}
-html[data-theme=dark] #tSearch,html[data-theme=dark] #tSearch span,html[data-theme=dark] #tSearch svg{color:#f1f3f6!important}
-html[data-theme=dark] #top .pill.off{color:#ffc9c3!important}
 /* ===== v27 ===== */
 .leaflet-popup-content td{white-space:pre-line}
 /* ===== v25: labels, calculator, palette ===== */
@@ -299,11 +291,11 @@ return new Promise(function(r){res=r})}})();
 
 <div id="sSave" class="sheet"><h3>ذخیره / خروجی لایه‌ها</h3>
 <div class="row"><select id="svFmt" style="direction:rtl"><option value="geojson">یک فایل GeoJSON (ادغام لایه‌های انتخابی)</option><option value="zip">ZIP — هر لایه یک GeoJSON جدا</option><option value="qgis">بسته QGIS (GeoJSON + پوشه عکس‌ها + پروژه .qgs)</option><option value="gpkg">GeoPackage (.gpkg) — یک فایل، هر لایه یک جدول</option><option value="csv">جدول CSV (Excel) — همه عوارض با مختصات مرکز</option></select></div>
-<label style="display:block;margin-bottom:8px;font-size:13px"><input type="checkbox" id="svShare"> همیشه با منوی اشتراک‌گذاری (Files، Drive، تلگرام، بله، ایتا، ایمیل ...)</label>
+<label style="display:block;margin-bottom:8px;font-size:13px"><input type="checkbox" id="svShare"> انتخاب محل ذخیره (منوی اشتراک‌گذاری: Files، Drive، تلگرام ...)</label>
 <label id="svAllRow" style="display:block;margin:6px 0;font-weight:700"><input type="checkbox" id="svAllChk" checked> انتخاب همه لایه‌ها</label>
 <div id="svList"></div>
 <div id="svInfo" style="font-size:12px;color:#555;margin:4px 0"></div>
-<div class="row"><button class="btn" id="svGo">ذخیره لایه‌های انتخاب‌شده</button><button class="btn g" id="svGoShare">📤 اشتراک‌گذاری (پیام‌رسان / Drive ...)</button></div>
+<div class="row"><button class="btn" id="svGo">ذخیره لایه‌های انتخاب‌شده</button></div>
 <div style="font-size:12px;color:#666">نتایج «شمارش» و «شناسایی» در بخش «نتایج تحلیل» همین فهرست ذخیره می‌شوند و مثل لایه‌ها خروجی می‌گیرند. GeoPackage با WGS84 (EPSG:4326) ساخته می‌شود و عکس‌ها در ستون متنی نگهداری می‌شوند.<br>مختصات WGS84 به ترتیب طول، عرض. در GeoJSON عکس‌ها داخل فایل هستند؛ در بسته QGIS عکس‌ها به‌صورت فایل جدا در پوشه photos و با مسیر نسبی در فیلد photo ذخیره می‌شوند.</div></div>
 
 <div id="cam" style="display:none;position:absolute;inset:0;z-index:1300;background:#000">
@@ -747,23 +739,12 @@ $('sScanBtn').onclick=()=>startScan();
 
 /* ---------- GPS ---------- */
 let meM=null,meC=null,watchId=null,myPos=null,first=true,myFix=null;
-let gpsRetry=0,gpsRetryN=0;
-async function gpsPermState(){try{return (await navigator.permissions.query({name:'geolocation'})).state}catch(e){return ''}}
-async function gpsFail(e){
- if(watchId!==null)navigator.geolocation.clearWatch(watchId);
- watchId=null;first=true;$('bM').classList.remove('on');$('gps').textContent='GPS خاموش';$('gps').className='pill off';
- const st=e.code===1?await gpsPermState():'';
- let m;
- if(e.code===1&&st==='denied')m='اجازه‌ی موقعیت برای این سایت در Chrome مسدود است. Chrome ← آیکون کنار آدرس ← Permissions ← Location ← Allow؛ یا Chrome ← Settings ← Site settings ← Location ← سایت را «Reset» کنید. سپس دوباره «موقعیت من» را بزنید.';
- else if(e.code===1&&st==='granted'){m='اجازه‌ی سایت داده شده ولی GPS گوشی خاموش است. GPS را از پنل بالای گوشی روشن کنید و به برنامه برگردید؛ خودکار ادامه می‌دهد.';gpsRetry=1}
- else if(e.code===1){m='اجازه‌ی موقعیت داده نشد. «موقعیت من» را دوباره بزنید و در پیام Chrome «Allow» را انتخاب کنید. اگر پیامی نیامد، GPS گوشی را روشن کنید و برگردید.';gpsRetry=1}
- else if(e.code===2){m='موقعیت در دسترس نیست؛ GPS گوشی را روشن کنید یا به فضای باز بروید.';gpsRetry=1}
- else m='زمان دریافت موقعیت تمام شد؛ دوباره «موقعیت من» را بزنید.';
- toast('خطای GPS: '+m,12000)}
-function gpsStart(){
+$('bM').onclick=ev=>{if(ev&&ev.preventDefault)ev.preventDefault();
+ if(!navigator.geolocation)return toast('این مرورگر GPS را پشتیبانی نمی‌کند');
+ if(!window.isSecureContext){toast('GPS فقط روی HTTPS یا localhost کار می‌کند. آدرس فعلی ('+location.protocol+') امن نیست؛ فایل را روی یک میزبان HTTPS بارگذاری کنید.',9000);$('gps').textContent='نیاز به HTTPS';return}
+ if(watchId!==null){if(myPos)map.setView(myPos,Math.max(map.getZoom(),16));return}
  $('gps').textContent='در حال یافتن...';
  watchId=navigator.geolocation.watchPosition(p=>{
-  gpsRetry=0;gpsRetryN=0;
   myPos=[p.coords.latitude,p.coords.longitude];myFix={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,t:Date.now()};
   if(!meM){meM=L.marker(myPos,{icon:L.divIcon({className:'',html:'<div class="me"></div>',iconSize:[16,16],iconAnchor:[8,8]})}).addTo(map);
    meC=L.circle(myPos,{radius:p.coords.accuracy,weight:1,color:'#1a73e8',fillOpacity:.1}).addTo(map)}
@@ -771,16 +752,9 @@ function gpsStart(){
   $('gps').textContent='GPS ±'+Math.round(p.coords.accuracy)+'m';$('gps').className='pill';
   $('bM').classList.add('on');
   if(first){map.setView(myPos,16);first=false}
-  updNav()},
-  gpsFail,
-  {enableHighAccuracy:true,maximumAge:2000,timeout:20000})}
-$('bM').onclick=ev=>{if(ev&&ev.preventDefault)ev.preventDefault();
- if(!navigator.geolocation)return toast('این مرورگر GPS را پشتیبانی نمی‌کند');
- if(!window.isSecureContext){toast('GPS فقط روی HTTPS یا localhost کار می‌کند. آدرس فعلی ('+location.protocol+') امن نیست؛ فایل را روی یک میزبان HTTPS بارگذاری کنید.',9000);$('gps').textContent='نیاز به HTTPS';return}
- if(watchId!==null){if(myPos)map.setView(myPos,Math.max(map.getZoom(),16));return}
- gpsRetry=0;gpsRetryN=0;gpsStart()};
-/* بعد از روشن‌کردن GPS از پنل گوشی و بازگشت به برنامه، خودکار دوباره تلاش می‌شود (حداکثر ۳ بار) */
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&gpsRetry&&watchId===null&&gpsRetryN<3&&navigator.geolocation&&window.isSecureContext){gpsRetry=0;gpsRetryN++;toast('در حال تلاش دوباره برای GPS ...',2500);gpsStart()}});
+    updNav()},
+  e=>{toast('خطای GPS: '+(e.code===1?'مرورگر اجازه موقعیت نداده (تنظیمات سایت یا آدرس ناامن)':e.code===2?'موقعیت در دسترس نیست؛ فضای باز را امتحان کنید':'زمان دریافت موقعیت تمام شد'),7000);if(watchId!==null)navigator.geolocation.clearWatch(watchId);$('gps').textContent='GPS خاموش';$('gps').className='pill off';watchId=null;first=true;$('bM').classList.remove('on')},
+  {enableHighAccuracy:true,maximumAge:2000,timeout:20000})};
 
 
 /* ---------- Go to / navigation ---------- */
@@ -2760,40 +2734,23 @@ $('rSave').onclick=async()=>{
 /* ---------- Save / Export (checkbox selection, GeoJSON, ZIP, QGIS package) ---------- */
 const safeName=n=>String(n).replace(/[\\/:*?"<>|]+/g,'_').trim()||'layer';
 const stampNow=()=>new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
-const svWant=()=>!!($('svShare').checked||svForce);let svForce=false;
-function shareNow(files,fn){return navigator.share({files,title:fn,text:fn})}
-/* فایل‌های قابل اشتراک: Chrome فقط چند نوع MIME را برای اشتراک فایل می‌پذیرد؛ نوع‌های دیگر با text/plain هم امتحان می‌شوند */
-function shareCandidates(fn,blob,types){
- const out=[],seen=new Set();
- types.concat(['text/plain']).forEach(t=>{if(seen.has(t))return;seen.add(t);out.push(new File([blob],fn,{type:t}))});
- return out}
-function shareAsk(files,fn){
- /* وقتی ساخت فایل طول کشیده و «ضربه‌ی کاربر» منقضی شده، مرورگر اشتراک را رد می‌کند؛ یک ضربه‌ی تازه لازم است */
- return new Promise(res=>{
-  const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px';
-  ov.innerHTML='<div style="background:var(--sf,#fff);color:var(--fg,#222);border-radius:16px;padding:18px;max-width:340px;width:100%;text-align:center;direction:rtl"><div style="font-weight:800;margin-bottom:6px">فایل آماده است</div><div style="font-size:13px;margin-bottom:12px;word-break:break-all">'+esc(fn)+'</div><button class="btn" id="shGo" style="width:100%;margin-bottom:8px">📤 باز کردن منوی اشتراک‌گذاری</button><button class="btn g" id="shDl" style="width:100%;margin-bottom:8px">⬇ دانلود معمولی</button><button class="btn r" id="shNo" style="width:100%">انصراف</button></div>';
-  document.body.appendChild(ov);
-  const end=v=>{ov.remove();res(v)};
-  ov.querySelector('#shGo').onclick=async()=>{try{await shareNow(files,fn);end('ok')}catch(e){if(e.name==='AbortError')end('cancel');else{toast('اشتراک ممکن نشد ('+e.name+')؛ دانلود معمولی',6000);end('dl')}}};
-  ov.querySelector('#shDl').onclick=()=>end('dl');ov.querySelector('#shNo').onclick=()=>end('cancel')})}
 async function saveBlob(fn,blob,types,share){
  if(share){
-  if(!navigator.share||!navigator.canShare)toast('منوی اشتراک‌گذاری روی این مرورگر/آدرس فعال نیست (به HTTPS نیاز دارد)؛ دانلود معمولی انجام می‌شود',7000);
+  if(!navigator.share||!navigator.canShare)toast('این مرورگر اشتراک‌گذاری فایل را پشتیبانی نمی‌کند؛ دانلود معمولی انجام می‌شود',6000);
   else{
-   const ok=shareCandidates(fn,blob,types).filter(f=>{try{return navigator.canShare({files:[f]})}catch(e){return false}});
-   if(!ok.length)toast('این نوع فایل برای منوی اشتراک مجاز نیست؛ دانلود معمولی انجام می‌شود',6000);
-   else{
-    try{await shareNow([ok[0]],fn);toast('اشتراک‌گذاری انجام/بسته شد',2500);return}
-    catch(e){
-     if(e.name==='AbortError')return;
-     if(e.name==='NotAllowedError'||e.name==='InvalidStateError'){const r=await shareAsk([ok[0]],fn);if(r==='ok'||r==='cancel')return}
-     else toast('اشتراک‌گذاری ممکن نشد ('+e.name+')؛ دانلود معمولی انجام می‌شود',7000)}}}}
+   let why='';
+   for(const t of types){
+    const f=new File([blob],fn,{type:t});
+    if(!navigator.canShare({files:[f]})){why='نوع '+t+' مجاز نیست';continue}
+    try{await navigator.share({files:[f],title:fn});toast('منوی اشتراک‌گذاری بسته شد',2500);return}
+    catch(e){if(e.name==='AbortError')return;why=e.name+': '+e.message}}
+   toast('اشتراک‌گذاری ممکن نشد ('+why+')؛ دانلود معمولی انجام می‌شود',8000)}}
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
  a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),8000);
  toast('دانلود شد: '+fn+' (پوشه Downloads مرورگر)',6000)}
 function dl(name,obj){
  const fn=safeName(name).replace(/\.(geojson|json|kml|kmz|gpx)$/i,'')+'.geojson';
- return saveBlob(fn,new Blob([JSON.stringify(obj,null,1)],{type:'application/geo+json'}),['text/plain','application/geo+json','application/json'],svWant())}
+ return saveBlob(fn,new Blob([JSON.stringify(obj,null,1)],{type:'application/geo+json'}),['text/plain','application/geo+json','application/json'],$('svShare').checked)}
 const DATA_IMG=/^data:image\/(jpeg|png|webp|gif);base64,/;
 const photoCount=L_=>{let n=0;L_.geo.features.forEach(f=>{const p=f.properties||{};for(const k in p)if(typeof p[k]==='string'&&(DATA_IMG.test(p[k])||p[k].startsWith('photo:')))n++});return n};
 const svSel=new Set(),svSeen=new Set();
@@ -2803,8 +2760,8 @@ function svUpd(){
  $('svAllChk').checked=n===layers.length&&n>0}
 function renderSave(){
  const el=$('svList');
- if(!layers.length){el.innerHTML='<div style="color:#666;font-size:13px">لایه‌ای برای ذخیره وجود ندارد.</div>';$('svGo').style.display='none';$('svGoShare').style.display='none';$('svAllRow').style.display='none';$('svInfo').textContent='';return}
- $('svGo').style.display='';$('svGoShare').style.display='';$('svAllRow').style.display='';
+ if(!layers.length){el.innerHTML='<div style="color:#666;font-size:13px">لایه‌ای برای ذخیره وجود ندارد.</div>';$('svGo').style.display='none';$('svAllRow').style.display='none';$('svInfo').textContent='';return}
+ $('svGo').style.display='';$('svAllRow').style.display='';
  [...svSel].forEach(id=>{if(!layers.some(l=>l.id===id))svSel.delete(id)});
  layers.forEach(l=>{if(!svSeen.has(l.id)){svSeen.add(l.id);if(!l.res)svSel.add(l.id)}});
  el.innerHTML='';
@@ -2816,7 +2773,6 @@ function renderSave(){
   d.querySelector('input').onchange=e=>{e.target.checked?svSel.add(L_.id):svSel.delete(L_.id);svUpd()};
   el.appendChild(d)});
  svUpd()}
-$('svGoShare').onclick=()=>{svForce=true;Promise.resolve($('svGo').onclick()).finally(()=>{svForce=false})};
 $('svAllChk').onchange=e=>{layers.forEach(l=>e.target.checked?svSel.add(l.id):svSel.delete(l.id));renderSave()};
 
 /* --- QGIS package: per-geometry GeoJSON (Multi*), photos extracted to photos/, .qgs project --- */
@@ -2874,7 +2830,7 @@ $('svGo').onclick=async()=>{
  const sel=layers.filter(l=>svSel.has(l.id));
  if(!sel.length)return toast('حداقل یک لایه را انتخاب کنید');
  if(!sel.some(l=>l.geo.features.length))return toast('لایه‌های انتخابی خالی هستند');
- const fmt=$('svFmt').value,sh=svWant(),b=$('svGo');b.disabled=true;
+ const fmt=$('svFmt').value,sh=$('svShare').checked,b=$('svGo');b.disabled=true;
  try{
   const selI=await Promise.all(sel.map(async L_=>({id:L_.id,name:L_.name,geo:await PH.inlineGeo(L_.geo)})));
   if(fmt==='geojson'){
