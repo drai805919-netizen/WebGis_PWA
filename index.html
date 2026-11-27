@@ -7,9 +7,9 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f5f4e">
 <script>try{var __t=JSON.parse(localStorage.getItem("webgis_settings")||"{}").theme,__h=new Date().getHours();document.documentElement.dataset.theme=(__t==="dark"||(__t==="auto"&&(__h<6||__h>=18)))?"dark":"light"}catch(e){}</script>
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.30">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.30">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.30">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.31">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.31">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.31">
 <link rel="stylesheet" href="lib/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'">
 <style>
 :root{--bg:#f4f6f3;--fg:#17261f;--pri:#1f6f5c;--pri2:#e8f1ee;--bd:#cfd9d3}
@@ -236,6 +236,19 @@ html[data-theme=dark] #bar{background:#2e333d!important;border-top-color:#444b58
 .swc{width:34px;height:26px;padding:0;border:1px solid var(--bd);border-radius:6px;background:transparent}
 .labpanel{margin-top:6px;padding:6px 0}.labpanel[hidden]{display:none}
 .labpanel textarea{padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--sf);color:var(--fg)}
+
+/* ===== v31: whiter menu text; dark theme bottom icons like the "More" menu ===== */
+#bar button{color:#fff!important}
+#bar button span{color:#fff!important}
+#bar button.on,#bar button.on span{color:#cfe2ff!important}
+#bar button.on{background:rgba(255,255,255,.14)!important;border-radius:10px!important}
+html[data-theme=dark] #bar button{color:var(--pri)!important}
+html[data-theme=dark] #bar button span{color:#fff!important}
+html[data-theme=dark] #bar button.on{color:#9cc2ff!important;background:rgba(91,155,255,.2)!important}
+html[data-theme=dark] #bar button.on span{color:#fff!important}
+html[data-theme=dark] #top{color:#fff}
+html[data-theme=dark] #tSearch,html[data-theme=dark] .ib{color:#fff!important}
+html[data-theme=dark] .pill,html[data-theme=dark] button.pill{color:#fff}
 </style>
 <script>
 /* v22: promise-based confirm dialog (replaces native confirm: no site title, Persian buttons) */
@@ -3973,7 +3986,7 @@ function uiBuild(){
  ['bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
  ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
  bar.appendChild($('bMore'))}
-const APP_VER='1.05.30'; /* major.minor.counter — the last number grows by 1 with every change */
+const APP_VER='1.05.31'; /* major.minor.counter — the last number grows by 1 with every change */
 $('verLbl').textContent='نسخه سامانه : '+APP_VER.replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
 $('bMore').onclick=()=>openSheet('sMore');
 $('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');$('bGd').onclick=()=>openSheet('sGuide');
