@@ -7,9 +7,9 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f5f4e">
 <script>try{var __t=JSON.parse(localStorage.getItem("webgis_settings")||"{}").theme,__h=new Date().getHours();document.documentElement.dataset.theme=(__t==="dark"||(__t==="auto"&&(__h<6||__h>=18)))?"dark":"light"}catch(e){}</script>
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.26">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.26">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.26">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.28">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.28">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.28">
 <link rel="stylesheet" href="lib/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'">
 <style>
 :root{--bg:#f4f6f3;--fg:#17261f;--pri:#1f6f5c;--pri2:#e8f1ee;--bd:#cfd9d3}
@@ -220,6 +220,18 @@ html[data-theme=dark] .gh i{background:#5a606b}
 .sr input[type=color]{flex:none;width:38px;height:28px;padding:0;border:1px solid var(--bd);border-radius:6px;background:transparent}
 .sr .sv{flex:1;word-break:break-word;font-size:13px}.sr .sc{flex:none;min-width:34px;text-align:left;color:var(--mt);font-size:12px}
 
+
+/* ===== v28: lighter bottom bar, compass mode ===== */
+#bar{background:#4a5263!important;border-top:1px solid #6a7283!important}
+#bar button{color:#d3d8e2!important}#bar button.on{color:#a9ccff!important}
+html[data-theme=dark] #bar{background:#2e333d!important;border-top-color:#444b58!important}
+#rotCtl{position:fixed;inset:0;z-index:5;pointer-events:none;background:transparent!important}
+#rotCard{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 74px);max-height:46%;overflow:auto;z-index:520;display:none;background:var(--sf);color:var(--fg);border-radius:16px;box-shadow:0 4px 18px rgba(0,0,0,.4);padding:14px 18px}
+#rotCard.show{display:block}.rc-x{position:absolute;top:6px;left:8px;border:0;background:transparent;font-size:18px;color:var(--mt)}
+body.rotmode .leaflet-tooltip{display:none}
+body.rotmode .me::after{content:'';position:absolute;left:50%;top:-14px;margin-left:-7px;border:7px solid transparent;border-bottom:14px solid #1a73e8;border-top:0}
+/* ===== v27 ===== */
+.leaflet-popup-content td{white-space:pre-line}
 /* ===== v25: labels, calculator, palette ===== */
 .chip{padding:3px 9px;border:1px solid var(--bd);border-radius:14px;background:var(--pri2);font:inherit;font-size:12px;color:var(--fg)}
 .chip.ex{background:transparent;border-style:dashed}
@@ -244,7 +256,7 @@ return new Promise(function(r){res=r})}})();
 
 </head>
 <body>
-<div id="map"></div><div id="cross"></div>
+<div id="map"></div><div id="cross"></div><div id="rotCard"></div>
 <div id="top"><button class="ib" id="tSearch" aria-label="جستجو"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>جستجو در لایه‌ها</span></button><span id="net" class="pill">آنلاین</span><span id="gps" class="pill off">GPS خاموش</span><button id="inst" class="pill" hidden>نصب برنامه</button><span id="zm" class="pill">زوم</span></div>
 <div id="toast"></div>
 
@@ -410,6 +422,7 @@ return new Promise(function(r){res=r})}})();
 <label>ضربه روی نقشه (نمایش و کپی مختصات)<select data-k="cp"><option value="ll">کپی: عرض, طول (استاندارد)</option><option value="xy">کپی: طول, عرض</option><option value="url">کپی: لینک Google Maps</option><option value="none">بدون عملیات (ضربه کاری انجام ندهد)</option></select></label>
 <label>تمرکز جستجوی نشانی<select data-k="geoBias"><option value="gilan">گیلان (اول داخل گیلان، اگر نبود کل ایران)</option><option value="view">اطراف نمای فعلی نقشه</option><option value="iran">کل ایران</option></select></label>
 <label><input type="checkbox" data-k="geoTap"> نمایش نشانی با لمس نقشه و با وارد کردن مختصات (نیازمند اینترنت)</label>
+<label>قطب‌نما (چرخش نقشه با جهت حرکت — آزمایشی)<select data-k="compass"><option value="off">خاموش (شمال بالا)</option><option value="gps">جهت حرکت (GPS)</option><option value="sensor">قطب‌نمای گوشی</option><option value="auto">خودکار (حرکت + قطب‌نمای گوشی)</option></select></label>
 <label>نشانی سرویس نشانی‌یابی (اختیاری؛ سازگار با Nominatim و فقط https)<input type="text" data-k="geoUrl" dir="ltr" placeholder="https://nominatim.openstreetmap.org"></label>
 <div class="setsec">برداشت مسیر</div>
 <label>حداکثر خطای GPS برای ثبت نقطه (متر)<input type="number" data-k="tkAcc" min="5" max="200" step="1"></label>
@@ -742,9 +755,123 @@ $('bM').onclick=ev=>{if(ev&&ev.preventDefault)ev.preventDefault();
   $('gps').textContent='GPS ±'+Math.round(p.coords.accuracy)+'m';$('gps').className='pill';
   $('bM').classList.add('on');
   if(first){map.setView(myPos,16);first=false}
+  rotRefresh();if(ROT.on){rotFeed(p.coords.heading,p.coords.speed);if(Date.now()>ROT.pause)map.panTo(myPos,{animate:false})}
   updNav()},
-  e=>{toast('خطای GPS: '+(e.code===1?'مرورگر اجازه موقعیت نداده (تنظیمات سایت یا آدرس ناامن)':e.code===2?'موقعیت در دسترس نیست؛ فضای باز را امتحان کنید':'زمان دریافت موقعیت تمام شد'),7000);if(watchId!==null)navigator.geolocation.clearWatch(watchId);$('gps').textContent='GPS خاموش';$('gps').className='pill off';watchId=null;$('bM').classList.remove('on')},
+  e=>{toast('خطای GPS: '+(e.code===1?'مرورگر اجازه موقعیت نداده (تنظیمات سایت یا آدرس ناامن)':e.code===2?'موقعیت در دسترس نیست؛ فضای باز را امتحان کنید':'زمان دریافت موقعیت تمام شد'),7000);if(watchId!==null)navigator.geolocation.clearWatch(watchId);$('gps').textContent='GPS خاموش';$('gps').className='pill off';watchId=null;$('bM').classList.remove('on');rotRefresh()},
   {enableHighAccuracy:true,maximumAge:2000,timeout:20000})};
+
+/* ---------- Compass / heading-up map rotation (experimental) ----------
+   The #map element is enlarged to the viewport diagonal and rotated with CSS; controls are moved out so they stay upright;
+   DOM markers / canvas icons / labels are counter-rotated; popups open in a fixed card; pointer coordinates are un-rotated. */
+function rotMath(deg,dx,dy){const th=deg*Math.PI/180,c=Math.cos(th),s=Math.sin(th);return[dx*c+dy*s,-dx*s+dy*c]}   // screen vector -> map-local vector
+const ROT_MAP=()=>document.getElementById('map');
+const _rotMP=L.Map.prototype.mouseEventToContainerPoint;
+L.Map.prototype.mouseEventToContainerPoint=function(e){
+ if(!ROT.on||this._container!==ROT_MAP())return _rotMP.call(this,e);
+ const el=this._container,r=el.getBoundingClientRect(),u=rotMath(-ROT.hd,e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2));
+ return L.point(u[0]+el.offsetWidth/2-el.clientLeft,u[1]+el.offsetHeight/2-el.clientTop)};
+const _rotDM=L.Draggable.prototype._onMove;
+L.Draggable.prototype._onMove=function(e){
+ if(!ROT.on||(e.touches&&e.touches.length>1)||!this._startPoint)return _rotDM.call(this,e);
+ const f=e.touches&&e.touches.length===1?e.touches[0]:e,u=rotMath(-ROT.hd,f.clientX-this._startPoint.x,f.clientY-this._startPoint.y),
+  cx=this._startPoint.x+u[0],cy=this._startPoint.y+u[1],
+  pe={type:e.type,target:e.target,srcElement:e.srcElement,timeStamp:e.timeStamp,clientX:cx,clientY:cy,touches:e.touches&&e.touches.length===1?[{clientX:cx,clientY:cy}]:undefined,preventDefault:()=>{if(e.preventDefault)e.preventDefault()},stopPropagation:()=>{if(e.stopPropagation)e.stopPropagation()}};
+ const ps=this._parentScale;this._parentScale={x:1,y:1};
+ try{return _rotDM.call(this,pe)}finally{this._parentScale=ps}};
+const _rotSP=L.Marker.prototype._setPos;
+L.Marker.prototype._setPos=function(pos){
+ _rotSP.call(this,pos);
+ const el=this._icon;if(!el||!L.Browser.any3d)return;
+ const io=(this.options.icon&&this.options.icon.options)||{},sz=io.iconSize?L.point(io.iconSize):null,an=io.iconAnchor?L.point(io.iconAnchor):(sz?sz.divideBy(2):L.point(0,0));
+ el.style.transformOrigin=an.x+'px '+an.y+'px';el.style.transform+=' rotate(var(--wgrot,0deg))'};
+function rotLayout(){
+ const m=ROT_MAP(),W=innerWidth,H=innerHeight,D=Math.ceil(Math.hypot(W,H))+4;
+ m.style.inset='auto';m.style.width=D+'px';m.style.height=D+'px';m.style.left=((W-D)/2)+'px';m.style.top=((H-D)/2)+'px';m.style.transformOrigin='50% 50%'}
+function rotApply(){
+ const m=ROT_MAP();if(!m)return;
+ m.style.transform='rotate('+(-ROT.hd)+'deg)';m.style.setProperty('--wgrot',ROT.hd+'deg');
+ const n=document.getElementById('cmpNeedle');if(n)n.style.transform='rotate('+(-ROT.hd)+'deg)'}
+let rotRedrawT=0,rotLastRedraw=-999;
+function rotRedraw(force){
+ const now=Date.now();if(!force&&(now-rotLastRedraw<350||Math.abs(ROT.hd-rotLastRedraw)<0))return;
+ if(!force&&Math.abs(((ROT.hd-ROT.drawn+540)%360)-180)<2)return;
+ rotLastRedraw=now;ROT.drawn=ROT.hd;
+ try{const r=map.options.renderer;if(r&&r._map){r._redrawBounds=null;r._redrawRequest=r._redrawRequest||L.Util.requestAnimFrame(r._redraw,r)}}catch(e){}
+ try{map.eachLayer(l=>{if(l instanceof LabelLayer)l._draw()})}catch(e){}}
+function rotTarget(hd){if(hd==null||!isFinite(hd))return;ROT.tgt=((hd%360)+360)%360}
+function rotTick(){
+ if(!ROT.on)return;
+ const d=((ROT.tgt-ROT.hd+540)%360)-180;
+ if(Math.abs(d)<0.6)return;
+ ROT.hd=(ROT.hd+d*0.35+360)%360;rotApply();rotRedraw(false)}
+/* GPS fix: heading (deg from north, only meaningful while moving) and speed (m/s) */
+function rotFeed(hd,sp){
+ ROT.moving=sp!=null&&sp>=1.5;
+ if(!ROT.on)return;
+ const mode=S.compass;
+ if((mode==='gps'||mode==='auto')&&ROT.moving&&hd!=null&&isFinite(hd))rotTarget(hd)}
+function rotSensorOn(){
+ if(ROT.sens)return;
+ const h=e=>{
+  let hd=null;
+  if(typeof e.webkitCompassHeading==='number')hd=e.webkitCompassHeading;
+  else if(e.absolute&&e.alpha!=null)hd=(360-e.alpha)%360;
+  if(hd==null)return;
+  const ang=(screen.orientation&&screen.orientation.angle)||0;hd=(hd+ang)%360;ROT.sensHd=hd;
+  if(ROT.on&&(S.compass==='sensor'||(S.compass==='auto'&&!ROT.moving)))rotTarget(hd)};
+ addEventListener('deviceorientationabsolute',h,true);addEventListener('deviceorientation',h,true);ROT.sens=h}
+function rotSensorOff(){if(ROT.sens){removeEventListener('deviceorientationabsolute',ROT.sens,true);removeEventListener('deviceorientation',ROT.sens,true);ROT.sens=null}}
+async function rotPerm(){
+ try{if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted'){toast('اجازه‌ی قطب‌نمای گوشی داده نشد؛ حالت «جهت حرکت GPS» را انتخاب کنید',6000);return false}}}catch(e){}
+ return true}
+function rotEnable(){
+ if(ROT.on)return;
+ const m=ROT_MAP(),c=map.getCenter(),z=map.getZoom();
+ ROT.on=true;document.body.classList.add('rotmode');
+ // controls stay upright: move them out of the rotated element
+ const cc=m.querySelector('.leaflet-control-container');
+ if(cc){let rc=document.getElementById('rotCtl');if(!rc){rc=document.createElement('div');rc.id='rotCtl';rc.className='leaflet-container leaflet-touch';document.body.insertBefore(rc,m.nextSibling)}rc.appendChild(cc)}
+ rotLayout();map.invalidateSize({pan:false});map.setView(c,z,{animate:false});
+ map.eachLayer(l=>{if(l instanceof L.Marker&&l.update)l.update()});
+ const mode=S.compass;if(mode==='sensor'||mode==='auto')rotSensorOn();
+ ROT.tgt=ROT.hd;ROT.timer=setInterval(rotTick,120);
+ addEventListener('resize',rotOnResize);
+ rotApply();rotRedraw(true);toast('حالت قطب‌نما روشن شد؛ نقشه با جهت حرکت می‌چرخد',3500)}
+function rotOnResize(){if(!ROT.on)return;const c=map.getCenter();rotLayout();map.invalidateSize({pan:false});map.setView(c,map.getZoom(),{animate:false})}
+function rotDisable(){
+ if(!ROT.on)return;
+ const m=ROT_MAP(),c=map.getCenter(),z=map.getZoom();
+ ROT.on=false;clearInterval(ROT.timer);removeEventListener('resize',rotOnResize);rotSensorOff();
+ m.style.transform='';m.style.removeProperty('--wgrot');m.style.inset='';m.style.width='';m.style.height='';m.style.left='';m.style.top='';m.style.transformOrigin='';
+ const rc=document.getElementById('rotCtl');if(rc){const cc=rc.querySelector('.leaflet-control-container');if(cc)m.appendChild(cc);rc.remove()}
+ document.body.classList.remove('rotmode');
+ const cd=document.getElementById('rotCard');if(cd)cd.classList.remove('show');
+ map.invalidateSize({pan:false});map.setView(c,z,{animate:false});
+ map.eachLayer(l=>{if(l instanceof L.Marker&&l.update)l.update()});
+ ROT.hd=0;ROT.tgt=0;rotRedraw(true);
+ const n=document.getElementById('cmpNeedle');if(n)n.style.transform=''}
+/* should the rotation be active right now? (setting on + GPS tracking running) */
+function rotRefresh(){
+ const want=S.compass&&S.compass!=='off'&&typeof watchId!=='undefined'&&watchId!==null;
+ try{if(want)rotEnable();else rotDisable()}catch(e){try{rotDisable()}catch(_){}toast('فعال‌سازی قطب‌نما ناموفق بود: '+e.message,5000)}}
+/* popups open in a fixed card while the map is rotated (Leaflet popups would be rotated too) */
+map.on('popupopen',e=>{
+ if(!ROT.on)return;
+ const p=e.popup,node=p&&p._contentNode,el=node&&node.firstChild;if(!el)return;
+ const card=document.getElementById('rotCard');card.innerHTML='';card.appendChild(el);
+ const x=document.createElement('button');x.className='rc-x';x.type='button';x.textContent='✕';x.onclick=()=>card.classList.remove('show');card.appendChild(x);
+ card.classList.add('show');setTimeout(()=>{try{map.closePopup(p)}catch(_){}},0)});
+map.on('dragstart',()=>{ROT.pause=Date.now()+8000});
+/* compass button (needle shows north; tap = north-up / back to the chosen mode) */
+const CmpCtl=L.Control.extend({options:{position:'topright'},onAdd(){
+ const d=L.DomUtil.create('div','leaflet-bar loc-ctl cmp-ctl'),a=L.DomUtil.create('a','',d);a.id='bCmp';a.href='#';a.title='قطب‌نما';a.setAttribute('role','button');a.setAttribute('aria-label','قطب‌نما');
+ a.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><g id="cmpNeedle" style="transform-origin:12px 12px"><path d="M12 4.5 14.6 12H9.4Z" fill="#e53935" stroke="none"/><path d="M12 19.5 9.4 12h5.2Z" fill="currentColor" stroke="none"/></g></svg>';
+ L.DomEvent.disableClickPropagation(d);
+ L.DomEvent.on(a,'click',async e=>{L.DomEvent.stop(e);
+  if(S.compass&&S.compass!=='off'){S.compass='off'}else{S.compass='auto';await rotPerm()}
+  setSave();setLoad();rotRefresh();if(S.compass!=='off'&&watchId===null)toast('قطب‌نما با روشن شدن GPS (دکمه «موقعیت من») فعال می‌شود',4500)});
+ return d}});
+new CmpCtl().addTo(map);
 
 /* ---------- Go to / navigation ---------- */
 /* ---------- Address search + reverse geocoding (OpenStreetMap Nominatim; needs internet, throttled to 1 request/s, cached) ---------- */
@@ -914,20 +1041,34 @@ function kmlGeom(g){
   if(ob)rings.push(kmlCoords(ob.getElementsByTagName('coordinates')[0].textContent));
   kids(g,'innerBoundaryIs').forEach(i=>rings.push(kmlCoords(i.getElementsByTagName('coordinates')[0].textContent)));
   return rings.length?{type:'Polygon',coordinates:rings}:null}
- if(nm==='MultiGeometry'){const gs=[...g.children].map(kmlGeom).filter(Boolean);return gs.length?{type:'GeometryCollection',geometries:gs}:null}
+ if(nm==='MultiGeometry'){const gs=[...g.children].map(kmlGeom).filter(Boolean);return mergeGeoms(gs)}
  return null}
 function kml2geo(t){
- const d=xml(t),f=[];
+ const d=xml(t),f=[],sty={};
+ const sInfo=st=>{if(!st)return null;
+  const c=['LineStyle','PolyStyle','IconStyle'].map(k=>st.getElementsByTagName(k)[0]).find(x=>x&&x.getElementsByTagName('color')[0]),ls=st.getElementsByTagName('LineStyle')[0],w=ls&&ls.getElementsByTagName('width')[0];
+  return{c:c?kmlHex(c.getElementsByTagName('color')[0].textContent):null,w:w?parseFloat(w.textContent):null}};
+ kids(d,'Style').forEach(st=>{const id=st.getAttribute('id');if(id)sty['#'+id]=sInfo(st)});
+ kids(d,'StyleMap').forEach(m=>{const id=m.getAttribute('id'),pr=[...m.getElementsByTagName('Pair')].find(p=>{const k=p.getElementsByTagName('key')[0];return k&&k.textContent.trim()==='normal'}),u=pr&&pr.getElementsByTagName('styleUrl')[0];if(id&&u)sty['#'+id]=sty[u.textContent.trim()]||null});
+ const ftype={};kids(d,'SimpleField').forEach(x=>{ftype[x.getAttribute('name')]=x.getAttribute('type')});
+ const cols=new Set(),wds=new Set(),meta=[];
  kids(d,'Placemark').forEach(p=>{
   const props={};
   const nm=p.getElementsByTagName('name')[0],ds=p.getElementsByTagName('description')[0];
   if(nm)props['نام']=nm.textContent;
   if(ds)props['توضیحات']=ds.textContent;
   kids(p,'Data').forEach(x=>{const v=x.getElementsByTagName('value')[0];props[x.getAttribute('name')]=v?v.textContent:''});
-  kids(p,'SimpleData').forEach(x=>props[x.getAttribute('name')]=x.textContent);
+  kids(p,'SimpleData').forEach(x=>{const k=x.getAttribute('name'),tx=x.textContent;props[k]=/^(int|uint|short|ushort|float|double)$/i.test(ftype[k]||'')&&tx.trim()!==''&&isFinite(+tx)?+tx:tx});
+  kvAdd(props,nm?kvLines(nm.textContent):null);
+  kvAdd(props,ds?(kvHtml(ds.textContent)||kvLines(ds.textContent)):null);
   const gs=[...p.children].map(kmlGeom).filter(Boolean);
   if(!gs.length)return;
-  f.push({type:'Feature',properties:props,geometry:gs.length===1?gs[0]:{type:'GeometryCollection',geometries:gs}})});
+  const own=[...p.children].find(c=>c.localName==='Style'),su=[...p.children].find(c=>c.localName==='styleUrl'),si=own?sInfo(own):(su?sty[su.textContent.trim()]:null);
+  if(si){if(si.c)cols.add(si.c);if(si.w)wds.add(si.w)}
+  meta.push(si);
+  f.push({type:'Feature',properties:props,geometry:mergeGeoms(gs)})});
+ if(cols.size>1)f.forEach((x,i)=>{const m=meta[i];if(m&&m.c)x.properties['رنگ KML']=m.c});
+ if(wds.size>1)f.forEach((x,i)=>{const m=meta[i];if(m&&m.w)x.properties['ضخامت KML']=m.w});
  return{type:'FeatureCollection',features:f}}
 function gpx2geo(t){
  const d=xml(t),f=[],pt=n=>[+n.getAttribute('lon'),+n.getAttribute('lat')];
@@ -955,6 +1096,7 @@ const ICONS={circle:['دایره','<circle cx="12" cy="12" r="8"/>'],pin:['سن�
 const icSvg=(k,c,z)=>`<svg viewBox="0 0 24 24" width="${z}" height="${z}" fill="${c}" stroke="#fff" stroke-width="1.5" style="filter:drop-shadow(0 0 1px rgba(0,0,0,.65))">${(ICONS[k]||ICONS.circle)[1]}</svg>`;
 function mkIcon(k,c){const i=ICONS[k]||ICONS.circle;
  return L.divIcon({className:'',html:`<svg viewBox="0 0 24 24" width="26" height="26" fill="${c}" stroke="#fff" stroke-width="1.5" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))">${i[1]}</svg>`,iconSize:[26,26],iconAnchor:i[2]?[13,25]:[13,13],popupAnchor:[0,-12]})}
+const ROT={on:false,hd:0,tgt:0,drawn:0,moving:false,pause:0,timer:0,sens:null,sensHd:null};
 /* ---------- Canvas icon marker: pin / flag / square ... drawn on the map canvas (thousands of DOM markers made zoom/pan slow) ---------- */
 const ICON_PATH={circle:'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z',pin:'M12 22s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z',square:'M7 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z',triangle:'M12 3 22 20H2z',diamond:'M12 2 22 12 12 22 2 12z',star:'M12 2l3 7 7.5.6-5.7 4.9 1.8 7.4L12 18l-6.6 3.9 1.8-7.4L1.5 9.6 9 9z',cross:'M9 3h6v6h6v6h-6v6H9v-6H3V9h6z',flag:'M5 2h2v20H5z M7 3h12l-3.5 4.5L19 12H7z'};
 const ICON_DOT='M12 7.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',ICON_P2D={};
@@ -963,15 +1105,15 @@ const IconMarker=L.CircleMarker.extend({
  initialize(ll,o){L.CircleMarker.prototype.initialize.call(this,ll,Object.assign({radius:14,fillOpacity:1},o))},
  _anch(){const i=ICONS[this.options.iconKey];return !!(i&&i[2])},
  _updateBounds(){const p=this._point,w=this._clickTolerance(),a=this._anch();
-  this._pxBounds=L.bounds([p.x-15-w,p.y-(a?29:15)-w],[p.x+15+w,p.y+(a?3:15)+w])},
- _containsPoint(p){const a=this._anch(),c=this._point,w=this._clickTolerance();
+  this._pxBounds=ROT.on?L.bounds([p.x-30-w,p.y-30-w],[p.x+30+w,p.y+30+w]):L.bounds([p.x-15-w,p.y-(a?29:15)-w],[p.x+15+w,p.y+(a?3:15)+w])},
+ _containsPoint(p){const a=this._anch(),c=this._point,w=this._clickTolerance();if(ROT.on){const u=rotMath(ROT.hd,p.x-c.x,p.y-c.y);p=L.point(c.x+u[0],c.y+u[1])}
   return Math.abs(p.x-c.x)<=15+w&&p.y>=c.y-(a?28:14)-w&&p.y<=c.y+(a?2:14)+w},
  _getPopupAnchor(){return L.point(0,this._anch()?-26:-14)},
  _getTooltipAnchor(){return L.point(0,this._anch()?-28:-14)},
  _updatePath(){
   const r=this._renderer,ctx=r&&r._ctx;if(!ctx||!r._drawing)return;
   const c=this._point,k=this.options.iconKey,a=this._anch(),p=icP2D(k);
-  ctx.save();ctx.translate(c.x-13,c.y-(a?25:13));ctx.scale(26/24,26/24);ctx.lineJoin='round';
+  ctx.save();ctx.translate(c.x,c.y);if(ROT.on)ctx.rotate(ROT.hd*Math.PI/180);ctx.translate(-13,-(a?25:13));ctx.scale(26/24,26/24);ctx.lineJoin='round';
   ctx.fillStyle=this.options.fillColor||'#c0392b';ctx.fill(p);
   ctx.lineWidth=3.4;ctx.strokeStyle='rgba(0,0,0,.35)';ctx.stroke(p);
   ctx.lineWidth=1.5;ctx.strokeStyle='#fff';ctx.stroke(p);
@@ -1593,10 +1735,11 @@ function symPanel(L_,box){
  const mk=(t,c,fn)=>{const b=document.createElement('button');b.type='button';b.className='btn '+c;b.style.fontSize='12px';b.textContent=t;b.onclick=fn;top.appendChild(b);return b};
  mk('اعمال رنگ‌بندی','g',()=>{
   const ns=symBuild(L_,fields[+sel.value]);
-  if(!ns)return toast('این ستون بیش از ۱۰۰ مقدار متفاوت دارد؛ ستون دیگری (مثل سایز، نوع، جنس) را انتخاب کنید',5000);
+  if(!ns)return toast('این ستون بیش از ۱۰۰ مقدار متفاوت دارد؛ ستون دیگری (مثل سایز، نوع، جنس) را انتخاب کنید. اگر سایز یا نوع داخل متن نام نوشته شده، با دکمه‌ی «تفکیک ... به ستون‌ها» یا با «🏷 لیبل ← عبارت محاسباتی ← ایجاد ستون دائمی» آن را جدا کنید',9000);
   L_.sym=ns;restyle(L_);symPanel(L_,box);symTitle(L_)});
  if(s)mk('حذف رنگ‌بندی','r',()=>{L_.sym=null;restyle(L_);box.hidden=true;symTitle(L_)});
  box.appendChild(top);
+ {const kr=kvRow(L_,()=>symPanel(L_,box));if(kr)box.appendChild(kr)}
  if(!s)return;
  const counts=symCounts(L_,s.field),list=document.createElement('div');
  if(!counts){box.appendChild(list);list.textContent='مقادیر ستون بیش از ۱۰۰ مورد است.';return}
@@ -1888,7 +2031,7 @@ function pyCompile(src){const ast=pyParse(String(src).trim());return{ast,fields:
 const LAB_FONTS=[['Tahoma','Tahoma'],['Vazirmatn','وزیرمتن (در صورت نصب بودن)'],['Segoe UI','Segoe UI'],['Arial','Arial'],['Verdana','Verdana'],['Georgia','Georgia'],['Times New Roman','Times New Roman'],['Courier New','Courier New'],['Noto Naskh Arabic','Noto Naskh Arabic'],['sans-serif','پیش‌فرض دستگاه'],['serif','Serif'],['monospace','Monospace']];
 const LAB_TXT=['#111111','#ffffff','#c0392b','#d35400','#f1c40f','#27ae60','#16a085','#2980b9','#8e44ad','#e91e63','#795548','#7f8c8d'];
 const LAB_HALO=['none','#ffffff','#000000','#ffeb3b','#e0e0e0'];
-const LAB_EX=[['ادغام نام و سایز','!NAME! + " - " + str(!SIZE!)'],['f-string','f"{!NAME!} ({!SIZE!} mm)"'],['قالب %','"%s / %d" % (!NAME!, !SIZE!)'],['حروف بزرگ + برش','!NAME!.upper()[0:3]'],['شرطی','"بزرگ" if !SIZE! >= 200 else "کوچک"'],['طول خط (متر)','str(round(!shape.length!, 1)) + " m"']];
+const LAB_EX=[['ادغام نام و سایز','!NAME! + " - " + str(!SIZE!)'],['f-string','f"{!NAME!} ({!SIZE!} mm)"'],['قالب %','"%s / %d" % (!NAME!, !SIZE!)'],['حروف بزرگ + برش','!NAME!.upper()[0:3]'],['استخراج از متن','!نام!.split("size :")[1].strip()'],['شرطی','"بزرگ" if !SIZE! >= 200 else "کوچک"'],['طول خط (متر)','str(round(!shape.length!, 1)) + " m"']];
 const labDef=()=>({on:true,src:'col',field:'',expr:'',font:'Tahoma',size:13,bold:false,color:'#111111',halo:'#ffffff',minZoom:15});
 function cleanLab(x){
  if(!x||typeof x!=='object')return null;
@@ -1972,7 +2115,7 @@ const LabelLayer=L.Layer.extend({
   L_.geo.features.forEach((f,i)=>{
    let t='';
    try{t=c?pyStr(c.run({field:labField(f,i)})):pyStr(f.properties&&f.properties[lab.field])}catch(e){t=''}
-   if(!t)return;const a=geomAnchor(f.geometry);if(!a||!isFinite(a[0])||!isFinite(a[1]))return;
+   t=t.replace(/\s*[\r\n]+\s*/g,' · ');if(!t)return;const a=geomAnchor(f.geometry);if(!a||!isFinite(a[0])||!isFinite(a[1]))return;
    items.push({lat:a[1],lng:a[0],t:t.length>80?t.slice(0,80):t,f,pt:!!f.geometry&&/Point/.test(f.geometry.type)})});
   return items},
  _draw(){
@@ -1994,8 +2137,9 @@ const LabelLayer=L.Layer.extend({
   const placed=labPlace(vis,1200);
   for(const v of placed){
    const it=v.it;
-   if(lab.halo!=='none'){ctx.lineWidth=Math.max(3,fs/4);ctx.strokeStyle=lab.halo;ctx.strokeText(it.t,v.x,v.y)}
-   ctx.fillStyle=lab.color==='auto'?(symColor(L_,it.f)||L_.color):lab.color;ctx.fillText(it.t,v.x,v.y)}}
+   ctx.save();ctx.translate(v.x,v.y);if(ROT.on)ctx.rotate(ROT.hd*Math.PI/180);
+   if(lab.halo!=='none'){ctx.lineWidth=Math.max(3,fs/4);ctx.strokeStyle=lab.halo;ctx.strokeText(it.t,0,0)}
+   ctx.fillStyle=lab.color==='auto'?(symColor(L_,it.f)||L_.color):lab.color;ctx.fillText(it.t,0,0);ctx.restore()}}
 });
 function labApply(L_){
  const on=!!(L_.lab&&L_.lab.on);
@@ -2033,6 +2177,7 @@ function labPanel(L_,box){
  const srcOpts=fields.map(f=>[f,f]).concat([['__expr__','✎ عبارت محاسباتی (Python)']]);
  const srcSel=mkSel(srcOpts,lab.src==='expr'?'__expr__':(lab.field||fields[0]||''),v=>{if(v==='__expr__')lab.src='expr';else{lab.src='col';lab.field=v}ap();ex.hidden=lab.src!=='expr'});
  box.appendChild(row(lbl('متن لیبل از:',srcSel)));
+ {const kr=kvRow(L_,()=>labPanel(L_,box));if(kr)box.appendChild(kr)}
  // expression editor
  const ex=document.createElement('div');ex.hidden=lab.src!=='expr';
  const chips=document.createElement('div');chips.style.cssText='display:flex;flex-wrap:wrap;gap:4px;margin:4px 0';
@@ -2218,6 +2363,60 @@ async function shpLoadLoose(o,key){
   checkCoords(r.geo);addLayer(o.shp.name,r.geo);toast(o.shp.name+': '+r.info+(o.dbf?'':' | بدون .dbf (بدون ستون مشخصات)'),7000)
  }catch(e){toast(key+': '+e.message,7000)}}
 
+/* ---------- KML / attribute helpers: unwrap MultiGeometry, split "key : value" text into columns, keep KML style colors ---------- */
+function mergeGeoms(gs){
+ const flat=[],w=g=>{if(!g)return;if(g.type==='GeometryCollection')g.geometries.forEach(w);else flat.push(g)};
+ gs.forEach(w);
+ if(!flat.length)return null;
+ if(flat.length===1)return flat[0];
+ const fam=t=>t.replace('Multi',''),f0=fam(flat[0].type);
+ if(flat.every(g=>fam(g.type)===f0)){
+  const co=[];flat.forEach(g=>{if(/^Multi/.test(g.type))g.coordinates.forEach(c=>co.push(c));else co.push(g.coordinates)});
+  return{type:'Multi'+f0,coordinates:co}}
+ return{type:'GeometryCollection',geometries:flat}}
+/* GeometryCollection with one member (or members of one type) -> plain geometry; returns number of changed features */
+function normGC(geo){let n=0;(geo.features||[]).forEach(f=>{const g=f&&f.geometry;if(g&&g.type==='GeometryCollection'){const m=mergeGeoms([g]);if(m&&m!==g){f.geometry=m;n++}}});return n}
+/* "line_number : 109\nsize : 2"  ->  {line_number:'109', size:'2'}  (every non-empty line must be key : value, at least 2 lines) */
+function kvLines(text){
+ const ls=String(text==null?'':text).split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ if(ls.length<2||ls.length>40)return null;
+ const out={};
+ for(const l of ls){const m=/^([^:：=<>]{1,40}?)\s*[:：]\s*(.*)$/.exec(l);if(!m||!m[1].trim())return null;out[m[1].trim()]=m[2].trim()}
+ return Object.keys(out).length>=2?out:null}
+/* Google-Earth style HTML description: <tr><td>key</td><td>value</td></tr> */
+function kvHtml(text){
+ const s=String(text==null?'':text);if(!/<t[dh]/i.test(s))return null;
+ const out={},re=/<tr[^>]*>\s*<t[dh][^>]*>([\s\S]*?)<\/t[dh]>\s*<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;let m,n=0;
+ const clean=x=>x.replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
+ while((m=re.exec(s))&&n<60){const k=clean(m[1]);if(k&&k.length<=40){out[k]=clean(m[2]);n++}}
+ return n?out:null}
+const kvVal=v=>/^-?(0|[1-9]\d{0,14})(\.\d+)?$/.test(v)?Number(v):v;
+/* adds the parsed columns to props without overwriting existing ones; returns the number of new columns */
+function kvAdd(props,kv){let n=0;if(!kv)return 0;for(const k in kv){if(!Object.prototype.hasOwnProperty.call(props,k)){props[k]=kvVal(kv[k]);n++}}return n}
+const kmlHex=c=>{c=String(c||'').trim();if(!/^[0-9a-fA-F]{6}$|^[0-9a-fA-F]{8}$/.test(c))return null;const b=c.slice(-6);return('#'+b.slice(4,6)+b.slice(2,4)+b.slice(0,2)).toLowerCase()};
+/* fields whose text parses as "key : value" lines (sampled) -> [{field, keys}] */
+function kvFields(L_){
+ const res={},fs=L_.geo.features,n=Math.min(fs.length,60);
+ for(let i=0;i<n;i++){const p=fs[i]&&fs[i].properties;if(!p)continue;for(const k in p){if(typeof p[k]!=='string'||p[k].length>600||UKEYS.includes(k))continue;const kv=kvLines(p[k])||kvHtml(p[k]);if(kv){res[k]=res[k]||{field:k,keys:new Set()};Object.keys(kv).forEach(x=>res[k].keys.add(x))}}}
+ return Object.values(res).map(x=>({field:x.field,keys:[...x.keys]}))}
+function kvSplit(L_,field){
+ let cols=new Set(),rows=0;
+ L_.geo.features.forEach(f=>{const p=f.properties;if(!p||typeof p[field]!=='string')return;const kv=kvLines(p[field])||kvHtml(p[field]);if(!kv)return;rows++;Object.keys(kv).forEach(k=>{if(!Object.prototype.hasOwnProperty.call(p,k)){p[k]=kvVal(kv[k]);cols.add(k)}})});
+ return{rows,cols:[...cols]}}
+/* row of buttons that split "key : value" text columns into real columns (used in the symbology and label panels) */
+function kvRow(L_,refresh){
+ const fs=kvFields(L_);if(!fs.length)return null;
+ const r=document.createElement('div');r.className='row';
+ fs.forEach(x=>{
+  const b=document.createElement('button');b.type='button';b.className='btn g';b.style.fontSize='12px';
+  b.textContent='تفکیک «'+x.field+'» به ستون‌ها ('+x.keys.slice(0,4).join('، ')+')';
+  b.onclick=async()=>{
+   if(!await dlg('متن ستون «'+x.field+'» به ستون‌های جدا ('+x.keys.join('، ')+') تفکیک می‌شود و برای همه‌ی عارضه‌ها به جدول مشخصات اضافه می‌شود (ستون اصلی می‌ماند). ادامه؟'))return;
+   const q=kvSplit(L_,x.field);saveL(L_);if(L_.labL)L_.labL.invalidate();
+   toast(q.cols.length?q.cols.length+' ستون ساخته شد: '+q.cols.join('، '):'ستون جدیدی ساخته نشد (ستون‌ها از قبل وجود داشتند)',6000);refresh()};
+  r.appendChild(b)});
+ return r}
+
 function rebuild(L_){L_.lyr.clearLayers();L_.lyr.addData(L_.geo);if(L_.labL)L_.labL.invalidate();saveL(L_);renderList()}
 function mkLayer(name,geo,user,sv){
  const id=sv?sv.id:++lid;
@@ -2227,18 +2426,19 @@ function mkLayer(name,geo,user,sv){
  L_.lyr=L.geoJSON(geo,{
   filter:f=>!symHidden(L_,f),
   style:f=>({color:symColor(L_,f)||L_.color,weight:3,fillOpacity:.25}),
+  onEachFeature:(f,l)=>{if(l.eachLayer){const mk=g=>g.eachLayer(c=>{c._wgTop=l;if(c.eachLayer)mk(c)});mk(l)}},
   pointToLayer:(f,ll)=>{
    const col=symColor(L_,f)||L_.color;
    const m=L_.icon==='circle'?L.circleMarker(ll,{radius:user?8:7,color:'#fff',weight:2,fillColor:col,fillOpacity:.95}):new IconMarker(ll,{iconKey:L_.icon,fillColor:col});
    if(user&&f.properties&&f.properties['نام'])m.bindTooltip(esc(f.properties['نام']),{permanent:true,direction:'top',offset:[0,-2]});return m}});
  /* popups are bound lazily on first tap (thousands of pre-built popups slowed loading) */
- L_.lyr.on('click',e=>{const l=e.layer;if(!l||!l.feature||(l.getPopup&&l.getPopup()))return;const f=l.feature;l.bindPopup(()=>popEl(L_,f));l.openPopup(e.latlng)});
+ L_.lyr.on('click',e=>{const c=e.layer,l=c&&(c.feature?c:c._wgTop);if(!l||!l.feature||(l.getPopup&&l.getPopup()))return;const f=l.feature;l.bindPopup(()=>popEl(L_,f));l.openPopup(e.latlng)});
  L_.lyr.on('add',()=>{if(L_.lab&&L_.lab.on){L_.labL=L_.labL||new LabelLayer(L_);L_.labL.addTo(map)}});
  L_.lyr.on('remove',()=>{if(L_.labL&&map.hasLayer(L_.labL))map.removeLayer(L_.labL)});
  layers.push(L_);ctl.addOverlay(L_.lyr,esc(name));if(L_.on)L_.lyr.addTo(map);
  return L_}
 function addLayer(name,geo){
- const L_=mkLayer(name,geo,false);saveL(L_);
+ normGC(geo);const L_=mkLayer(name,geo,false);saveL(L_);
  try{map.fitBounds(L_.lyr.getBounds(),{padding:[30,30]})}catch(e){}
  renderList();PH.migGeo(geo).then(n=>{if(n)saveL(L_)}).catch(()=>{});const vc=vcount(geo);toast(`«${name}» بارگذاری شد: ${geo.features.length} عارضه، ${vc.toLocaleString('en')} رأس`+(vc>400000?' — لایه سنگین است؛ در صورت کندی داده‌ی ساده‌شده بارگذاری کنید':''),vc>400000?7000:3000)}
 function stats(geo){let p=0,l=0,a=0;turf.flattenEach(geo,f=>{const t=f.geometry.type;if(t==='Point')p++;else if(t==='LineString')l++;else a++});return{p,l,a}}
@@ -3357,7 +3557,7 @@ $('bkFile').onchange=async e=>{
   const good=[];let bad=0;
   o.layers.forEach(l=>{try{
    if(!l||!l.geo||l.geo.type!=='FeatureCollection'||!Array.isArray(l.geo.features))throw 0;
-   if(l.geo.features.length)checkCoords(l.geo);migDates(l.geo);good.push(l)}catch(_){bad++}});
+   if(l.geo.features.length)checkCoords(l.geo);migDates(l.geo);normGC(l.geo);good.push(l)}catch(_){bad++}});
   if(!good.length)throw new Error('هیچ لایه معتبری در فایل پیدا نشد');
   const replace=$('bkMode').value==='replace';
   const msg=replace?`همه ${layers.length} لایه فعلی حذف و با ${good.length} لایه پشتیبان جایگزین می‌شود. ادامه می‌دهید؟`:`${good.length} لایه به لایه‌های فعلی اضافه می‌شود. ادامه می‌دهید؟`;
@@ -3535,7 +3735,7 @@ function fxNode(c,p){
  c.splice(best.i,0,[p[0],p[1]]);return true}
 
 /* ---------- Settings (user-defined options; other menus only operate) ---------- */
-const SET_DEF={theme:'light',user:'',cp:'ll',geoBias:'gilan',geoTap:true,geoUrl:'',obs:['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'],
+const SET_DEF={theme:'light',user:'',cp:'ll',compass:'off',geoBias:'gilan',geoTap:true,geoUrl:'',obs:['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'],
  tkAcc:30,tkStep:4,tkWake:true,fxEnd:1,fxPt:2,
  prxDist:30,prxMode:'enter',prxSound:'two',prxVol:.8,prxVib:true,prxHold:60,prxWake:true};
 const S=(()=>{let o={};try{o=JSON.parse(localStorage.getItem('webgis_settings'))||{}}catch(e){}return Object.assign({},SET_DEF,o,{obs:Array.isArray(o.obs)&&o.obs.length?o.obs:SET_DEF.obs})})();
@@ -3554,6 +3754,7 @@ document.querySelectorAll('#sSet [data-k]').forEach(el=>{
   if(k==='cp'){$('cpFmt').value=v;if($('cpFmt').onchange)$('cpFmt').onchange()}
   S[k]=v;setSave();setLoad();
   if(k==='theme')applyTheme();
+  if(k==='compass'){if(S.compass!=='off')rotPerm().then(()=>{rotRefresh();if(watchId===null)toast('قطب‌نما با روشن شدن GPS (دکمه «موقعیت من») فعال می‌شود',4500)});else rotRefresh()}
   if(k==='prxDist'&&$('pxD'))$('pxD').value=v;
   if(k==='prxSound'||k==='prxVol')pxBeep('two')}});
 
@@ -3582,7 +3783,7 @@ function guideTheme(){
   d.documentElement.dataset.theme=document.documentElement.dataset.theme||'light'}catch(e){}}
 function guideLoad(){const fr=$('guideFrame');if(!fr.getAttribute('src')){fr.onload=guideTheme;fr.src='guide.html'}else guideTheme()}
 applyTheme();
-$('setReset').onclick=async()=>{if(!await dlg('همه تنظیمات به حالت پیش‌فرض برگردد؟'))return;Object.assign(S,SET_DEF,{obs:SET_DEF.obs.slice()});setSave();setLoad();applyTheme();$('cpFmt').value=S.cp;lsSet('webgis_cp',S.cp);toast('تنظیمات بازنشانی شد')};
+$('setReset').onclick=async()=>{if(!await dlg('همه تنظیمات به حالت پیش‌فرض برگردد؟'))return;Object.assign(S,SET_DEF,{obs:SET_DEF.obs.slice()});setSave();setLoad();applyTheme();rotRefresh();$('cpFmt').value=S.cp;lsSet('webgis_cp',S.cp);toast('تنظیمات بازنشانی شد')};
 
 /* ---------- Proximity alert: beep when the user gets within a chosen distance of a feature ---------- */
 const PX={on:false,watch:null,fix:null,near:null,timer:null,wl:null,ac:null,hold:new Map(),sel:new Set(),bb:new WeakMap()};
@@ -3833,7 +4034,7 @@ function uiBuild(){
  ['bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
  ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
  bar.appendChild($('bMore'))}
-const APP_VER='1.05.26'; /* major.minor.counter — the last number grows by 1 with every change */
+const APP_VER='1.05.28'; /* major.minor.counter — the last number grows by 1 with every change */
 $('verLbl').textContent='نسخه سامانه : '+APP_VER.replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
 $('bMore').onclick=()=>openSheet('sMore');
 $('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');$('bGd').onclick=()=>openSheet('sGuide');
@@ -4284,7 +4485,7 @@ $('idPkR').oninput=()=>{$('idR').value=$('idPkR').value;idDraw()};
 /* ---------- PWA ---------- */
 (async()=>{
  try{await DB.open();const all=(await DB.all()).sort((a,b)=>a.id-b.id);
-  all.forEach(o=>{lid=Math.max(lid,o.id);const ch=migDates(o.geo),L_=mkLayer(o.name,o.geo,o.user,o);if(ch)saveL(L_)});
+  all.forEach(o=>{lid=Math.max(lid,o.id);const ch=migDates(o.geo)+normGC(o.geo),L_=mkLayer(o.name,o.geo,o.user,o);if(ch)saveL(L_)});
   userL=layers.find(l=>l.user&&l.name==='نشانگرهای من')||null;editL=layers.find(l=>l.user&&l.name==='ویرایش‌ها')||null;renderList();
   PH.migAll().then(n=>{if(n)toast(n+' عکس به مخزن جداگانه‌ی عکس منتقل شد (حجم لایه‌ها کم شد)',6000)}).catch(()=>{});
   tkRecover().catch(()=>{});
