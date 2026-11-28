@@ -7,9 +7,9 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f5f4e">
 <script>try{var __t=JSON.parse(localStorage.getItem("webgis_settings")||"{}").theme,__h=new Date().getHours();document.documentElement.dataset.theme=(__t==="dark"||(__t==="auto"&&(__h<6||__h>=18)))?"dark":"light"}catch(e){}</script>
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.31">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.31">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.31">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.34">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.34">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.34">
 <link rel="stylesheet" href="lib/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'">
 <style>
 :root{--bg:#f4f6f3;--fg:#17261f;--pri:#1f6f5c;--pri2:#e8f1ee;--bd:#cfd9d3}
@@ -270,7 +270,10 @@ return new Promise(function(r){res=r})}})();
 <div id="toast"></div>
 
 <div id="sLayers" class="sheet"><h3>لایه‌ها</h3>
-<div style="font-weight:700;margin:2px 0 4px">نقشه‌ی پایه (MBTiles محلی)</div><div id="mbInfo" style="font-size:13px;margin-bottom:6px"></div>
+<div style="font-weight:700;margin:2px 0 4px">نقشه‌های پایه</div><div id="bsList"></div>
+<div class="row"><button class="btn" id="bsAdd">+ افزودن نقشه (XYZ)</button><button class="btn g" id="bsReset" style="font-size:12px">بازنشانی نقشه‌ها</button></div>
+<div class="row"><button class="btn g" id="bsOff" style="font-size:12px">ذخیره نقشه برای آفلاین</button></div>
+<div style="font-weight:700;margin:2px 0 4px">MBTiles محلی (آفلاین؛ اختیاری)</div><div id="mbInfo" style="font-size:13px;margin-bottom:6px"></div>
 <div class="row"><button class="btn" id="mbPick">انتخاب فایل MBTiles از گوشی</button><button class="btn g" id="mbFit" style="font-size:12px">رفتن به محدوده‌ی نقشه</button></div>
 <div class="row"><button class="btn g" id="mbImp" style="font-size:12px">ذخیره‌ی یک‌بارهٔ فایل در حافظه‌ی برنامه</button><button class="btn r" id="mbDel" style="font-size:12px">حذف نسخه‌ی ذخیره‌شده</button></div>
 <progress id="mbBar" value="0" max="1" style="width:100%;display:none"></progress><div id="mbTxt" style="font-size:12px;margin-bottom:6px"></div>
@@ -327,13 +330,20 @@ return new Promise(function(r){res=r})}})();
 <div style="position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);left:0;right:0;display:flex;gap:10px;justify-content:center"><label class="btn g">از عکس<input type="file" id="scanF" accept="image/*" hidden></label><button class="btn r" id="scanX">بستن</button></div></div>
 
 <div id="sSearch" class="sheet"><h3>جستجو و مختصات</h3>
-<div class="seg" id="srTabs"><button data-p="sr" class="on">جستجو در لایه‌ها</button><button data-p="go">مختصات و ناوبری</button></div>
+<div class="seg" id="srTabs"><button data-p="sr" class="on">جستجو در لایه‌ها</button><button data-p="ad">نشانی و مکان</button><button data-p="go">مختصات و ناوبری</button></div>
 <div id="srPane">
 <div class="row"><select id="sLay" style="direction:rtl"></select></div>
 <div class="row"><select id="sCol" style="direction:rtl"></select><select id="sMode" style="direction:rtl"><option value="c">شامل (Contains)</option><option value="e">دقیقاً برابر</option><option value="s">شروع با</option></select></div>
 <div class="row"><input type="text" id="sQ" placeholder="متن یا شماره..." style="direction:rtl"><button class="btn" id="sDo">جستجو</button><button class="btn g" id="sScanBtn">اسکن</button><button class="btn r" id="sClr">پاک کردن</button></div>
 <div id="sScanned" style="display:none"></div>
 <div id="sInfo" style="font-size:12px;color:#666;margin-bottom:4px"></div><div id="sRes"></div></div>
+<div id="adPane" style="display:none">
+<div class="row"><input type="search" id="adQ" placeholder="مثلاً: خیابان نامجو رشت — یا مختصات: 37.28, 49.58" enterkeyhint="search" style="flex:1;min-width:0;padding:10px;border:1px solid var(--bd);border-radius:10px;font:inherit;background:var(--sf);color:var(--fg)"><button class="btn" id="adGo">جستجو</button></div>
+<div id="adSt" style="font-size:12px;color:var(--mt);margin:4px 0"></div>
+<div id="adRes"></div>
+<div class="row"><button class="btn g" id="adClr" style="font-size:12px">پاک کردن علامت‌های نقشه</button></div>
+<div style="font-size:11px;color:var(--mt);margin-top:6px">جستجو در نشانی‌ها و مکان‌های ایران (با تمرکز بر گیلان در حالت پیش‌فرض) با داده‌ی © OpenStreetMap contributors؛ نیازمند اینترنت است. برای رعایت قوانین سرویس، جستجو فقط با زدن دکمه (نه هنگام تایپ) انجام می‌شود. تمرکز جستجو در «تنظیمات» قابل تغییر است.</div>
+</div>
 <div id="goPane" style="display:none">
 <div class="row"><select id="fmt"><option value="ll">طول/عرض (درجه)</option><option value="utm">UTM زون 39N (گیلان)</option></select></div>
 <div class="row" id="inLL"><input type="number" id="iLat" step="any" placeholder="عرض مثلاً 37.28"><input type="number" id="iLon" step="any" placeholder="طول مثلاً 49.58"></div>
@@ -342,6 +352,26 @@ return new Promise(function(r){res=r})}})();
 <div id="goAddr" style="font-size:13px;margin:6px 0"></div><div id="navInfo" style="font-size:13px"></div>
 <select id="cpFmt" style="display:none"><option value="ll">ll</option><option value="xy">xy</option><option value="url">url</option><option value="none">none</option></select>
 </div></div>
+
+<div id="sOffline" class="sheet"><h3>ذخیره نقشه برای آفلاین</h3>
+<div style="font-size:12px;color:#555;margin-bottom:4px">ابتدا نقشه را روی منطقه‌ی موردنظر ببرید؛ محدوده = همین نمایش فعلی. نقشه‌هایی که الان روشن هستند ذخیره می‌شوند.</div>
+<div id="ofLayers"></div>
+<div class="row"><label style="font-size:13px">زوم از <input type="number" id="ofZ0" min="0" max="22" style="width:60px"></label><label style="font-size:13px">تا <input type="number" id="ofZ1" min="0" max="22" style="width:60px"></label><label style="font-size:13px"><input type="checkbox" id="ofPad" checked> حاشیه ۲۰٪</label></div>
+<div id="ofEst" style="font-size:13px;margin-bottom:6px"></div>
+<div class="row"><button class="btn g" id="ofCalc">محاسبه</button><button class="btn" id="ofGo">شروع دانلود</button><button class="btn r" id="ofStop" style="display:none">توقف</button></div>
+<progress id="ofBar" value="0" max="1" style="width:100%"></progress><div id="ofTxt" style="font-size:12px;margin-bottom:6px"></div>
+<div id="ofStat" style="font-size:12px;color:#555;margin-bottom:6px"></div>
+<div class="row"><button class="btn r" id="ofClear" style="font-size:12px">پاک کردن نقشه‌های آفلاین</button></div>
+<div style="font-size:11px;color:#666">بیرون از محدوده یا زوم‌های دانلودنشده، نقشه خالی است. برای سرویس‌های عمومی حداکثر ۵۰۰ تایل.</div></div>
+
+<div id="sBase" class="sheet"><h3>افزودن نقشه (XYZ)</h3>
+<div class="row"><select id="bsPre" style="direction:rtl"><option value="">پیش‌تنظیم ...</option><option value="gh">Google Hybrid (با نام خیابان‌ها)</option><option value="gs">Google Satellite</option><option value="gr">Google Roads</option><option value="gt">Google Terrain</option><option value="es">Esri Street</option><option value="cl">Carto Light</option></select></div>
+<div class="row"><input type="text" id="bsName" placeholder="نام نقشه" style="direction:rtl"></div>
+<div class="row"><input type="text" id="bsUrl" placeholder="قالب XYZ مثلاً https://.../{z}/{x}/{y}.png" dir="ltr"></div>
+<div class="row"><label style="font-size:13px">حداقل زوم: <input type="number" id="bsMin" value="0" min="0" max="20" style="width:60px"></label><label style="font-size:13px">حداکثر زوم: <input type="number" id="bsZoom" value="19" min="1" max="24" style="width:60px"></label></div>
+<label style="display:block;font-size:13px;margin-bottom:6px"><input type="checkbox" id="bsTms"> TMS (ردیف‌های وارونه — معادل tms:true در Leaflet؛ فقط XYZ)</label>
+<div class="row"><button class="btn" id="bsOk">تأیید و ایجاد نقشه</button><button class="btn r" id="bsCancel">لغو</button></div>
+<div style="font-size:11px;color:#666">استفاده از نقشه‌های Google تابع شرایط سرویس Google است.</div></div>
 
 <div id="sSnap" class="sheet"><h3>چسباندن گروهی نقاط به خط</h3>
 <div class="row"><select id="snPt" style="direction:rtl"></select></div>
@@ -362,7 +392,7 @@ return new Promise(function(r){res=r})}})();
 <div class="row"><button class="btn" id="rtA">① مبدأ</button><button class="btn g" id="rtB">② مقصد</button><button class="btn g" id="rtMe">مبدأ = موقعیت من</button></div>
 <div class="row"><button class="btn g" id="rtAS">🔍 مبدأ: از نتیجه جستجو</button><button class="btn g" id="rtBS">🔍 مقصد: از نتیجه جستجو</button></div>
 <div id="rtPick" style="display:none;max-height:190px;overflow:auto;border:1px solid #cfd9d3;border-radius:8px;padding:4px;margin-bottom:6px"></div>
-<div class="row"><select id="rtMode" style="direction:rtl"><option value="net">🚐 روی لایه‌های خطی فعال (بدون اینترنت)</option><option value="line">✈️ خط مستقیم (فاصله هوایی)</option></select></div>
+<div class="row"><select id="rtMode" style="direction:rtl"><option value="auto">خودکار (آنلاین ← شبکه لایه‌ها ← خط مستقیم)</option><option value="car">🚗 آنلاین — رانندگی (خودرو)</option><option value="moto">🏍️ آنلاین — موتورسیکلت (مسیر خودرو)</option><option value="bike">🚲 آنلاین — دوچرخه</option><option value="foot">🚶 آنلاین — پیاده‌روی</option><option value="net">🚐 آفلاین — روی لایه‌های خطی فعال</option><option value="line">✈️ خط مستقیم (فاصله هوایی)</option></select></div>
 <div class="row"><button class="btn" id="rtGo">محاسبه مسیر</button><button class="btn g" id="rtSwap">جابه‌جایی</button><button class="btn g" id="rtSave">افزودن به لایه‌ها</button><button class="btn r" id="rtClr">پاک</button></div>
 <div class="row"><button class="btn g" id="rtAnim">⏸ توقف حرکت</button><label style="font-size:13px"><input type="checkbox" id="rtPP" checked> رفت و برگشت</label></div>
 <div id="rtInfo" style="font-size:14px;margin-top:4px"></div></div>
@@ -401,7 +431,10 @@ return new Promise(function(r){res=r})}})();
 <div class="setsec">عمومی</div>
 <label>نام یا کد ثبت‌کننده (روی هر عارضه ثبت می‌شود)<input type="text" data-k="user"></label>
 <label>ضربه روی نقشه (نمایش و کپی مختصات)<select data-k="cp"><option value="ll">کپی: عرض, طول (استاندارد)</option><option value="xy">کپی: طول, عرض</option><option value="url">کپی: لینک Google Maps</option><option value="none">بدون عملیات (ضربه کاری انجام ندهد)</option></select></label>
+<label>تمرکز جستجوی نشانی<select data-k="geoBias"><option value="gilan">گیلان (اول داخل گیلان، اگر نبود کل ایران)</option><option value="view">اطراف نمای فعلی نقشه</option><option value="iran">کل ایران</option></select></label>
+<label><input type="checkbox" data-k="geoTap"> نمایش نشانی با لمس نقشه و با وارد کردن مختصات (نیازمند اینترنت)</label>
 
+<label>نشانی سرویس نشانی‌یابی (اختیاری؛ سازگار با Nominatim و فقط https)<input type="text" data-k="geoUrl" dir="ltr" placeholder="https://nominatim.openstreetmap.org"></label>
 <div class="setsec">برداشت مسیر</div>
 <label>حداکثر خطای GPS برای ثبت نقطه (متر)<input type="number" data-k="tkAcc" min="5" max="200" step="1"></label>
 <label>حداقل فاصله بین نقاط ثبت‌شده (متر)<input type="number" data-k="tkStep" min="1" max="50" step="1"></label>
@@ -458,7 +491,7 @@ return new Promise(function(r){res=r})}})();
 <button id="pickOk">انتخاب</button>
 </div>
 
-<div id="mbHint" style="display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:1100;background:#fff;color:#222;border:1px solid #cfd9d3;border-radius:12px;padding:10px 14px;box-shadow:0 2px 10px rgba(0,0,0,.3);text-align:center;font-size:13px;max-width:88vw"><div style="margin-bottom:6px">نقشه‌ی MBTiles انتخاب نشده است</div><button class="btn" id="mbHintBtn">انتخاب فایل MBTiles</button></div>
+<div id="mbHint" style="display:none"><button class="btn" id="mbHintBtn">MBTiles</button></div>
 <input type="file" id="mbFile" style="display:none">
 <div id="bar">
 <button id="bL">لایه‌ها</button>
@@ -486,7 +519,6 @@ return new Promise(function(r){res=r})}})();
 <script src="lib/jszip.min.js"></script>
 <script>window.JSZip||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"><\/script>')</script>
 <script src="mbtiles.js"></script>
-<script>if(!window.L||!window.turf||!window.JSZip)document.write('<p style="padding:24px;direction:rtl;font:16px sans-serif">کتابخانه‌ها بارگذاری نشدند. بار اول به اینترنت وصل شوید و صفحه را دوباره باز کنید.</p>')</script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -541,8 +573,107 @@ const zmU=()=>{$('zm').textContent='زوم '+(Math.round(map.getZoom()*10)/10)};
 function onOv(e,on){const L_=layers.find(l=>l.lyr===e.layer);if(L_&&L_.on!==on){L_.on=on;saveL(L_);renderList()}}
 map.on('overlayadd',e=>onOv(e,true));map.on('overlayremove',e=>onOv(e,false));
 
+/* ---------- Map-layer thumbnails: one tile of every map at the current view (browser / service-worker cache) ---------- */
+const TH_PH='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" fill="#e8eaed"/><path d="M8 14l10-4 12 4 10-4v24l-10 4-12-4-10 4V14Z" fill="none" stroke="#9aa0a6" stroke-width="2.5" stroke-linejoin="round"/><path d="M18 10v24M30 14v24" stroke="#9aa0a6" stroke-width="2.5"/></svg>');
+function bsThumbUrl(d){
+ const c=map.getCenter(),mn=d.minZoom||0,mx=Math.min(d.maxZoom||19,18);
+ const z=Math.max(mn,Math.min(mx,Math.round(map.getZoom())-1)),n=Math.pow(2,z),la=Math.max(-85.0511,Math.min(85.0511,c.lat))*Math.PI/180;
+ let x=Math.floor((c.lng+180)/360*n),y=Math.floor((1-Math.log(Math.tan(la)+1/Math.cos(la))/Math.PI)/2*n);
+ x=((x%n)+n)%n;y=Math.max(0,Math.min(n-1,y));
+ if(d.type==='wms'){
+  if(!d.layers)return null;
+  const S=40075016.68557849,sz=S/n,x0=-S/2+x*sz,y1=S/2-y*sz,x1=x0+sz,y0=y1-sz,ver=d.version||'1.3.0',u=String(d.url),j=u.includes('?')?'&':'?';
+  let bbox,crs;
+  if(d.crs==='4326'){const lon=v=>v/(S/2)*180,lat=v=>Math.atan(Math.sinh(v/(S/2)*Math.PI))*180/Math.PI;crs='EPSG:4326';bbox=ver==='1.3.0'?[lat(y0),lon(x0),lat(y1),lon(x1)]:[lon(x0),lat(y0),lon(x1),lat(y1)]}
+  else{crs='EPSG:3857';bbox=[x0,y0,x1,y1]}
+  return u+j+'service=WMS&request=GetMap&version='+ver+'&layers='+encodeURIComponent(d.layers)+'&styles=&format='+encodeURIComponent(d.format||'image/png')+'&transparent='+(d.transparent!==false)+'&width=160&height=160&'+(ver==='1.3.0'?'crs':'srs')+'='+crs+'&bbox='+bbox.map(v=>+v.toFixed(6)).join(',')}
+ const yy=d.tms?n-1-y:y;
+ return String(d.url).replace(/\{z\}/g,z).replace(/\{x\}/g,x).replace(/\{y\}/g,yy).replace(/\{s\}/g,'a').replace(/\{r\}/g,'')}
+function bsThumbSet(im,d){let u=null;try{u=bsThumbUrl(d)}catch(e){}if(!u){im.src=TH_PH;return}if(im.dataset.u!==u){im.dataset.u=u;im.src=u}}
+function bsThumbEl(d){const im=new Image();im.className='bs-th';im.dataset.id=d.id;im.alt='';im.decoding='async';im.onerror=()=>{im.onerror=null;im.src=TH_PH};bsThumbSet(im,d);return im}
+function bsThumbRefresh(){document.querySelectorAll('img.bs-th[data-id]').forEach(im=>{const d=baseList.find(x=>x.id===im.dataset.id);if(d)bsThumbSet(im,d)})}
+{const _ai=L.Control.Layers.prototype._addItem;
+ L.Control.Layers.prototype._addItem=function(obj){
+  const label=_ai.call(this,obj);
+  try{const id=Object.keys(baseL).find(k=>baseL[k]===obj.layer),d=id&&baseList.find(x=>x.id===id);
+   if(d){const sp=label.querySelector('span'),nm=sp&&sp.querySelector('span');if(sp&&nm){sp.insertBefore(bsThumbEl(d),nm);nm.style.flex='1'}}}catch(e){}
+  return label}}
+let thT=0;
+map.on('moveend',()=>{clearTimeout(thT);thT=setTimeout(()=>{if(document.querySelector('.leaflet-control-layers-expanded')||$('sLayers').classList.contains('show'))bsThumbRefresh()},700)});
+ctl.getContainer().addEventListener('click',()=>setTimeout(bsThumbRefresh,80));
+
+/* ---------- Base maps manager (XYZ), persistent, at least one base always kept ---------- */
+const BASE_DEF=[
+ {id:'osm',name:'نقشه OSM',type:'xyz',url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',maxZoom:19,attr:'© OpenStreetMap'},
+ {id:'sat',name:'ماهواره Esri',type:'xyz',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',maxZoom:19,attr:'Esri'},
+ {id:'topo',name:'توپو OpenTopo',type:'xyz',url:'https://tile.opentopomap.org/{z}/{x}/{y}.png',maxZoom:17,attr:'OpenTopoMap'}];
+const BS_PRE={
+ gh:{type:'xyz',name:'Google Hybrid',url:'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',maxZoom:20},
+ gs:{type:'xyz',name:'Google Satellite',url:'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',maxZoom:20},
+ gr:{type:'xyz',name:'Google Roads',url:'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',maxZoom:20},
+ gt:{type:'xyz',name:'Google Terrain',url:'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',maxZoom:20},
+ es:{type:'xyz',name:'Esri Street',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',maxZoom:19},
+ cl:{type:'xyz',name:'Carto Light',url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',maxZoom:19}};
+let baseList=[],baseL={};
+const bsLS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+function bsLoad(){try{const a=JSON.parse(bsLS.get('webgis_bases'));if(Array.isArray(a)&&a.some(x=>x&&x.id&&x.url&&!x.overlay))return a.filter(x=>x&&x.id&&x.url&&x.name&&x.type!=='wms')}catch(e){}return JSON.parse(JSON.stringify(BASE_DEF))}
+const bsSave=()=>bsLS.set('webgis_bases',JSON.stringify(baseList));
+function bsMake(d){
+ let l;
+ l=L.tileLayer(d.url,{minZoom:d.minZoom||0,tms:!!d.tms,maxZoom:d.maxZoom||19,attribution:d.attr||'',subdomains:'abc',zIndex:d.overlay?5:1});
+ if(!BASE_DEF.some(x=>x.id===d.id)){let n=0,w=false;l.on('tileerror',()=>{if(++n>=6&&!w&&navigator.onLine){w=true;toast('«'+d.name+'» بارگذاری نمی‌شود؛ آدرس، نام لایه، دسترسی شبکه یا HTTPS را بررسی کنید',7000)}});l.on('tileload',()=>{n=0})}
+ return l}
+function bsAttach(d){const l=baseL[d.id]=bsMake(d);d.overlay?ctl.addOverlay(l,d.name):ctl.addBaseLayer(l,d.name);return l}
+function bsDetachAll(){Object.keys(baseL).forEach(k=>{try{map.removeLayer(baseL[k]);ctl.removeLayer(baseL[k])}catch(e){}});baseL={}}
+function bsReload(){
+ bsDetachAll();baseList=bsLoad();baseList.forEach(bsAttach);
+ const act=bsLS.get('webgis_base_active'),bs=baseList.filter(x=>!x.overlay),first=bs.find(x=>x.id===act)||bs[0];
+ if(first)map.addLayer(baseL[first.id]);
+ baseList.filter(x=>x.overlay&&x.on!==false).forEach(x=>map.addLayer(baseL[x.id]))}
+function bsActivate(id){
+ baseList.filter(x=>!x.overlay&&x.id!==id).forEach(x=>{if(map.hasLayer(baseL[x.id]))map.removeLayer(baseL[x.id])});
+ if(!map.hasLayer(baseL[id]))map.addLayer(baseL[id]);bsLS.set('webgis_base_active',id)}
+map.on('baselayerchange',e=>{const id=Object.keys(baseL).find(k=>baseL[k]===e.layer);if(id){bsLS.set('webgis_base_active',id);bsRender()}});
+map.on('overlayadd overlayremove',e=>{const id=Object.keys(baseL).find(k=>baseL[k]===e.layer),d=baseList.find(x=>x.id===id);if(d){d.on=e.type==='overlayadd';bsSave();bsRender()}});
+async function bsDel(id){
+ const d=baseList.find(x=>x.id===id);if(!d)return;
+ if(!d.overlay&&baseList.filter(x=>!x.overlay).length<=1)return toast('حداقل یک نقشه پایه باید باقی بماند؛ ابتدا نقشه دیگری اضافه کنید',5000);
+ if(!await dlg('نقشه «'+d.name+'» حذف شود؟'))return;
+ const wasOn=map.hasLayer(baseL[id]);
+ try{map.removeLayer(baseL[id]);ctl.removeLayer(baseL[id])}catch(e){}
+ delete baseL[id];baseList=baseList.filter(x=>x.id!==id);bsSave();
+ if(!d.overlay&&wasOn){const n=baseList.find(x=>!x.overlay);if(n)bsActivate(n.id)}
+ bsRender();toast('نقشه حذف شد')}
+function bsRender(){
+ const el=$('bsList');if(!el)return;el.innerHTML='';
+ const nb=baseList.filter(x=>!x.overlay).length;
+ baseList.forEach(d=>{
+  const r=document.createElement('div');r.className='lay';r.style.cssText='display:flex;align-items:center;gap:8px';
+  const on=map.hasLayer(baseL[d.id]);
+  r.innerHTML=`<input type="${d.overlay?'checkbox':'radio'}" name="bsAct" ${on?'checked':''} style="width:22px;height:22px;flex:none"><span style="flex:1"><b>${esc(d.name)}</b><br><span style="font-size:11px;color:#666">${d.type==='wms'?'WMS':'XYZ'}${d.overlay?' — پوشش شفاف':''}${d.tms?' — TMS':''}${d.server?' — از سرور':''}</span></span><button class="btn r" style="padding:6px 10px;font-size:12px" ${(!d.overlay&&nb<=1)?'disabled title="حداقل یک نقشه پایه"':''}>حذف</button>`;
+  {const im=bsThumbEl(d);im.onclick=()=>r.querySelector('input').click();r.insertBefore(im,r.querySelector('span'))}
+  r.querySelector('input').onchange=e=>{d.overlay?(e.target.checked?map.addLayer(baseL[d.id]):map.removeLayer(baseL[d.id])):bsActivate(d.id);bsRender()};
+  r.querySelector('button').onclick=()=>bsDel(d.id);
+  el.appendChild(r)})}
+/* --- add-map form --- */
+const bsUrlOk=u=>/^https?:\/\//i.test(u)||(!!u&&!/^[a-z][a-z0-9+.\-]*:/i.test(u));
+function bsForm(){}
+$('bsPre').onchange=()=>{const p=BS_PRE[$('bsPre').value];if(!p)return;$('bsTms').checked=!!p.tms;$('bsMin').value=p.minZoom||0;$('bsName').value=p.name;$('bsUrl').value=p.url;$('bsZoom').value=p.maxZoom||19};
+$('bsAdd').onclick=()=>{openSheet('sBase')};
+$('bsCancel').onclick=()=>{openSheet('sBase')};
+$('bsOk').onclick=()=>{
+ const name=$('bsName').value.trim(),url=$('bsUrl').value.trim();
+ if(!name)return toast('نام نقشه را بنویسید');
+ if(!bsUrlOk(url))return toast('آدرس باید با http:// یا https:// شروع شود');
+ if(location.protocol==='https:'&&/^http:\/\//i.test(url))return toast('این برنامه روی HTTPS است و مرورگر آدرس HTTP را مسدود می‌کند؛ از آدرس HTTPS استفاده کنید',9000);
+ if(!(/\{z\}/.test(url)&&/\{x\}/.test(url)&&/\{-?y\}/.test(url)))return toast('آدرس XYZ باید شامل {z} و {x} و {y} باشد');
+ const d={id:'c'+Date.now().toString(36),name,type:'xyz',url,tms:$('bsTms').checked,maxZoom:Math.max(1,Math.min(24,+$('bsZoom').value||19)),minZoom:Math.max(0,Math.min(20,+$('bsMin').value||0))};
+ d.attr=/google/i.test(url)?'Map data © Google':'';
+ baseList.push(d);bsAttach(d);bsSave();bsActivate(d.id);
+ openSheet('sBase');toast('نقشه «'+name+'» افزوده و فعال شد',4000)};
+$('bsReset').onclick=async()=>{if(!await dlg('فهرست نقشه‌های پایه به حالت اولیه برگردد؟ نقشه‌های افزوده‌شده حذف می‌شوند.'))return;bsLS.set('webgis_bases',JSON.stringify(BASE_DEF));bsLS.set('webgis_base_active','osm');bsReload();bsRender();toast('بازنشانی شد')};
+bsReload();
 /* ---------- MBTiles محلی: تنها نقشه‌ی پایه (بدون هیچ سرویس آنلاین / WMS) ---------- */
-const baseList=[],baseL={};
 const MBL={mb:null,layer:null,blob:null,src:null,name:''};
 const mbLS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 const OPFS_NAME='local-map.mbtiles';
@@ -562,17 +693,17 @@ function mbMake(){
  if(MBL.layer){try{map.removeLayer(MBL.layer);ctl.removeLayer(MBL.layer)}catch(e){}}
  const flip=(MBL.mb.scheme==='xyz')!==(mbLS.get('mbt_flip')==='1');
  MBL.layer=MBT.makeLayer(MBL.mb,{opacity:+mbLS.get('mbt_op')||1,flip});
- MBL.layer.addTo(map);ctl.addOverlay(MBL.layer,'نقشه MBTiles');
+ MBL.layer.setZIndex(3);MBL.layer.addTo(map);ctl.addOverlay(MBL.layer,'نقشه MBTiles');
  MBL.layer.on('tileerror',()=>{})}
 function mbFit(){
  const m=MBL.mb;if(!m)return;
  if(m.bounds)map.fitBounds([[m.bounds[1],m.bounds[0]],[m.bounds[3],m.bounds[2]]]);
  else if(m.center)map.setView([m.center[1],m.center[0]],Math.max(m.minzoom,Math.min(m.maxzoom,m.center[2]||m.minzoom)));
  else toast('محدوده‌ی نقشه در فایل ثبت نشده؛ نقشه را به منطقه‌ی خود ببرید و زوم کنید',6000)}
-async function mbUse(blob,src,name){
+async function mbUse(blob,src,name,noFit){
  const mb=await MBT.open(blob);
  MBL.mb=mb;MBL.blob=blob;MBL.src=src;MBL.name=name||blob.name||'';
- mbMake();mbHint(false);mbRender();mbFit()}
+ mbMake();mbHint(false);mbRender();if(!noFit)mbFit()}
 $('mbPick').onclick=()=>{$('mbFile').value='';$('mbFile').click()};
 $('mbHintBtn').onclick=()=>$('mbPick').onclick();
 $('mbFile').onchange=async e=>{
@@ -605,16 +736,15 @@ $('mbDel').onclick=async()=>{
  const f=await opfsFile();if(!f)return toast('نسخه‌ی ذخیره‌شده‌ای وجود ندارد');
  if(!await dlg('نسخه‌ی ذخیره‌شده‌ی نقشه ('+mbMB(f.size)+') از حافظه‌ی برنامه حذف شود؟ فایل اصلی گوشی دست‌نخورده می‌ماند.'))return;
  await opfsDrop();
- if(MBL.src==='opfs'){try{map.removeLayer(MBL.layer);ctl.removeLayer(MBL.layer)}catch(e){}MBL.mb=MBL.layer=MBL.blob=null;MBL.src=null;mbHint(true)}
+ if(MBL.src==='opfs'){try{map.removeLayer(MBL.layer);ctl.removeLayer(MBL.layer)}catch(e){}MBL.mb=MBL.layer=MBL.blob=null;MBL.src=null;mbHint(false)}
  mbRender();toast('حذف شد')};
-function bsRender(){mbRender()}
 (async()=>{
  const f=await opfsFile();
- if(f){try{await mbUse(f,'opfs','')}catch(e){toast('❌ نسخه‌ی ذخیره‌شده خوانده نشد: '+e.message,9000);mbHint(true)}}
- else mbHint(true)})();
+ if(f){try{await mbUse(f,'opfs','',true)}catch(e){toast('❌ نسخه‌ی ذخیره‌شده خوانده نشد: '+e.message,9000);mbHint(false)}}
+ else mbHint(false)})();
 
 
-function updNet(){$('net').textContent='محلی';$('net').className='pill'}
+function updNet(){const o=navigator.onLine;$('net').textContent=o?'آنلاین':'آفلاین';$('net').className='pill'+(o?'':' off')}
 addEventListener('online',updNet);addEventListener('offline',updNet);updNet();
 
 function fmtPt(lat,lon){
@@ -624,7 +754,7 @@ function updCoord(){const e=$('coord');if(e){const c=map.getCenter();e.textConte
 map.on('move',updCoord);updCoord();
 
 /* ---------- Sheets ---------- */
-const sheets=['sLayers','sCount','sMark','sRule','sSave','sEdit','sSearch','sRoute','sBackup','sSnap','sId','sTrack','sWork','sMore','sFix','sSet','sPrx','sGuide'];
+const sheets=['sLayers','sCount','sMark','sRule','sSave','sEdit','sSearch','sRoute','sBackup','sSnap','sBase','sId','sTrack','sWork','sOffline','sMore','sFix','sSet','sPrx','sGuide'];
 function openSheet(id,from){
  if($(id).classList.contains('peek')&&$(id).classList.contains('show')){sheetPeek(id,false);return}
  const was=$(id).classList.contains('show')||(id==='sMark'&&mkMode);
@@ -637,7 +767,9 @@ function openSheet(id,from){
  if(id==='sSearch'&&!was)refreshCols();
  if(id==='sBackup'&&!was)bkInfo();
  if(id==='sSnap'&&!was)snapInit();
- if(id==='sLayers'&&!was)bsRender();
+ if(id==='sLayers'&&!was)bsRender();mbRender();
+ if(id==='sBase'&&!was)bsForm();
+ if(id==='sOffline'&&!was)ofInit();
  if(id==='sTrack'&&!was)tkUI();
  if(id==='sWork'&&!was)wkInit();
  if(id==='sSet'&&!was)setLoad();
@@ -653,7 +785,7 @@ $('bS').onclick=()=>openSheet('sSave');
 $('bE').onclick=()=>openSheet('sEdit');
 $('bB').onclick=()=>openSheet('sBackup');
 $('tSearch').onclick=()=>{srTab('sr');openSheet('sSearch')};
-function srTab(p){$('srPane').style.display=p==='sr'?'':'none';$('goPane').style.display=p==='go'?'':'none';document.querySelectorAll('#srTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p))}
+function srTab(p){$('srPane').style.display=p==='sr'?'':'none';$('adPane').style.display=p==='ad'?'':'none';$('goPane').style.display=p==='go'?'':'none';document.querySelectorAll('#srTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p))}
 $('srTabs').onclick=e=>{const b=e.target.closest('button');if(b)srTab(b.dataset.p)};
 $('sScanBtn').onclick=()=>startScan();
 
@@ -679,7 +811,7 @@ $('bM').onclick=ev=>{if(ev&&ev.preventDefault)ev.preventDefault();
 
 /* ---------- Go to / navigation ---------- */
 /* ---------- Address search + reverse geocoding (OpenStreetMap Nominatim; needs internet, throttled to 1 request/s, cached) ---------- */
-const GEO_BASE='',GILAN={w:48.45,e:50.65,s:36.55,n:38.60};
+const GEO_BASE='https://nominatim.openstreetmap.org',GILAN={w:48.45,e:50.65,s:36.55,n:38.60};
 const geoBase=()=>{const u=String((typeof S!=='undefined'&&S.geoUrl)||'').trim().replace(/\/+$/,'');return /^https:\/\/[^\s]+$/.test(u)?u:GEO_BASE};
 const geoNorm=q=>String(q||'').replace(/[يى]/g,'ی').replace(/ك/g,'ک').replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[\u200c\u200f\u200e]/g,' ').replace(/\s+/g,' ').trim();
 /* "37.28, 49.58" (lat,lon in any order for Iran) -> {lat,lon} | null */
@@ -712,7 +844,12 @@ function geoCache(kind,key,val){
  if(ks.length>mx)ks.sort((x,y)=>bag[x].t-bag[y].t).slice(0,ks.length-mx).forEach(k=>delete bag[k]);
  try{localStorage.setItem('webgis_geo',JSON.stringify(o))}catch(e){try{localStorage.removeItem('webgis_geo')}catch(_){}}}
 let geoLast=0,geoChain=Promise.resolve();
-const geoFetch=()=>Promise.reject(new Error('نسخه‌ی محلی: بدون اینترنت'));
+function geoFetch(url){
+ return geoChain=geoChain.catch(()=>{}).then(async()=>{
+  const w=geoLast+1100-Date.now();if(w>0)await new Promise(r=>setTimeout(r,w));geoLast=Date.now();
+  let r;try{r=await fetch(url,{headers:{Accept:'application/json'}})}catch(e){throw new Error('اتصال به سرویس نشانی برقرار نشد (اینترنت را بررسی کنید)')}
+  if(!r.ok)throw new Error(r.status===429?'سرویس نشانی موقتاً شلوغ است؛ چند دقیقه بعد دوباره امتحان کنید':'خطای سرویس نشانی ('+r.status+')');
+  return r.json()})}
 const geoVb=b=>b.w.toFixed(4)+','+b.n.toFixed(4)+','+b.e.toFixed(4)+','+b.s.toFixed(4);
 /* returns {items, note, cached} */
 async function geoSearch(q){
@@ -764,7 +901,17 @@ function geoPopEl(lat,lon,title,addr){
  mk('هدف ناوبری',()=>{tgt=[lat,lon];if(tgtL){map.removeLayer(tgtL);tgtL=null}updNav();toast('هدف ناوبری تعیین شد (جستجو ← مختصات و ناوبری)',3500)});
  el.append(h,a,c,row);return el}
 /* fills title/address of a popup element from reverse geocoding (only when the setting is on and online) */
-async function geoAddrInto(){}
+async function geoAddrInto(el,lat,lon,after,force){
+ if(!force&&!S.geoTap)return;
+ const a=el.querySelector('.gp-a'),h=el.querySelector('.gp-t');if(!a)return;
+ const prev=a.textContent;a.textContent='در حال دریافت نشانی ...';a.style.opacity='.6';
+ try{
+  const r=await geoReverse(lat,lon);
+  a.style.opacity='';
+  if(!r){a.textContent=navigator.onLine===false?'نشانی در حالت آفلاین در دسترس نیست':'برای این نقطه نشانی پیدا نشد'}
+  else{if(r.title&&(!h.textContent||h.dataset.def))h.textContent=r.title;a.textContent=r.addr||r.display||prev}
+  if(after)after(r)
+ }catch(e){a.style.opacity='';a.textContent=prev||e.message}}
 function geoShow(it,typed){
  geoClear();
  if(it.geom)try{L.geoJSON(it.geom,{style:{color:'#e91e63',weight:6,opacity:.85,fillColor:'#e91e63',fillOpacity:.15},interactive:false}).addTo(geoHL)}catch(e){}
@@ -774,6 +921,28 @@ function geoShow(it,typed){
  setTimeout(()=>{if(geoMk)geoMk.openPopup()},350);
  if(typeof sheetPeek==='function')sheetPeek('sSearch',true);
  if(typed)geoAddrInto(pe,it.lat,it.lon,null,true)}
+function adRender(r){
+ const st=$('adSt'),res=$('adRes');res.innerHTML='';st.style.color='var(--mt)';
+ if(!r.items.length){st.textContent='نتیجه‌ای پیدا نشد؛ نام را کوتاه‌تر یا با نام شهر بنویسید (مثلاً «نامجو رشت»).';return}
+ st.textContent=r.items.length+' نتیجه'+(r.cached?' (از حافظه‌ی گوشی)':'')+(r.note?' — '+r.note:'');
+ r.items.forEach(it=>{
+  const b=document.createElement('button');b.className='idrow';
+  let d='';if(myPos){try{const m=turf.distance(turf.point([myPos[1],myPos[0]]),turf.point([it.lon,it.lat]),{units:'meters'});d=' • فاصله از شما: '+fmtD(m)}catch(e){}}
+  const t1=document.createElement('b');t1.textContent=it.name;
+  const t2=document.createElement('small');t2.textContent=it.type?'  ('+it.type+')':'';
+  const t3=document.createElement('small');t3.textContent=(it.addr||'')+d;
+  b.append(t1,t2,document.createElement('br'),t3);
+  b.onclick=()=>geoShow(it,false);res.appendChild(b)})}
+async function adGo(){
+ const q=$('adQ').value.trim();if(!q)return;
+ const c=geoCoords(q);
+ if(c){$('adSt').textContent='';$('adRes').innerHTML='';geoShow({name:'نقطه‌ی واردشده',type:'',addr:'',lat:c.lat,lon:c.lon,bbox:null,geom:null},true);return}
+ const my=++adTok,st=$('adSt');$('adRes').innerHTML='';st.style.color='var(--mt)';st.textContent='در حال جستجو ...';$('adGo').disabled=true;
+ try{const r=await geoSearch(q);if(my===adTok)adRender(r)}
+ catch(e){if(my===adTok){st.textContent='❌ '+e.message;st.style.color='#c0392b'}}
+ finally{if(my===adTok)$('adGo').disabled=false}}
+$('adGo').onclick=adGo;$('adQ').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();adGo()}};
+$('adClr').onclick=()=>{geoClear();$('adRes').innerHTML='';$('adSt').textContent=''};
 
 $('fmt').onchange=()=>{const u=$('fmt').value==='utm';$('inLL').style.display=u?'none':'flex';$('inUTM').style.display=u?'flex':'none';updCoord()};
 $('goBtn').onclick=()=>{
@@ -1309,15 +1478,39 @@ function tabNum(v){
  if(/^-?\d+,\d+$/.test(s))s=s.replace(',','.');else s=s.replace(/,/g,'');
  return /^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(s)?Number(s):NaN}
 const hNorm=h=>String(h==null?'':h).toLowerCase().replace(/[\s_\-\.\(\)\[\]:]/g,'');
-const H_LON=['lon','long','lng','longitude','lon_dd','طول','طولجغرافیایی'].map(hNorm),H_LAT=['lat','latitude','lat_dd','عرض','عرضجغرافیایی'].map(hNorm);
+const H_LON=['lon','long','lng','longitude','lon_dd','طول','طولجغرافیایی','طولمرکز'].map(hNorm),H_LAT=['lat','latitude','lat_dd','عرض','عرضجغرافیایی','عرضمرکز'].map(hNorm);
 const H_E=['e','east','easting','utme','utmx','xutm','x','xcoord','xcoordinate','eastingm'].map(hNorm),H_N=['n','north','northing','utmn','utmy','yutm','y','ycoord','ycoordinate','northingm'].map(hNorm);
+/* WKT <-> GeoJSON (برای رفت‌وبرگشت کامل خطوط و پلیگون‌ها در CSV) */
+function wktParse(s){
+ try{
+  const m=/^(MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|LINESTRING|POLYGON|POINT)\s*(?:ZM|Z|M)?\s*(\(.*\))\s*$/is.exec(String(s).trim());if(!m)return null;
+  const T=m[1].toUpperCase(),num='[-+]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][-+]?\\d+)?';
+  const js=m[2].replace(new RegExp('('+num+')\\s+('+num+')(?:\\s+'+num+')*','g'),'[$1,$2]').replace(/\(/g,'[').replace(/\)/g,']');
+  let c=JSON.parse(js);
+  if(T==='POINT')c=c[0];else if(T==='MULTIPOINT')c=c.map(a=>Array.isArray(a[0])?a[0]:a);
+  const okc=x=>Array.isArray(x)?(typeof x[0]==='number'?x.length>=2&&isFinite(x[0])&&isFinite(x[1]):x.length>0&&x.every(okc)):false;
+  if(!okc(c))return null;
+  return{type:{POINT:'Point',MULTIPOINT:'MultiPoint',LINESTRING:'LineString',MULTILINESTRING:'MultiLineString',POLYGON:'Polygon',MULTIPOLYGON:'MultiPolygon'}[T],coordinates:c}
+ }catch(e){return null}}
+const wktC=c=>(+c[0]).toFixed(7)+' '+(+c[1]).toFixed(7),wktR=r=>'('+r.map(wktC).join(', ')+')';
+function wktOf(g){
+ if(!g)return '';
+ switch(g.type){
+  case 'LineString':return 'LINESTRING '+wktR(g.coordinates);
+  case 'MultiLineString':return 'MULTILINESTRING ('+g.coordinates.map(wktR).join(', ')+')';
+  case 'Polygon':return 'POLYGON ('+g.coordinates.map(wktR).join(', ')+')';
+  case 'MultiPolygon':return 'MULTIPOLYGON ('+g.coordinates.map(p=>'('+p.map(wktR).join(', ')+')').join(', ')+')';
+  case 'MultiPoint':return 'MULTIPOINT ('+g.coordinates.map(c=>'('+wktC(c)+')').join(', ')+')';
+  default:return ''}}
 /* rows[0] = header. returns {geo,info}. utm: converter {inv(E,N)->{lon,lat}} (zone 39N) */
 function tableToGeo(rows,utm){
  if(!rows||rows.length<2)throw new Error('جدول داده‌ای ندارد');
  if(rows.length>200001)throw new Error('تعداد ردیف‌ها بیش از ۲۰۰ هزار است');
  let hdr=rows[0].map(h=>String(h==null?'':h).trim());
  const nh=hdr.map(hNorm),find=l=>nh.findIndex(h=>l.includes(h)&&h);
- let ix=find(H_LON),iy=find(H_LAT),mode='ll',swapN=false;
+ const own=nh[0]===hNorm('لایه')&&nh[1]===hNorm('نوع هندسه')&&nh[2]===hNorm('طول (مرکز)')&&nh[3]===hNorm('عرض (مرکز)'),iw=own&&nh[4]===hNorm('هندسه (WKT)')?4:-1;
+  let ix=find(H_LON),iy=find(H_LAT),mode='ll',swapN=false;
+  if(own){ix=2;iy=3}
  if(ix<0||iy<0){
   const ie=find(H_E),inn=find(H_N);
   if(ie<0||inn<0)throw new Error('ستون مختصات پیدا نشد. نام ستون‌ها باید مثل lon و lat (یا طول و عرض) یا X و Y / Easting و Northing (UTM زون 39N) باشد. ستون‌ها: '+hdr.slice(0,12).join('، '));
@@ -1334,7 +1527,7 @@ function tableToGeo(rows,utm){
   else{const sw=ok.every(v=>Math.abs(v[1])<=180&&Math.abs(v[0])<=90);
    if(sw){swapN=true}else throw new Error('مقادیر طول/عرض خارج از محدوده معتبر است')}}
  const seen=new Set();hdr=hdr.map((h,i)=>{let n=h||('ستون'+(i+1)),b=n,k=2;while(seen.has(n))n=b+'_'+(k++);seen.add(n);return n});
- const feats=[];let skipped=0,outZone=0;
+ const feats=[],gmap={};let skipped=0,outZone=0,wktN=0,wktBad=0,centOnly=0;
  data.forEach((r,ri)=>{
   let x=tabNum(r[ix]),y=tabNum(r[iy]);
   if(!isFinite(x)||!isFinite(y)){skipped++;return}
@@ -1343,15 +1536,26 @@ function tableToGeo(rows,utm){
   else if(swapN){lon=y;lat=x}else{lon=x;lat=y}
   if(!(Math.abs(lon)<=180&&Math.abs(lat)<=90)){skipped++;return}
   const p={};
-  hdr.forEach((h,i)=>{let v=r[i];if(v===undefined||v===null)v='';if(typeof v==='string'){v=v.trim();if(/^-?(0|[1-9]\d{0,14})(\.\d+)?$/.test(v))v=Number(v)}p[h]=v});
-  feats.push({type:'Feature',properties:p,geometry:{type:'Point',coordinates:[+lon.toFixed(7),+lat.toFixed(7)]}})});
+  hdr.forEach((h,i)=>{if(own&&(i<4||i===iw))return;let v=r[i];if(v===undefined||v===null)v='';if(typeof v==='string'){v=v.trim();if(/^-?(0|[1-9]\d{0,14})(\.\d+)?$/.test(v))v=Number(v)}if(own&&v==='')return;p[h]=v});
+   let geom={type:'Point',coordinates:[+lon.toFixed(7),+lat.toFixed(7)]};
+   if(own){const w=iw>=0?String(r[iw]||'').trim():'';
+    if(w){const g2=wktParse(w);if(g2){geom=g2;wktN++}else wktBad++}
+    else if(String(r[1]||'').trim()!=='نقطه'&&String(r[1]||'').trim()!=='')centOnly++}
+   const ft={type:'Feature',properties:p,geometry:geom};feats.push(ft);
+   if(own){const ln=String(r[0]||'').trim()||'—';(gmap[ln]=gmap[ln]||[]).push(ft)}});
  if(!feats.length)throw new Error('هیچ ردیف معتبری برای نمایش پیدا نشد');
  let info=`${feats.length} نقطه (${mode==='utm'?'UTM زون 39N ← WGS84':'طول/عرض'})`;
  if(swapN)info+=' | ترتیب طول و عرض جابه‌جا تشخیص داده شد و اصلاح شد';
  if(skipped)info+=` | ${skipped} ردیف بدون مختصات معتبر حذف شد`;
  if(outZone)info+=` | هشدار: ${outZone} نقطه خارج از محدوده زون ۳۹ است (شاید زون دیگری باشد)`;
- return{geo:{type:'FeatureCollection',features:feats},info}}
-function tabAdd(rows,name){const r=tableToGeo(rows,UTM);checkCoords(r.geo);addLayer(name,r.geo);toast(name+': '+r.info,6000)}
+ if(own){info+=' | فایل خروجی خود برنامه شناسایی شد'+(Object.keys(gmap).length>1?' و به '+Object.keys(gmap).length+' لایه تفکیک شد':'');
+   if(wktN)info+=` | هندسه‌ی ${wktN} خط/چندضلعی بازیابی شد`;
+   if(wktBad)info+=` | هشدار: هندسه‌ی ${wktBad} ردیف خوانده نشد (به‌صورت نقطه‌ی مرکز آمد)`;
+   if(centOnly)info+=` | هشدار: ${centOnly} خط/چندضلعی در این CSV فقط مرکز دارد و به‌صورت نقطه بازیابی شد (برای حفظ هندسه از GeoJSON/KML یا CSV نسخه‌ی جدید استفاده کنید)`}
+  return{geo:{type:'FeatureCollection',features:feats},info,groups:own?Object.keys(gmap).map(k=>({name:k,geo:{type:'FeatureCollection',features:gmap[k]}})):null}}
+function tabAdd(rows,name){const r=tableToGeo(rows,UTM);checkCoords(r.geo);
+ if(r.groups&&r.groups.length)r.groups.forEach(g=>addLayer(g.name==='—'?name:g.name,g.geo));else addLayer(name,r.geo);
+ toast(name+': '+r.info,9000)}
 async function xlsxLoad(f){
  const z=await JSZip.loadAsync(await f.arrayBuffer()),files={};
  for(const n of Object.keys(z.files)){if(z.files[n].dir)continue;if(/^xl\/(workbook\.xml|sharedStrings\.xml|_rels\/workbook\.xml\.rels|worksheets\/[^\/]+\.xml)$/.test(n))files[n]=await z.files[n].async('string')}
@@ -2514,11 +2718,12 @@ function csvOf(sel){
  const cols=[],seen=new Set(),isP=v=>typeof v==='string'&&(DATA_IMG.test(v)||v.startsWith('photo:'));
  sel.forEach(L_=>L_.geo.features.forEach(f=>{const p=f.properties||{};for(const k in p)if(!seen.has(k)){seen.add(k);cols.push(k)}}));
  const q=v=>{v=v===null||v===undefined?'':typeof v==='object'?JSON.stringify(v):String(v);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
- const out=[['لایه','نوع هندسه','طول (مرکز)','عرض (مرکز)'].concat(cols).map(q).join(',')];
+ const hasW=sel.some(L_=>L_.geo.features.some(f=>f.geometry&&f.geometry.type!=='Point')),
+  out=[['لایه','نوع هندسه','طول (مرکز)','عرض (مرکز)'].concat(hasW?['هندسه (WKT)']:[]).concat(cols).map(q).join(',')];
  sel.forEach(L_=>L_.geo.features.forEach(f=>{
   let c=null;try{c=featC(f)}catch(e){}
   const p=f.properties||{};
-  out.push([L_.name,geoFa(f.geometry),c?c[0].toFixed(7):'',c?c[1].toFixed(7):''].concat(cols.map(k=>isP(p[k])?'[عکس]':p[k])).map(q).join(','))}));
+  out.push([L_.name,geoFa(f.geometry),c?c[0].toFixed(7):'',c?c[1].toFixed(7):''].concat(hasW?[wktOf(f.geometry)]:[]).concat(cols.map(k=>isP(p[k])?'[عکس]':p[k])).map(q).join(','))}));
  return '\ufeff'+out.join('\r\n')}
 
 
@@ -3153,7 +3358,7 @@ map.on('click',async e=>{
   if(clickMk)map.removeLayer(clickMk);
   clickMk=L.circleMarker(e.latlng,{radius:7,color:'#fff',weight:2,fillColor:'#c0392b',fillOpacity:.95,interactive:false}).addTo(map);
   clearTimeout(clickMk._t);const m=clickMk;setTimeout(()=>{if(m===clickMk){map.removeLayer(m);clickMk=null}},6000)}
- if(false){const my=++tapTok,ll=e.latlng;setTimeout(()=>{if(my!==tapTok)return;const pe=geoPopEl(ll.lat,ll.lng,'','');L.popup({maxWidth:300}).setLatLng(ll).setContent(pe).openOn(map);geoAddrInto(pe,ll.lat,ll.lng)},650)}
+ if(S.geoTap){const my=++tapTok,ll=e.latlng;setTimeout(()=>{if(my!==tapTok)return;const pe=geoPopEl(ll.lat,ll.lng,'','');L.popup({maxWidth:300}).setLatLng(ll).setContent(pe).openOn(map);geoAddrInto(pe,ll.lat,ll.lng)},650)}
  });
 
 /* ---------- Routing ---------- */
@@ -3216,6 +3421,21 @@ $('rtSave').onclick=async()=>{
  applyStamp(geo.features[0],fx,'ایجاد');
  addLayer('مسیر '+fmtD(r.len),geo)};
 function rtLine(){const a=rt.A,b=rt.B;return{coords:[[a.lng,a.lat],[b.lng,b.lat]],len:turf.distance([a.lng,a.lat],[b.lng,b.lat],{units:'meters'}),dur:null,method:'خط مستقیم (فاصله هوایی)',straight:true}}
+async function rtOnline(p){
+ const a=rt.A,b=rt.B,co=`${a.lng.toFixed(6)},${a.lat.toFixed(6)};${b.lng.toFixed(6)},${b.lat.toFixed(6)}`;
+ const hosts=[`https://routing.openstreetmap.de/routed-${p}/route/v1/driving/`].concat(p==='car'?['https://router.project-osrm.org/route/v1/driving/']:[]);
+ let err=new Error('پاسخی دریافت نشد');
+ for(const h of hosts){
+  try{
+   const c=new AbortController(),t=setTimeout(()=>c.abort(),12000);
+   const r=await fetch(h+co+'?overview=full&geometries=geojson&alternatives=3&steps=false',{signal:c.signal});clearTimeout(t);
+   if(!r.ok)throw new Error('HTTP '+r.status);
+   const j=await r.json();
+   if(j.code!=='Ok'||!j.routes||!j.routes.length)throw new Error(j.message||j.code||'مسیری پیدا نشد');
+   const best=j.routes.reduce((m,x)=>x.distance<m.distance?x:m);
+   return{coords:best.geometry.coordinates,len:best.distance,dur:best.duration,method:'OSRM آنلاین ('+{car:'خودرو',bike:'دوچرخه',foot:'پیاده'}[p]+')'+(j.routes.length>1?' – کوتاه‌ترین از '+j.routes.length+' مسیر پیشنهادی':'')}}
+  catch(e){err=e.name==='AbortError'?new Error('زمان پاسخ سرویس تمام شد'):e}}
+ throw err}
 /* offline: Dijkstra on the line layers currently visible */
 function hav(x1,y1,x2,y2){const r=Math.PI/180,dl=(y2-y1)*r,dn=(x2-x1)*r,a=Math.sin(dl/2)**2+Math.cos(y1*r)*Math.cos(y2*r)*Math.sin(dn/2)**2;return 12742000*Math.asin(Math.min(1,Math.sqrt(a)))}
 class Heap{constructor(){this.a=[]}get size(){return this.a.length}
@@ -3325,7 +3545,7 @@ async function rtCalc(){
  else if(mode==='net')res=await tryR('شبکه خطی',async()=>rtNet());
  else{
   const prof=(mode==='auto'||mode==='moto')?'car':mode;
-  
+  if(navigator.onLine){res=await tryR('سرویس آنلاین',()=>rtOnline(prof));if(res)res.kind=mode==='moto'?'moto':prof}else notes.push('دستگاه آفلاین است');
   if(!res&&mode==='auto')res=await tryR('شبکه خطی',async()=>rtNet());
   if(!res&&mode==='auto'){res=rtLine();res.warn='مسیر جاده‌ای پیدا نشد؛ فقط فاصله هوایی نمایش داده شد'}}
  if(tk!==rt.tk)return;
@@ -3543,7 +3763,7 @@ function fxNode(c,p){
  c.splice(best.i,0,[p[0],p[1]]);return true}
 
 /* ---------- Settings (user-defined options; other menus only operate) ---------- */
-const SET_DEF={theme:'light',user:'',cp:'ll',geoBias:'gilan',geoTap:false,geoUrl:'',obs:['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'],
+const SET_DEF={theme:'light',user:'',cp:'ll',geoBias:'gilan',geoTap:true,geoUrl:'',obs:['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'],
  tkAcc:30,tkStep:4,tkWake:true,fxEnd:1,fxPt:2,
  prxDist:30,prxMode:'enter',prxSound:'two',prxVol:.8,prxVib:true,prxHold:60,prxWake:true};
 const S=(()=>{let o={};try{o=JSON.parse(localStorage.getItem('webgis_settings'))||{}}catch(e){}return Object.assign({},SET_DEF,o,{obs:Array.isArray(o.obs)&&o.obs.length?o.obs:SET_DEF.obs})})();
@@ -3841,7 +4061,7 @@ function uiBuild(){
  ['bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
  ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
  bar.appendChild($('bMore'))}
-const APP_VER='1.05.32'; /* major.minor.counter — the last number grows by 1 with every change */
+const APP_VER='1.05.34'; /* major.minor.counter — the last number grows by 1 with every change */
 $('verLbl').textContent='نسخه سامانه : '+APP_VER.replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
 $('bMore').onclick=()=>openSheet('sMore');
 $('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');$('bGd').onclick=()=>openSheet('sGuide');
@@ -4093,6 +4313,78 @@ $('wSave').onclick=async()=>{
 $('bW').onclick=()=>openSheet('sWork');
 tkUI();
 
+/* ---------- Offline map packs (download tiles of the current view into Cache Storage) ---------- */
+const OFF_CACHE='webgis-offline-v1',PUB_HOST=/(openstreetmap\.org|arcgisonline\.com|opentopomap\.org|google\.com|googleapis\.com|gstatic\.com|cartocdn\.com)/i;
+let ofStopF=false,ofBusy=false;
+const ofVisible=()=>baseList.filter(d=>baseL[d.id]&&map.hasLayer(baseL[d.id]));
+const ofAbs=u=>{try{return new URL(u,location.href)}catch(e){return null}};
+const ofPublic=d=>d.type==='xyz'||d.type==='wms'?PUB_HOST.test((ofAbs(d.url)||{}).hostname||''):false;
+function tileUrlFor(d,l,x,y,z){
+ if(d.type==='wms'){const c=L.point(x,y);c.z=z;return new URL(l.getTileUrl(c),location.href).href}
+ const n=Math.pow(2,z),yy=d.tms?n-1-y:y,s='abc'[Math.abs(x+y)%3];
+ return new URL(d.url.replace(/\{s\}/g,s).replace(/\{x\}/g,x).replace(/\{-y\}/g,n-1-y).replace(/\{y\}/g,yy).replace(/\{z\}/g,z).replace(/\{r\}/g,''),location.href).href}
+function ofRange(l,b,z){
+ const ts=(l.getTileSize&&l.getTileSize().x)||256,n=Math.pow(2,z),nw=map.project(b.getNorthWest(),z),se=map.project(b.getSouthEast(),z),cl=v=>Math.max(0,Math.min(n-1,v));
+ return{x0:cl(Math.floor(nw.x/ts)),x1:cl(Math.floor(se.x/ts)),y0:cl(Math.floor(nw.y/ts)),y1:cl(Math.floor(se.y/ts))}}
+async function ofStat(){
+ let h='';
+ try{const k=await caches.open(OFF_CACHE),n=(await k.keys()).length;h=`تایل‌های ذخیره‌شده برای آفلاین: <b>${n.toLocaleString('fa-IR')}</b>`}catch(e){h='Cache Storage در دسترس نیست (HTTPS لازم است)'}
+ try{const e=await navigator.storage.estimate();h+=` | کل فضای مصرفی: <b>${(e.usage/1048576).toFixed(0)} MB</b> از ${(e.quota/1048576).toFixed(0)} MB`}catch(_){}
+ $('ofStat').innerHTML=h}
+function ofInit(){
+ const v=ofVisible(),el=$('ofLayers');el.innerHTML=v.length?'':'<div style="color:#a5281b;font-size:13px">هیچ نقشه‌ای روی نقشه روشن نیست.</div>';
+ v.forEach(d=>{const lb=document.createElement('label');lb.style.cssText='display:block;font-size:13px;margin:2px 0';lb.innerHTML=`<input type="checkbox" data-id="${esc(d.id)}" checked> ${esc(d.name)} <span style="color:#888;font-size:11px">(${d.type==='wms'?'WMS':'XYZ'}${ofPublic(d)?' — سرویس عمومی':''})</span>`;el.appendChild(lb)});
+ const z=Math.round(map.getZoom()),mx=Math.max(...v.map(d=>d.maxZoom||19),19);
+ $('ofZ0').value=z;$('ofZ1').value=Math.min(z+3,mx);$('ofEst').textContent='';$('ofTxt').textContent='';$('ofBar').value=0;ofStat()}
+function ofSel(){return[...$('ofLayers').querySelectorAll('input:checked')].map(i=>baseList.find(d=>d.id===i.dataset.id)).filter(d=>d&&baseL[d.id])}
+function ofPlan(){
+ const sel=ofSel();if(!sel.length)return null;
+ let z0=Math.round(+$('ofZ0').value),z1=Math.round(+$('ofZ1').value);
+ if(!(z0>=0&&z1>=z0))return{err:'بازه‌ی زوم نامعتبر است'};
+ let b=map.getBounds();if($('ofPad').checked)b=b.pad(.2);
+ const items=[];let total=0,pub=false;
+ sel.forEach(d=>{const l=baseL[d.id],a=Math.max(z0,d.minZoom||0),e=Math.min(z1,d.maxZoom||19);let n=0;
+  for(let z=a;z<=e;z++){const r=ofRange(l,b,z);n+=(r.x1-r.x0+1)*(r.y1-r.y0+1)}
+  items.push({d,l,a,e,n,b});total+=n;if(ofPublic(d))pub=true});
+ const cap=pub?500:40000;
+ return{items,total,cap,pub,err:total>cap?(pub?`برای سرویس‌های عمومی (OSM/Esri/Google/…) دانلود انبوه طبق شرایط استفاده مجاز نیست؛ حداکثر ${cap} تایل. یا از فایل MBTiles محلی استفاده کنید.`:`تعداد تایل (${total.toLocaleString('fa-IR')}) از سقف ${cap.toLocaleString('fa-IR')} بیشتر است؛ بازه‌ی زوم یا محدوده را کوچک‌تر کنید.`):null}}
+$('ofCalc').onclick=()=>{
+ const p=ofPlan();if(!p)return toast('یک نقشه را انتخاب کنید');
+ if(p.err&&!p.items){$('ofEst').innerHTML='<span style="color:#a5281b">'+p.err+'</span>';return}
+ $('ofEst').innerHTML=`تعداد تایل: <b>${p.total.toLocaleString('fa-IR')}</b> | حجم تقریبی: <b>${(p.total*30/1024).toFixed(0)} MB</b> (حدود ۳۰ KB هر تایل)`+(p.err?`<br><span style="color:#a5281b">${p.err}</span>`:'')};
+$('ofGo').onclick=async()=>{
+ if(ofBusy)return;const p=ofPlan();if(!p)return toast('یک نقشه را انتخاب کنید');
+ if(p.err){$('ofEst').innerHTML='<span style="color:#a5281b">'+p.err+'</span>';return}
+ if(!('caches' in window))return toast('Cache Storage در دسترس نیست؛ برنامه باید روی HTTPS (یا localhost) باز شود',7000);
+ if(!await dlg(`${p.total.toLocaleString('fa-IR')} تایل (حدود ${(p.total*30/1024).toFixed(0)} MB) دانلود و ذخیره شود؟`))return;
+ const urls=[];
+ p.items.forEach(it=>{for(let z=it.a;z<=it.e;z++){const r=ofRange(it.l,it.b,z);for(let x=r.x0;x<=r.x1;x++)for(let y=r.y0;y<=r.y1;y++)urls.push(tileUrlFor(it.d,it.l,x,y,z))}});
+ ofBusy=true;ofStopF=false;$('ofGo').style.display='none';$('ofStop').style.display='';$('ofBar').max=urls.length;$('ofBar').value=0;
+ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
+ const cache=await caches.open(OFF_CACHE);let i=0,done=0,fail=0,skip=0,bytes=0,quota=false;
+ const upd=()=>{$('ofBar').value=done;$('ofTxt').textContent=`${done.toLocaleString('fa-IR')} / ${urls.length.toLocaleString('fa-IR')} | ${(bytes/1048576).toFixed(1)} MB | رد شده: ${skip} | ناموفق: ${fail}`};
+ const worker=async()=>{
+  while(!ofStopF&&i<urls.length){
+   const u=urls[i++];
+   try{
+    if(await cache.match(u))skip++;
+    else{let ok=false;
+     for(let a=0;a<2&&!ok&&!ofStopF;a++){
+      try{const r=await fetch(u,{cache:'no-store',mode:new URL(u).origin===location.origin?'same-origin':'cors'}),ct=r.headers.get('content-type')||'';
+       if(r.ok&&/^image\//i.test(ct)){const bl=await r.blob();await cache.put(u,new Response(bl,{headers:{'Content-Type':ct}}));bytes+=bl.size;ok=true}else if(r.ok)break}
+      catch(e){if(e&&e.name==='QuotaExceededError'){quota=true;ofStopF=true}}}
+     if(!ok)fail++}}
+   catch(e){fail++}
+   done++;if(done%8===0||done===urls.length)upd();
+   if(done>=16&&fail>=done-skip&&fail>0){ofStopF=true}}};
+ await Promise.all(Array.from({length:6},worker));upd();
+ ofBusy=false;$('ofGo').style.display='';$('ofStop').style.display='none';ofStat();
+ const allFail=fail>0&&fail>=done-skip;
+ toast(quota?'فضای ذخیره‌سازی پر شد؛ دانلود متوقف شد':allFail?'دانلود ناموفق بود: سرور تایل در دسترس نیست یا CORS مجاز نیست':ofStopF&&done<urls.length?'دانلود متوقف شد':`ذخیره شد: ${(done-fail).toLocaleString('fa-IR')} تایل`,8000)};
+$('ofStop').onclick=()=>{ofStopF=true};
+$('ofClear').onclick=async()=>{if(ofBusy)return toast('ابتدا دانلود را متوقف کنید');if(!await dlg('همه نقشه‌های ذخیره‌شده برای آفلاین پاک شود؟'))return;try{await caches.delete(OFF_CACHE);toast('پاک شد')}catch(e){toast('پاک کردن ممکن نشد')}ofStat()};
+$('bsOff').onclick=()=>openSheet('sOffline');
+
 /* ---------- Navigation: page / panel headers with back arrow, hardware-back support, "move the map to pick" ---------- */
 const hs={stk:[],ign:0};
 function hsPush(n){try{history.pushState({h:n},'')}catch(e){}hs.stk.push(n)}
@@ -4101,8 +4393,8 @@ addEventListener('popstate',()=>{
  if(hs.ign>0){hs.ign--;return}
  const n=hs.stk.pop();
  if(n==='pv')pvHide();else if(n==='pk')pickEnd(false);else if(n==='idpk')idPkEnd(false);else if(n==='nav')navBack()});
-const NAVP={},NAV_PD={sFix:'sMore',sSet:'sMore',sBackup:'sMore',sSave:'sMore',sEdit:'sMore',sRule:'sMore',sPrx:'sMore',sGuide:'sMore',sSnap:'sEdit'};
-const PAGES=['sGuide','sSet','sLayers','sBackup','sSave','sFix','sSnap','sSearch','sWork'];
+const NAVP={},NAV_PD={sBase:'sLayers',sOffline:'sLayers',sFix:'sMore',sSet:'sMore',sBackup:'sMore',sSave:'sMore',sEdit:'sMore',sRule:'sMore',sPrx:'sMore',sGuide:'sMore',sSnap:'sEdit'};
+const PAGES=['sGuide','sSet','sLayers','sBackup','sSave','sBase','sOffline','sFix','sSnap','sSearch','sWork'];
 const SH_TITLE={sRule:'خط‌کش',sEdit:'ویرایش عوارض',sMore:'سایر'};
 const ARROW='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg>';
 const anySheet=()=>sheets.some(s=>$(s).classList.contains('show'));
@@ -4230,7 +4522,7 @@ $('idPkR').oninput=()=>{$('idR').value=$('idPkR').value;idDraw()};
 let dip=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('inst').hidden=false});
 $('inst').onclick=async()=>{if(!dip)return;dip.prompt();await dip.userChoice;dip=null;$('inst').hidden=true};
-if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').then(r=>{navigator.serviceWorker.ready.then(()=>{try{if(!localStorage.getItem('mbt_ready')){localStorage.setItem('mbt_ready','1');toast('برنامه کامل ذخیره شد و بدون اینترنت قابل استفاده است',7000)}}catch(e){}});r.onupdatefound=()=>{const w=r.installing;if(w)w.onstatechange=()=>{if(w.state==='activated'&&navigator.serviceWorker.controller)toast('نسخه جدید فعال شد؛ برنامه را ببندید و دوباره باز کنید',9000)}}}).catch(()=>{}));
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').then(r=>{r.onupdatefound=()=>{const w=r.installing;if(w)w.onstatechange=()=>{if(w.state==='activated'&&navigator.serviceWorker.controller)toast('نسخه جدید فعال شد؛ برنامه را ببندید و دوباره باز کنید',9000)}}}).catch(()=>{}));
 </script>
 </body>
 </html>
