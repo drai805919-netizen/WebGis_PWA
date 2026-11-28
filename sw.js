@@ -1,4 +1,4 @@
-const V='webgis-v1.05.34',TILE='webgis-tiles-v1',OFF='webgis-offline-v1';
+const V='webgis-v1.05.35',TILE='webgis-tiles-v1',OFF='webgis-offline-v1';
 const KEEP=[V,TILE,OFF];            // OFF (نقشه‌های ذخیره‌شده برای آفلاین) هرگز پاک نمی‌شود
 const LOCAL=['./lib/leaflet.min.js','./lib/leaflet.min.css','./lib/images/layers.png','./lib/images/layers-2x.png','./lib/images/marker-icon.png','./lib/images/marker-icon-2x.png','./lib/images/marker-shadow.png','./lib/turf.min.js','./lib/jszip.min.js','./lib/jsQR.min.js','./lib/zxing.min.js'];
 const CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./icon.svg','./favicon-48.png','./apple-touch-icon.png','./mbtiles.js','./guide.html'];

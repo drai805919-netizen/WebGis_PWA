@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>WebGIS موبایل</title>
+<title>آوند</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f5f4e">
 <script>try{var __t=JSON.parse(localStorage.getItem("webgis_settings")||"{}").theme,__h=new Date().getHours();document.documentElement.dataset.theme=(__t==="dark"||(__t==="auto"&&(__h<6||__h>=18)))?"dark":"light"}catch(e){}</script>
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.34">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.34">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.34">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.35">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.35">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.35">
 <link rel="stylesheet" href="lib/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'">
 <style>
 :root{--bg:#f4f6f3;--fg:#17261f;--pri:#1f6f5c;--pri2:#e8f1ee;--bd:#cfd9d3}
@@ -491,7 +491,7 @@ return new Promise(function(r){res=r})}})();
 <button id="pickOk">انتخاب</button>
 </div>
 
-<div id="mbHint" style="display:none"><button class="btn" id="mbHintBtn">MBTiles</button></div>
+<div id="mbHint" style="display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:1100;background:#fff;color:#222;border:1px solid #cfd9d3;border-radius:12px;padding:10px 14px;box-shadow:0 2px 10px rgba(0,0,0,.3);text-align:center;font-size:13px;max-width:88vw"><div id="mbHintTxt" style="margin-bottom:6px">نقشه‌ی MBTiles انتخاب نشده است</div><button class="btn" id="mbHintBtn">انتخاب فایل MBTiles</button></div>
 <input type="file" id="mbFile" style="display:none">
 <div id="bar">
 <button id="bL">لایه‌ها</button>
@@ -673,37 +673,61 @@ $('bsOk').onclick=()=>{
  openSheet('sBase');toast('نقشه «'+name+'» افزوده و فعال شد',4000)};
 $('bsReset').onclick=async()=>{if(!await dlg('فهرست نقشه‌های پایه به حالت اولیه برگردد؟ نقشه‌های افزوده‌شده حذف می‌شوند.'))return;bsLS.set('webgis_bases',JSON.stringify(BASE_DEF));bsLS.set('webgis_base_active','osm');bsReload();bsRender();toast('بازنشانی شد')};
 bsReload();
-/* ---------- MBTiles محلی: تنها نقشه‌ی پایه (بدون هیچ سرویس آنلاین / WMS) ---------- */
-const MBL={mb:null,layer:null,blob:null,src:null,name:''};
+/* ---------- MBTiles محلی ---------- */
+const MBL={mb:null,layer:null,blob:null,src:null,name:'',hid:[]};
 const mbLS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 const OPFS_NAME='local-map.mbtiles';
 const mbMB=n=>n>=1073741824?(n/1073741824).toFixed(2)+' گیگابایت':(n/1048576).toFixed(0)+' مگابایت';
 async function opfsDir(){return navigator.storage&&navigator.storage.getDirectory?await navigator.storage.getDirectory():null}
 async function opfsFile(){try{const r=await opfsDir();return r?await(await r.getFileHandle(OPFS_NAME)).getFile():null}catch(e){return null}}
 async function opfsDrop(){try{const r=await opfsDir();if(r)await r.removeEntry(OPFS_NAME)}catch(e){}}
-function mbHint(on){$('mbHint').style.display=on?'block':'none'}
+function mbHint(on){const h=$('mbHint');if(!h)return;h.style.display=on?'block':'none';if(on&&$('mbHintTxt'))$('mbHintTxt').textContent=navigator.onLine?'نقشه‌ی MBTiles انتخاب نشده است':'اینترنت قطع است؛ برای دیدن نقشه فایل MBTiles را انتخاب کنید'}
 function mbRender(){
  const i=$('mbInfo');if(!i)return;
  if(!MBL.mb){i.textContent='هنوز نقشه‌ای بارگذاری نشده است.';$('mbImp').disabled=true}
  else{const m=MBL.mb;i.innerHTML='<b>'+esc(m.name||MBL.name||'MBTiles')+'</b><br>فرمت: '+esc(m.format||'؟')+' — زوم '+m.minzoom+' تا '+m.maxzoom+' — حجم '+mbMB(m.size)+'<br>منبع: '+(MBL.src==='opfs'?'نسخه‌ی ذخیره‌شده در برنامه':'فایل انتخاب‌شده از گوشی (هر بار باید دوباره انتخاب شود)');
   $('mbImp').disabled=MBL.src!=='direct'}
- $('mbOp').value=mbLS.get('mbt_op')||1;$('mbFlip').checked=mbLS.get('mbt_flip')==='1';
- $('mbDel').style.display=''}
+ $('mbOp').value=mbLS.get('mbt_op')||1;$('mbFlip').checked=mbLS.get('mbt_flip')==='1'}
 function mbMake(){
  if(MBL.layer){try{map.removeLayer(MBL.layer);ctl.removeLayer(MBL.layer)}catch(e){}}
  const flip=(MBL.mb.scheme==='xyz')!==(mbLS.get('mbt_flip')==='1');
  MBL.layer=MBT.makeLayer(MBL.mb,{opacity:+mbLS.get('mbt_op')||1,flip});
- MBL.layer.setZIndex(3);MBL.layer.addTo(map);ctl.addOverlay(MBL.layer,'نقشه MBTiles');
- MBL.layer.on('tileerror',()=>{})}
-function mbFit(){
+ MBL.layer.setZIndex(3);MBL.layer.addTo(map);ctl.addOverlay(MBL.layer,'نقشه MBTiles')}
+const mbTileB=(z,x,row,flip)=>{const n=Math.pow(2,z),y=flip?row:n-1-row,lon=v=>v/n*360-180,lat=v=>Math.atan(Math.sinh(Math.PI*(1-2*v/n)))*180/Math.PI;return[[lat(y+1),lon(x)],[lat(y),lon(x+1)]]};
+function mbRedraw(){setTimeout(()=>{if(MBL.layer&&map.hasLayer(MBL.layer)){try{MBL.layer.redraw()}catch(e){}}},80)}
+/* نمایش فوری: نما را روی داده‌ی فایل می‌برد و زوم را داخل بازه‌ی فایل نگه می‌دارد (بدون نیاز به کلیک «موقعیت من») */
+async function mbFit(){
  const m=MBL.mb;if(!m)return;
- if(m.bounds)map.fitBounds([[m.bounds[1],m.bounds[0]],[m.bounds[3],m.bounds[2]]]);
- else if(m.center)map.setView([m.center[1],m.center[0]],Math.max(m.minzoom,Math.min(m.maxzoom,m.center[2]||m.minzoom)));
- else toast('محدوده‌ی نقشه در فایل ثبت نشده؛ نقشه را به منطقه‌ی خود ببرید و زوم کنید',6000)}
+ let b=null;
+ if(m.bounds)b=[[m.bounds[1],m.bounds[0]],[m.bounds[3],m.bounds[2]]];
+ else if(m.center)map.setView([m.center[1],m.center[0]],Math.max(m.minzoom,Math.min(m.maxzoom,m.center[2]!=null?m.center[2]:m.minzoom)),{animate:false});
+ else{try{const ft=await m.firstTile();if(ft)b=mbTileB(ft[0],ft[1],ft[2],MBL.layer&&MBL.layer.options.flip)}catch(e){}}
+ if(b)map.fitBounds(b,{animate:false,maxZoom:Math.max(m.minzoom,Math.min(m.maxzoom,16))});
+ else if(!m.center)toast('محدوده‌ی نقشه در فایل ثبت نشده؛ نقشه را به منطقه‌ی خود ببرید',6000);
+ const z=map.getZoom(),z2=Math.min(Math.max(z,m.minzoom),m.maxzoom+6);
+ if(z2!==z)map.setView(map.getCenter(),z2,{animate:false});
+ mbRedraw()}
+function mbEnsure(){
+ const m=MBL.mb;if(!m)return;
+ const z=map.getZoom();let out=z<m.minzoom||z>m.maxzoom+6;
+ if(!out&&m.bounds)out=!L.latLngBounds([[m.bounds[1],m.bounds[0]],[m.bounds[3],m.bounds[2]]]).pad(.1).contains(map.getCenter());
+ if(out)mbFit();else mbRedraw()}
+/* وقتی اینترنت قطع است و MBTiles آماده است: نقشه‌های آنلاین موقتاً کنار می‌روند و MBTiles بلافاصله نمایش داده می‌شود؛ با برگشت اینترنت نقشه‌ی قبلی برمی‌گردد */
+function mbAuto(){
+ const off=!navigator.onLine;
+ if(MBL.mb&&MBL.layer&&off){
+  baseList.forEach(d=>{const l=baseL[d.id];if(l&&map.hasLayer(l)){map.removeLayer(l);if(!MBL.hid.includes(d.id))MBL.hid.push(d.id)}});
+  if(!map.hasLayer(MBL.layer))MBL.layer.addTo(map);
+  mbEnsure()}
+ else if(MBL.hid.length&&(!off||!MBL.mb)){MBL.hid.forEach(id=>{const l=baseL[id];if(l&&!map.hasLayer(l))l.addTo(map)});MBL.hid=[];mbRedraw()}
+ mbHint(off&&!MBL.mb)}
+addEventListener('offline',mbAuto);addEventListener('online',mbAuto);
 async function mbUse(blob,src,name,noFit){
  const mb=await MBT.open(blob);
  MBL.mb=mb;MBL.blob=blob;MBL.src=src;MBL.name=name||blob.name||'';
- mbMake();mbHint(false);mbRender();if(!noFit)mbFit()}
+ mbMake();mbRender();
+ if(noFit)mbEnsure();else await mbFit();
+ mbAuto()}
 $('mbPick').onclick=()=>{$('mbFile').value='';$('mbFile').click()};
 $('mbHintBtn').onclick=()=>$('mbPick').onclick();
 $('mbFile').onchange=async e=>{
@@ -712,7 +736,7 @@ $('mbFile').onchange=async e=>{
  catch(err){toast('❌ '+err.message,9000)}};
 $('mbFit').onclick=()=>{if(!MBL.mb)return toast('ابتدا فایل MBTiles را انتخاب کنید');mbFit()};
 $('mbOp').oninput=e=>{mbLS.set('mbt_op',e.target.value);if(MBL.layer)MBL.layer.setOpacity(+e.target.value)};
-$('mbFlip').onchange=e=>{mbLS.set('mbt_flip',e.target.checked?'1':'0');if(MBL.mb)mbMake()};
+$('mbFlip').onchange=e=>{mbLS.set('mbt_flip',e.target.checked?'1':'0');if(MBL.mb){mbMake();mbRedraw()}};
 $('mbImp').onclick=async()=>{
  if(!MBL.blob||MBL.src!=='direct')return toast('ابتدا فایل را از گوشی انتخاب کنید');
  const f=MBL.blob,dir=await opfsDir();
@@ -726,22 +750,22 @@ $('mbImp').onclick=async()=>{
   await opfsDrop();
   const fh=await dir.getFileHandle(OPFS_NAME,{create:true});
   if(!fh.createWritable)throw new Error('این مرورگر نوشتن در حافظه‌ی برنامه را پشتیبانی نمی‌کند');
-  w=await fh.createWritable();const rd=f.stream().getReader();let done=0,t0=Date.now();
+  w=await fh.createWritable();const rd=f.stream().getReader();let done=0;
   for(;;){const r=await rd.read();if(r.done)break;await w.write(r.value);done+=r.value.length;bar.value=done;txt.textContent=mbMB(done)+' از '+mbMB(f.size)+' ('+Math.round(done/f.size*100)+'٪)'}
   await w.close();w=null;
   const nf=await opfsFile();if(!nf||nf.size!==f.size)throw new Error('اندازه‌ی فایل کپی‌شده با اصل یکسان نیست');
-  await mbUse(nf,'opfs',MBL.name);txt.textContent='';bar.style.display='none';toast('فایل در حافظه‌ی برنامه ذخیره شد؛ دفعه‌ی بعد خودکار باز می‌شود',6000)
+  await mbUse(nf,'opfs',MBL.name,true);txt.textContent='';bar.style.display='none';toast('فایل در حافظه‌ی برنامه ذخیره شد؛ دفعه‌ی بعد خودکار باز می‌شود',6000)
  }catch(err){try{if(w)await w.abort()}catch(_){}await opfsDrop();bar.style.display='none';txt.textContent='';mbRender();toast('❌ ذخیره ناموفق: '+err.message,9000)}};
 $('mbDel').onclick=async()=>{
  const f=await opfsFile();if(!f)return toast('نسخه‌ی ذخیره‌شده‌ای وجود ندارد');
  if(!await dlg('نسخه‌ی ذخیره‌شده‌ی نقشه ('+mbMB(f.size)+') از حافظه‌ی برنامه حذف شود؟ فایل اصلی گوشی دست‌نخورده می‌ماند.'))return;
  await opfsDrop();
- if(MBL.src==='opfs'){try{map.removeLayer(MBL.layer);ctl.removeLayer(MBL.layer)}catch(e){}MBL.mb=MBL.layer=MBL.blob=null;MBL.src=null;mbHint(false)}
- mbRender();toast('حذف شد')};
+ if(MBL.src==='opfs'){try{map.removeLayer(MBL.layer);ctl.removeLayer(MBL.layer)}catch(e){}MBL.mb=MBL.layer=MBL.blob=null;MBL.src=null}
+ mbRender();mbAuto();toast('حذف شد')};
 (async()=>{
  const f=await opfsFile();
- if(f){try{await mbUse(f,'opfs','',true)}catch(e){toast('❌ نسخه‌ی ذخیره‌شده خوانده نشد: '+e.message,9000);mbHint(false)}}
- else mbHint(false)})();
+ if(f){try{await mbUse(f,'opfs','',true)}catch(e){toast('❌ نسخه‌ی ذخیره‌شده خوانده نشد: '+e.message,9000);mbAuto()}}
+ else mbAuto()})();
 
 
 function updNet(){const o=navigator.onLine;$('net').textContent=o?'آنلاین':'آفلاین';$('net').className='pill'+(o?'':' off')}
@@ -1062,7 +1086,7 @@ const DB={db:null,
  st(sn,m,f){return new Promise(r=>{try{const q=f(DB.db.transaction(sn,m).objectStore(sn));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  run(m,f){return new Promise(r=>{try{const q=f(DB.db.transaction('layers',m).objectStore('layers'));q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
  put(o){return DB.run('readwrite',st=>st.put(o))},del(id){return DB.run('readwrite',st=>st.delete(id))},clear(){return DB.run('readwrite',st=>st.clear())},all(){return DB.run('readonly',st=>st.getAll()).then(x=>x||[])}};
-function saveL(L_){DB.put({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res,sym:L_.sym||null,lab:L_.lab||null})}
+function saveL(L_){DB.put({id:L_.id,name:L_.name,geo:L_.geo,color:L_.color,icon:L_.icon,on:L_.on,user:L_.user,res:!!L_.res,sym:L_.sym||null,lab:L_.lab||null,fill:L_.fill!==false,dash:!!L_.dash})}
 
 /* ---------- GeoPackage reader (pure JS SQLite parser, no WASM / no CDN) ---------- */
 function gpkgRead(buf,opt){
@@ -1396,7 +1420,7 @@ function gpkgWrite(items){
    const root=buildTable(rows.map((v,i)=>({rid:i+1,p:rec(v)})));
    master.push(['table',tn,tn,root,sql]);
    let idn=it.name+' ('+fa+')';while(used.has(idn))idn+='_';used.add(idn);
-   contents.push([tn,'features',idn,'WebGIS export',now,bb[0],bb[1],bb[2],bb[3],4326]);
+   contents.push([tn,'features',idn,'Avand export',now,bb[0],bb[1],bb[2],bb[3],4326]);
    gcols.push([tn,'geom',gtn,4326,0,0])})});
  mk('gpkg_contents','CREATE TABLE gpkg_contents (table_name TEXT NOT NULL, data_type TEXT NOT NULL, identifier TEXT, description TEXT DEFAULT \'\', last_change DATETIME NOT NULL, min_x DOUBLE, min_y DOUBLE, max_x DOUBLE, max_y DOUBLE, srs_id INTEGER)',contents);
  mk('gpkg_geometry_columns','CREATE TABLE gpkg_geometry_columns (table_name TEXT NOT NULL, column_name TEXT NOT NULL, geometry_type_name TEXT NOT NULL, srs_id INTEGER NOT NULL, z TINYINT NOT NULL, m TINYINT NOT NULL)',gcols);
@@ -1527,7 +1551,7 @@ function tableToGeo(rows,utm){
   else{const sw=ok.every(v=>Math.abs(v[1])<=180&&Math.abs(v[0])<=90);
    if(sw){swapN=true}else throw new Error('مقادیر طول/عرض خارج از محدوده معتبر است')}}
  const seen=new Set();hdr=hdr.map((h,i)=>{let n=h||('ستون'+(i+1)),b=n,k=2;while(seen.has(n))n=b+'_'+(k++);seen.add(n);return n});
- const feats=[],gmap={};let skipped=0,outZone=0,wktN=0,wktBad=0,centOnly=0;
+ const feats=[],gmap={};let skipped=0,outZone=0,wktN=0,wktBad=0,centOnly=0,circN=0;
  data.forEach((r,ri)=>{
   let x=tabNum(r[ix]),y=tabNum(r[iy]);
   if(!isFinite(x)||!isFinite(y)){skipped++;return}
@@ -1540,6 +1564,7 @@ function tableToGeo(rows,utm){
    let geom={type:'Point',coordinates:[+lon.toFixed(7),+lat.toFixed(7)]};
    if(own){const w=iw>=0?String(r[iw]||'').trim():'';
     if(w){const g2=wktParse(w);if(g2){geom=g2;wktN++}else wktBad++}
+    else if(String(r[1]||'').trim()==='چندضلعی'&&hdr.indexOf('نوع')>=0&&String(r[hdr.indexOf('نوع')]).trim()==='محدوده شناسایی'&&/نقطه/.test(String(r[hdr.indexOf('روش شناسایی')]||''))&&+String(r[hdr.indexOf('شعاع/فاصله (متر)')]||0)>0&&typeof turf!=='undefined'){try{geom=turf.circle([lon,lat],+String(r[hdr.indexOf('شعاع/فاصله (متر)')])/1000,{steps:72,units:'kilometers'}).geometry;circN++}catch(e){}}
     else if(String(r[1]||'').trim()!=='نقطه'&&String(r[1]||'').trim()!=='')centOnly++}
    const ft={type:'Feature',properties:p,geometry:geom};feats.push(ft);
    if(own){const ln=String(r[0]||'').trim()||'—';(gmap[ln]=gmap[ln]||[]).push(ft)}});
@@ -1550,6 +1575,7 @@ function tableToGeo(rows,utm){
  if(outZone)info+=` | هشدار: ${outZone} نقطه خارج از محدوده زون ۳۹ است (شاید زون دیگری باشد)`;
  if(own){info+=' | فایل خروجی خود برنامه شناسایی شد'+(Object.keys(gmap).length>1?' و به '+Object.keys(gmap).length+' لایه تفکیک شد':'');
    if(wktN)info+=` | هندسه‌ی ${wktN} خط/چندضلعی بازیابی شد`;
+   if(circN)info+=` | محدوده‌ی ${circN} شناسایی نقطه‌ای از روی مرکز و شعاع بازسازی شد`;
    if(wktBad)info+=` | هشدار: هندسه‌ی ${wktBad} ردیف خوانده نشد (به‌صورت نقطه‌ی مرکز آمد)`;
    if(centOnly)info+=` | هشدار: ${centOnly} خط/چندضلعی در این CSV فقط مرکز دارد و به‌صورت نقطه بازیابی شد (برای حفظ هندسه از GeoJSON/KML یا CSV نسخه‌ی جدید استفاده کنید)`}
   return{geo:{type:'FeatureCollection',features:feats},info,groups:own?Object.keys(gmap).map(k=>({name:k,geo:{type:'FeatureCollection',features:gmap[k]}})):null}}
@@ -2392,14 +2418,17 @@ function kvRow(L_,refresh){
  return r}
 
 function rebuild(L_){L_.lyr.clearLayers();L_.lyr.addData(L_.geo);if(L_.labL)L_.labL.invalidate();saveL(L_);renderList()}
+/* محدوده‌ی شناسایی و خط مبدأ همیشه خط‌چین و بدون رنگ داخلی نمایش داده می‌شوند */
+const isZoneF=f=>{const n=f&&f.properties&&f.properties['نوع'];return n==='محدوده شناسایی'||n==='خط مبدأ'};
 function mkLayer(name,geo,user,sv){
  const id=sv?sv.id:++lid;
  const L_={id,name,geo,color:sv?sv.color:(user?'#c0392b':colors[(id-1)%colors.length]),icon:sv?sv.icon:(user?'pin':'circle'),on:sv?sv.on!==false:true,user:!!user,res:!!(sv&&sv.res)};
+ L_.fill=!(sv&&sv.fill===false);L_.dash=!!(sv&&sv.dash);
  L_.sym=sv&&sv.sym?cleanSym(sv.sym):null;
  L_.lab=sv&&sv.lab?cleanLab(sv.lab):null;
  L_.lyr=L.geoJSON(geo,{
   filter:f=>!symHidden(L_,f),
-  style:f=>({color:symColor(L_,f)||L_.color,weight:3,fillOpacity:.25}),
+  style:f=>{const z=isZoneF(f);return{color:symColor(L_,f)||L_.color,weight:3,fillOpacity:(L_.fill!==false&&!z)?.25:0,dashArray:(L_.dash||z)?'9 7':null}},
   onEachFeature:(f,l)=>{if(l.eachLayer){const mk=g=>g.eachLayer(c=>{c._wgTop=l;if(c.eachLayer)mk(c)});mk(l)}},
   pointToLayer:(f,ll)=>{
    const col=symColor(L_,f)||L_.color;
@@ -2438,6 +2467,7 @@ function renderList(){
   const s=stats(L_.geo),d=document.createElement('div');d.className='lay';
   d.innerHTML=`<b>${esc(L_.name)}${L_.res?' <span class="pill">نتیجه تحلیل</span>':''}</b><div style="font-size:12px">نقطه ${s.p} | خط ${s.l} | چندضلعی ${s.a}</div>
   <div class="row"><label><input type="checkbox" ${L_.on?'checked':''}> نمایش</label><input type="color" value="${L_.color}">
+   ${s.a?`<label style="font-size:12px"><input type="checkbox" class="fillcb" ${L_.fill!==false?'checked':''}> رنگ داخل</label><label style="font-size:12px"><input type="checkbox" class="dashcb" ${L_.dash?'checked':''}> خط‌چین</label>`:''}
   ${s.p?`<button type="button" class="icb icsel"></button>`:''}<button type="button" class="icb symb">🎨 رنگ‌بندی</button><button type="button" class="icb labb">🏷 لیبل</button></div>
   <div class="icgrid" hidden></div>
   <div class="symt" id="symt-${L_.id}" style="font-size:12px;color:var(--mt)"></div><div class="sympanel" hidden></div>
@@ -2447,6 +2477,7 @@ function renderList(){
   const fillIc=()=>{if(!icb)return;icb.innerHTML=icSvg(L_.icon,L_.color,26)+'<span>'+ICONS[L_.icon][0]+'</span> ▾';icg.innerHTML=Object.keys(ICONS).map(k=>`<button type="button" data-k="${k}" class="${k===L_.icon?'on':''}">${icSvg(k,L_.color,32)}<span>${ICONS[k][0]}</span></button>`).join('')};fillIc();
   cb.onchange=()=>{cb.checked?L_.lyr.addTo(map):map.removeLayer(L_.lyr)};
   cl.onchange=()=>{L_.color=cl.value;rebuild(L_);fillIc()};
+   {const fc=d.querySelector('.fillcb'),dc=d.querySelector('.dashcb');if(fc){fc.onchange=()=>{L_.fill=fc.checked;rebuild(L_)};dc.onchange=()=>{L_.dash=dc.checked;rebuild(L_)}}}
   if(icb){icb.onclick=()=>{icg.hidden=!icg.hidden};icg.onclick=e=>{const b=e.target.closest('button');if(!b)return;L_.icon=b.dataset.k;rebuild(L_);fillIc();icg.hidden=true}}
   {const sb=d.querySelector('.symb'),sp=d.querySelector('.sympanel'),st=d.querySelector('.symt');if(L_.sym)st.textContent='رنگ‌بندی بر اساس ستون «'+L_.sym.field+'»';sb.onclick=()=>{sp.hidden=!sp.hidden;if(!sp.hidden)symPanel(L_,sp)};
   const lb=d.querySelector('.labb'),lp=d.querySelector('.labpanel'),lt=d.querySelector('[id^=labt-]');if(L_.lab&&L_.lab.on)lt.textContent='لیبل: '+(L_.lab.src==='expr'?'عبارت محاسباتی':'ستون «'+L_.lab.field+'»');
@@ -2881,8 +2912,8 @@ function qgsXml(en,bb){
   const tip=e.photo?`<mapTip enabled="1">${esc(`<div style="direction:rtl"><b>[% coalesce(attribute($currentfeature,'نام'),'') %]</b><br><img src="file:///[% @project_folder %]/[% "photo" %]" width="240"></div>`)}</mapTip>`:'';
   return `<maplayer type="vector" geometry="${gt[e.type]}" autoRefreshEnabled="0"><id>${e.id}</id><datasource>./${e.file}|layername=${e.base}</datasource><layername>${esc(e.name)}</layername><srs>${QGS_CRS}</srs><provider encoding="UTF-8">ogr</provider>${fc}${tip}</maplayer>`}).join('');
  return `<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis projectname="WebGIS" version="3.28.0-Firenze">
-<title>WebGIS export</title>
+<qgis projectname="Avand" version="3.28.0-Firenze">
+<title>Avand export</title>
 <projectCrs>${QGS_CRS}</projectCrs>
 <layer-tree-group><customproperties/>${tree}</layer-tree-group>
 <projectlayers>${lyr}</projectlayers>
@@ -2911,8 +2942,8 @@ async function buildQgis(sel){
    en.push({id:base+'_'+Math.random().toString(36).slice(2,8),base,file:base+'.geojson',name:L_.name+' ('+{Point:'نقطه',LineString:'خط',Polygon:'چندضلعی'}[k]+')',type:k,photo:hasPh})})});
  if(!en.length)throw new Error('عارضه‌ای برای خروجی وجود ندارد');
  if(bb[0]>bb[2])bb.splice(0,4,44,25,63,40);
- zip.file('webgis.qgs',qgsXml(en,bb));
- zip.file('README.txt',`بسته خروجی WebGIS برای QGIS — ${jalali()}\r\n\r\n1) پوشه ZIP را کامل Extract کنید (نه اینکه داخل ZIP باز کنید).\r\n2) فایل webgis.qgs را در QGIS 3.x باز کنید.\r\n   اگر پروژه باز نشد: فایل‌های *.geojson را به QGIS بکشید و رها کنید (سیستم مختصات EPSG:4326).\r\n3) عکس‌ها در پوشه photos/ هستند و مسیر نسبی آن‌ها در فیلد photo ذخیره شده است.\r\n   - نمایش با Map Tips: View > Show Map Tips و نگه داشتن ماوس روی عارضه.\r\n   - نمایش در فرم: Layer Properties > Attributes Form > فیلد photo > Widget Type = Attachment (Relative to project path).\r\n\r\nلایه‌ها: ${en.length} | عکس‌ها: ${pn}\r\n${en.map(e=>e.file+' = '+e.name).join('\r\n')}\r\n`);
+ zip.file('avand.qgs',qgsXml(en,bb));
+ zip.file('README.txt',`بسته خروجی آوند برای QGIS — ${jalali()}\r\n\r\n1) پوشه ZIP را کامل Extract کنید (نه اینکه داخل ZIP باز کنید).\r\n2) فایل avand.qgs را در QGIS 3.x باز کنید.\r\n   اگر پروژه باز نشد: فایل‌های *.geojson را به QGIS بکشید و رها کنید (سیستم مختصات EPSG:4326).\r\n3) عکس‌ها در پوشه photos/ هستند و مسیر نسبی آن‌ها در فیلد photo ذخیره شده است.\r\n   - نمایش با Map Tips: View > Show Map Tips و نگه داشتن ماوس روی عارضه.\r\n   - نمایش در فرم: Layer Properties > Attributes Form > فیلد photo > Widget Type = Attachment (Relative to project path).\r\n\r\nلایه‌ها: ${en.length} | عکس‌ها: ${pn}\r\n${en.map(e=>e.file+' = '+e.name).join('\r\n')}\r\n`);
  return{blob:await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:4}}),n:en.length,pn}}
 $('svGo').onclick=async()=>{
  const sel=layers.filter(l=>svSel.has(l.id));
@@ -2924,24 +2955,24 @@ $('svGo').onclick=async()=>{
   if(fmt==='geojson'){
    if(selI.length===1)await dl(selI[0].name,{type:'FeatureCollection',features:selI[0].geo.features});
    else{const fs=[];selI.forEach(L_=>L_.geo.features.forEach(f=>fs.push({type:'Feature',properties:Object.assign({},f.properties,{'لایه':L_.name}),geometry:f.geometry})));
-    await dl('webgis-selected-'+stampNow(),{type:'FeatureCollection',features:fs})}}
+    await dl('avand-selected-'+stampNow(),{type:'FeatureCollection',features:fs})}}
   else if(fmt==='zip'){
    const zip=new JSZip(),used=new Set();
    selI.forEach(L_=>{let n=safeName(L_.name),k=n,i=1;while(used.has(k))k=n+'_'+(++i);used.add(k);
     zip.file(k+'.geojson',JSON.stringify({type:'FeatureCollection',features:L_.geo.features}))});
-   await saveBlob('webgis-layers-'+stampNow()+'.zip',await zip.generateAsync({type:'blob',compression:'DEFLATE'}),['application/zip','application/octet-stream'],sh)}
+   await saveBlob('avand-layers-'+stampNow()+'.zip',await zip.generateAsync({type:'blob',compression:'DEFLATE'}),['application/zip','application/octet-stream'],sh)}
   else if(fmt==='gpkg'){
    toast('در حال ساخت GeoPackage ...',2500);await new Promise(r=>setTimeout(r,50));
    const u8=gpkgWrite(selI.map(L_=>({name:L_.name,geo:L_.geo})));
-   await saveBlob('webgis-'+stampNow()+'.gpkg',new Blob([u8],{type:'application/geopackage+sqlite3'}),['application/geopackage+sqlite3','application/octet-stream'],sh);
+   await saveBlob('avand-'+stampNow()+'.gpkg',new Blob([u8],{type:'application/geopackage+sqlite3'}),['application/geopackage+sqlite3','application/octet-stream'],sh);
    toast(`GeoPackage: ${sel.length} لایه، ${(u8.length/1048576).toFixed(2)} مگابایت`,5000)}
   else if(fmt==='csv'){
    const csv=csvOf(sel);
-   await saveBlob('webgis-'+stampNow()+'.csv',new Blob([csv],{type:'text/csv;charset=utf-8'}),['text/csv','text/plain'],sh)}
+   await saveBlob('avand-'+stampNow()+'.csv',new Blob([csv],{type:'text/csv;charset=utf-8'}),['text/csv','text/plain'],sh)}
   else{
    toast('در حال ساخت بسته QGIS ...',2500);
    const r=await buildQgis(selI);
-   await saveBlob('webgis-qgis-'+stampNow()+'.zip',r.blob,['application/zip','application/octet-stream'],sh);
+   await saveBlob('avand-qgis-'+stampNow()+'.zip',r.blob,['application/zip','application/octet-stream'],sh);
    toast(`بسته QGIS: ${r.n} لایه، ${r.pn} عکس`,5000)}
  }catch(e){toast('خطا در ساخت خروجی: '+e.message,7000)}
  b.disabled=false};
@@ -3568,7 +3599,7 @@ $('bkMake').onclick=async()=>{
   const refs=new Set();all.forEach(l=>l.geo.features.forEach(f=>{const q=f.properties;if(q)for(const k in q)if(PH.isRef(q[k]))refs.add(q[k])}));
    const photos=[];for(const r of refs){const d=await PH.dataUrl(r);if(d)photos.push({id:r.slice(6),data:d})}
    const o={app:'webgis-pwa',schema:2,created:greg(),created_fa:jalali(),count:all.length,settings:st,photos,layers:all};
-  await saveBlob('webgis-backup-'+stampNow()+'.json',new Blob([JSON.stringify(o)],{type:'application/json'}),['text/plain','application/json'],$('bkShare').checked);
+  await saveBlob('avand-backup-'+stampNow()+'.json',new Blob([JSON.stringify(o)],{type:'application/json'}),['text/plain','application/json'],$('bkShare').checked);
   toast('پشتیبان '+all.length+' لایه و '+photos.length+' عکس آماده شد',4000)
  }catch(e){toast('پشتیبان‌گیری ناموفق: '+e.message,7000)}};
 function removeLayerObj(L_,dbDel){
@@ -3581,7 +3612,7 @@ $('bkFile').onchange=async e=>{
  try{
   if(f.size>300*1024*1024)throw new Error('حجم فایل بیش از ۳۰۰ مگابایت است');
   let o;try{o=JSON.parse(await f.text())}catch(_){throw new Error('فایل JSON معتبر نیست')}
-  if(!o||o.app!=='webgis-pwa'||!Array.isArray(o.layers))throw new Error('این فایل، پشتیبان WebGIS نیست');
+  if(!o||o.app!=='webgis-pwa'||!Array.isArray(o.layers))throw new Error('این فایل، پشتیبان آوند نیست');
   const good=[];let bad=0;
   o.layers.forEach(l=>{try{
    if(!l||!l.geo||l.geo.type!=='FeatureCollection'||!Array.isArray(l.geo.features))throw 0;
@@ -4061,7 +4092,7 @@ function uiBuild(){
  ['bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
  ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
  bar.appendChild($('bMore'))}
-const APP_VER='1.05.34'; /* major.minor.counter — the last number grows by 1 with every change */
+const APP_VER='1.05.35'; /* major.minor.counter — the last number grows by 1 with every change */
 $('verLbl').textContent='نسخه سامانه : '+APP_VER.replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
 $('bMore').onclick=()=>openSheet('sMore');
 $('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');$('bGd').onclick=()=>openSheet('sGuide');

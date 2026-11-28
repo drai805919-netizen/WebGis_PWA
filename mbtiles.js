@@ -237,9 +237,13 @@
     if (!(minz >= 0)) minz = 0; if (!(maxz >= 0)) maxz = 18;
     let bounds = null;
     if (meta.bounds) { const p = meta.bounds.split(',').map(Number); if (p.length === 4 && p.every(isFinite) && p[0] < p[2] && p[1] < p[3]) bounds = p; }
+    /* bounds پیش‌فرض «کل جهان» (در بعضی فایل‌ها) به‌درد نمایش نمی‌خورد */
+    if (bounds && (bounds[2] - bounds[0] >= 340 || bounds[3] - bounds[1] >= 160)) bounds = null;
     let center = null;
     if (meta.center) { const p = meta.center.split(',').map(Number); if (p.length >= 2 && p.every(isFinite)) center = p; }
     const mb = { db, meta, plan, name: meta.name || '', format: fmt, minzoom: minz, maxzoom: maxz, bounds, center, scheme: (meta.scheme || 'tms').toLowerCase(), size: blob.size, tileReads: 0 };
+    /* اولین تایل ایندکس (کمترین زوم) برای پیدا کردن محل داده وقتی bounds و center در فایل نیست */
+    mb.firstTile = async function () { try { const k = await db.edgeKey(plan.ix.root, false, 3); return k && k.length >= 3 ? k : null; } catch (e) { return null; } };
     mb.getTile = async function (z, x, row) {
       const key = [z, x, row];
       let data = null;
