@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>آوند</title>
+<title>رهنگار</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f5f4e">
 <script>try{var __t=JSON.parse(localStorage.getItem("webgis_settings")||"{}").theme,__h=new Date().getHours();document.documentElement.dataset.theme=(__t==="dark"||(__t==="auto"&&(__h<6||__h>=18)))?"dark":"light"}catch(e){}</script>
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.36">
-<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.36">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.36">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=1.05.37">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png?v=1.05.37">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=1.05.37">
 <link rel="stylesheet" href="lib/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'">
 <style>
 :root{--bg:#f4f6f3;--fg:#17261f;--pri:#1f6f5c;--pri2:#e8f1ee;--bd:#cfd9d3}
@@ -200,7 +200,7 @@ html[data-theme=dark] .gh i{background:#5a606b}
 .icgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}.icgrid[hidden]{display:none}
 .icgrid button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border:2px solid var(--bd);border-radius:10px;background:var(--pri2);font:inherit;font-size:11px;color:var(--fg)}
 .icgrid button.on{border-color:var(--pri)}
-#verLbl{margin:10px 0 2px;text-align:center;font-size:11px;color:var(--mt);opacity:.7}
+#verLbl{margin:10px 0 2px;text-align:center;font-size:13px;font-weight:700;color:#000;opacity:1}html[data-theme=dark] #verLbl{color:var(--fg)}
 
 .leaflet-popup-content{max-height:min(320px,42vh)!important}
 /* ===== v22: custom confirm dialog ===== */
@@ -435,6 +435,10 @@ return new Promise(function(r){res=r})}})();
 <label><input type="checkbox" data-k="geoTap"> نمایش نشانی با لمس نقشه و با وارد کردن مختصات (نیازمند اینترنت)</label>
 
 <label>نشانی سرویس نشانی‌یابی (اختیاری؛ سازگار با Nominatim و فقط https)<input type="text" data-k="geoUrl" dir="ltr" placeholder="https://nominatim.openstreetmap.org"></label>
+<div class="setsec">مسیریابی و ترافیک</div>
+<label>سرویس مسیریابی آنلاین (حالت خودرو)<select data-k="rtProv"><option value="osrm">OSRM — رایگان، بدون ترافیک</option><option value="neshan">نشان — با ترافیک زنده (نیازمند کلید)</option></select></label>
+<label>کلید API نشان (Api-Key)<input type="text" id="rtKey" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="service.xxxxxxxx"></label>
+<div style="font-size:11px;color:#666">کلید فقط روی همین دستگاه ذخیره می‌شود و در فایل پشتیبان نمی‌آید. ترافیک فقط برای حالت خودرو و موتورسیکلت لحاظ می‌شود و در شهرهایی که نشان پوشش می‌دهد دقیق است؛ دوچرخه و پیاده با OSRM محاسبه می‌شوند. اگر نشان پاسخ ندهد، مسیر با OSRM (بدون ترافیک) محاسبه و هشدار نمایش داده می‌شود.</div>
 <div class="setsec">برداشت مسیر</div>
 <label>حداکثر خطای GPS برای ثبت نقطه (متر)<input type="number" data-k="tkAcc" min="5" max="200" step="1"></label>
 <label>حداقل فاصله بین نقاط ثبت‌شده (متر)<input type="number" data-k="tkStep" min="1" max="50" step="1"></label>
@@ -1420,7 +1424,7 @@ function gpkgWrite(items){
    const root=buildTable(rows.map((v,i)=>({rid:i+1,p:rec(v)})));
    master.push(['table',tn,tn,root,sql]);
    let idn=it.name+' ('+fa+')';while(used.has(idn))idn+='_';used.add(idn);
-   contents.push([tn,'features',idn,'Avand export',now,bb[0],bb[1],bb[2],bb[3],4326]);
+   contents.push([tn,'features',idn,'Rahnegar export',now,bb[0],bb[1],bb[2],bb[3],4326]);
    gcols.push([tn,'geom',gtn,4326,0,0])})});
  mk('gpkg_contents','CREATE TABLE gpkg_contents (table_name TEXT NOT NULL, data_type TEXT NOT NULL, identifier TEXT, description TEXT DEFAULT \'\', last_change DATETIME NOT NULL, min_x DOUBLE, min_y DOUBLE, max_x DOUBLE, max_y DOUBLE, srs_id INTEGER)',contents);
  mk('gpkg_geometry_columns','CREATE TABLE gpkg_geometry_columns (table_name TEXT NOT NULL, column_name TEXT NOT NULL, geometry_type_name TEXT NOT NULL, srs_id INTEGER NOT NULL, z TINYINT NOT NULL, m TINYINT NOT NULL)',gcols);
@@ -2912,8 +2916,8 @@ function qgsXml(en,bb){
   const tip=e.photo?`<mapTip enabled="1">${esc(`<div style="direction:rtl"><b>[% coalesce(attribute($currentfeature,'نام'),'') %]</b><br><img src="file:///[% @project_folder %]/[% "photo" %]" width="240"></div>`)}</mapTip>`:'';
   return `<maplayer type="vector" geometry="${gt[e.type]}" autoRefreshEnabled="0"><id>${e.id}</id><datasource>./${e.file}|layername=${e.base}</datasource><layername>${esc(e.name)}</layername><srs>${QGS_CRS}</srs><provider encoding="UTF-8">ogr</provider>${fc}${tip}</maplayer>`}).join('');
  return `<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis projectname="Avand" version="3.28.0-Firenze">
-<title>Avand export</title>
+<qgis projectname="Rahnegar" version="3.28.0-Firenze">
+<title>Rahnegar export</title>
 <projectCrs>${QGS_CRS}</projectCrs>
 <layer-tree-group><customproperties/>${tree}</layer-tree-group>
 <projectlayers>${lyr}</projectlayers>
@@ -2942,8 +2946,8 @@ async function buildQgis(sel){
    en.push({id:base+'_'+Math.random().toString(36).slice(2,8),base,file:base+'.geojson',name:L_.name+' ('+{Point:'نقطه',LineString:'خط',Polygon:'چندضلعی'}[k]+')',type:k,photo:hasPh})})});
  if(!en.length)throw new Error('عارضه‌ای برای خروجی وجود ندارد');
  if(bb[0]>bb[2])bb.splice(0,4,44,25,63,40);
- zip.file('avand.qgs',qgsXml(en,bb));
- zip.file('README.txt',`بسته خروجی آوند برای QGIS — ${jalali()}\r\n\r\n1) پوشه ZIP را کامل Extract کنید (نه اینکه داخل ZIP باز کنید).\r\n2) فایل avand.qgs را در QGIS 3.x باز کنید.\r\n   اگر پروژه باز نشد: فایل‌های *.geojson را به QGIS بکشید و رها کنید (سیستم مختصات EPSG:4326).\r\n3) عکس‌ها در پوشه photos/ هستند و مسیر نسبی آن‌ها در فیلد photo ذخیره شده است.\r\n   - نمایش با Map Tips: View > Show Map Tips و نگه داشتن ماوس روی عارضه.\r\n   - نمایش در فرم: Layer Properties > Attributes Form > فیلد photo > Widget Type = Attachment (Relative to project path).\r\n\r\nلایه‌ها: ${en.length} | عکس‌ها: ${pn}\r\n${en.map(e=>e.file+' = '+e.name).join('\r\n')}\r\n`);
+ zip.file('rahnegar.qgs',qgsXml(en,bb));
+ zip.file('README.txt',`بسته خروجی رهنگار برای QGIS — ${jalali()}\r\n\r\n1) پوشه ZIP را کامل Extract کنید (نه اینکه داخل ZIP باز کنید).\r\n2) فایل rahnegar.qgs را در QGIS 3.x باز کنید.\r\n   اگر پروژه باز نشد: فایل‌های *.geojson را به QGIS بکشید و رها کنید (سیستم مختصات EPSG:4326).\r\n3) عکس‌ها در پوشه photos/ هستند و مسیر نسبی آن‌ها در فیلد photo ذخیره شده است.\r\n   - نمایش با Map Tips: View > Show Map Tips و نگه داشتن ماوس روی عارضه.\r\n   - نمایش در فرم: Layer Properties > Attributes Form > فیلد photo > Widget Type = Attachment (Relative to project path).\r\n\r\nلایه‌ها: ${en.length} | عکس‌ها: ${pn}\r\n${en.map(e=>e.file+' = '+e.name).join('\r\n')}\r\n`);
  return{blob:await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:4}}),n:en.length,pn}}
 $('svGo').onclick=async()=>{
  const sel=layers.filter(l=>svSel.has(l.id));
@@ -2955,24 +2959,24 @@ $('svGo').onclick=async()=>{
   if(fmt==='geojson'){
    if(selI.length===1)await dl(selI[0].name,{type:'FeatureCollection',features:selI[0].geo.features});
    else{const fs=[];selI.forEach(L_=>L_.geo.features.forEach(f=>fs.push({type:'Feature',properties:Object.assign({},f.properties,{'لایه':L_.name}),geometry:f.geometry})));
-    await dl('avand-selected-'+stampNow(),{type:'FeatureCollection',features:fs})}}
+    await dl('rahnegar-selected-'+stampNow(),{type:'FeatureCollection',features:fs})}}
   else if(fmt==='zip'){
    const zip=new JSZip(),used=new Set();
    selI.forEach(L_=>{let n=safeName(L_.name),k=n,i=1;while(used.has(k))k=n+'_'+(++i);used.add(k);
     zip.file(k+'.geojson',JSON.stringify({type:'FeatureCollection',features:L_.geo.features}))});
-   await saveBlob('avand-layers-'+stampNow()+'.zip',await zip.generateAsync({type:'blob',compression:'DEFLATE'}),['application/zip','application/octet-stream'],sh)}
+   await saveBlob('rahnegar-layers-'+stampNow()+'.zip',await zip.generateAsync({type:'blob',compression:'DEFLATE'}),['application/zip','application/octet-stream'],sh)}
   else if(fmt==='gpkg'){
    toast('در حال ساخت GeoPackage ...',2500);await new Promise(r=>setTimeout(r,50));
    const u8=gpkgWrite(selI.map(L_=>({name:L_.name,geo:L_.geo})));
-   await saveBlob('avand-'+stampNow()+'.gpkg',new Blob([u8],{type:'application/geopackage+sqlite3'}),['application/geopackage+sqlite3','application/octet-stream'],sh);
+   await saveBlob('rahnegar-'+stampNow()+'.gpkg',new Blob([u8],{type:'application/geopackage+sqlite3'}),['application/geopackage+sqlite3','application/octet-stream'],sh);
    toast(`GeoPackage: ${sel.length} لایه، ${(u8.length/1048576).toFixed(2)} مگابایت`,5000)}
   else if(fmt==='csv'){
    const csv=csvOf(sel);
-   await saveBlob('avand-'+stampNow()+'.csv',new Blob([csv],{type:'text/csv;charset=utf-8'}),['text/csv','text/plain'],sh)}
+   await saveBlob('rahnegar-'+stampNow()+'.csv',new Blob([csv],{type:'text/csv;charset=utf-8'}),['text/csv','text/plain'],sh)}
   else{
    toast('در حال ساخت بسته QGIS ...',2500);
    const r=await buildQgis(selI);
-   await saveBlob('avand-qgis-'+stampNow()+'.zip',r.blob,['application/zip','application/octet-stream'],sh);
+   await saveBlob('rahnegar-qgis-'+stampNow()+'.zip',r.blob,['application/zip','application/octet-stream'],sh);
    toast(`بسته QGIS: ${r.n} لایه، ${r.pn} عکس`,5000)}
  }catch(e){toast('خطا در ساخت خروجی: '+e.message,7000)}
  b.disabled=false};
@@ -3448,7 +3452,7 @@ $('rtSwap').onclick=()=>{if(!rt.A||!rt.B)return toast('هر دو نقطه لاز
 $('rtSave').onclick=async()=>{
  if(!rt.res)return toast('ابتدا مسیر را محاسبه کنید');
  const fx=await userFix(true);if(!fx||!rt.res)return;
- const r=rt.res,geo={type:'FeatureCollection',features:[{type:'Feature',properties:{'نام':'مسیر','طول (متر)':Math.round(r.len*10)/10,'روش':r.method,'مبدأ':rt.A.lat.toFixed(6)+', '+rt.A.lng.toFixed(6),'مقصد':rt.B.lat.toFixed(6)+', '+rt.B.lng.toFixed(6),'تاریخ شمسی':jalali(),'زمان':greg()},geometry:{type:'LineString',coordinates:r.coords.map(c=>[+c[0].toFixed(7),+c[1].toFixed(7)])}}]};
+ const r=rt.res,geo={type:'FeatureCollection',features:[{type:'Feature',properties:{'نام':'مسیر','طول (متر)':Math.round(r.len*10)/10,'روش':r.method,...(r.dur?{'زمان (دقیقه)':Math.round(r.dur/60),'ترافیک':r.traffic?'لحاظ شده':'لحاظ نشده'}:{}),'مبدأ':rt.A.lat.toFixed(6)+', '+rt.A.lng.toFixed(6),'مقصد':rt.B.lat.toFixed(6)+', '+rt.B.lng.toFixed(6),'تاریخ شمسی':jalali(),'زمان':greg()},geometry:{type:'LineString',coordinates:r.coords.map(c=>[+c[0].toFixed(7),+c[1].toFixed(7)])}}]};
  applyStamp(geo.features[0],fx,'ایجاد');
  addLayer('مسیر '+fmtD(r.len),geo)};
 function rtLine(){const a=rt.A,b=rt.B;return{coords:[[a.lng,a.lat],[b.lng,b.lat]],len:turf.distance([a.lng,a.lat],[b.lng,b.lat],{units:'meters'}),dur:null,method:'خط مستقیم (فاصله هوایی)',straight:true}}
@@ -3467,6 +3471,49 @@ async function rtOnline(p){
    return{coords:best.geometry.coordinates,len:best.distance,dur:best.duration,method:'OSRM آنلاین ('+{car:'خودرو',bike:'دوچرخه',foot:'پیاده'}[p]+')'+(j.routes.length>1?' – کوتاه‌ترین از '+j.routes.length+' مسیر پیشنهادی':'')}}
   catch(e){err=e.name==='AbortError'?new Error('زمان پاسخ سرویس تمام شد'):e}}
  throw err}
+/* ---- Neshan (traffic-aware) routing: needs the user's own Api-Key, stored only on this device ---- */
+const nsKey=()=>{try{return(localStorage.getItem('rn_neshan_key')||'').trim()}catch(e){return''}};
+function nsDecode(s,pr){let i=0,la=0,lo=0;const o=[],f=Math.pow(10,pr);
+ while(i<s.length){let b,sh=0,r=0;
+  do{b=s.charCodeAt(i++)-63;r|=(b&31)<<sh;sh+=5}while(b>=32&&i<s.length);la+=(r&1)?~(r>>1):(r>>1);
+  sh=0;r=0;do{b=s.charCodeAt(i++)-63;r|=(b&31)<<sh;sh+=5}while(b>=32&&i<s.length);lo+=(r&1)?~(r>>1):(r>>1);
+  o.push([lo/f,la/f])}
+ return o}
+function nsParse(j,A){
+ const rs=(j&&j.routes)||[];
+ if(!rs.length)throw new Error((j&&j.message)||'مسیری پیدا نشد');
+ const pl=p=>p?(typeof p==='string'?p:(p.points||'')):'',val=x=>x==null?0:(typeof x==='object'?(+x.value||0):(+x||0));
+ const near=c=>c&&hav(A.lng,A.lat,c[0],c[1])<5000;
+ const geom=(strs)=>{for(const pr of [5,6]){const pts=[];
+   strs.forEach(s=>{nsDecode(s,pr).forEach(c=>{const l=pts[pts.length-1];if(!l||l[0]!==c[0]||l[1]!==c[1])pts.push(c)})});
+   if(pts.length>=2&&near(pts[0]))return pts}
+  return null};
+ const list=[];
+ rs.forEach(r=>{
+  let len=0,dur=0;const st=[];
+  (r.legs||[]).forEach(l=>{len+=val(l.distance);dur+=val(l.duration);(l.steps||[]).forEach(s=>{const q=pl(s.polyline);if(q)st.push(q)})});
+  let pts=st.length?geom(st):null;
+  if(!pts){const o=pl(r.overview_polyline);pts=o?geom([o]):null}
+  if(pts&&dur>0)list.push({pts,len,dur})});
+ if(!list.length)throw new Error('پاسخ نشان قابل خواندن نبود');
+ const best=list.reduce((m,x)=>x.dur<m.dur?x:m);
+ return{coords:best.pts,len:best.len||0,dur:best.dur,traffic:true,stamp:Date.now(),
+  method:'نشان — مسیریابی با ترافیک زنده (خودرو)'+(list.length>1?' – سریع‌ترین از '+list.length+' مسیر پیشنهادی':'')}}
+async function rtNeshan(){
+ const a=rt.A,b=rt.B,key=nsKey();
+ const url='https://api.neshan.org/v4/direction?type=car&origin='+a.lat.toFixed(6)+','+a.lng.toFixed(6)+'&destination='+b.lat.toFixed(6)+','+b.lng.toFixed(6)+'&alternative=true';
+ const c=new AbortController(),t=setTimeout(()=>c.abort(),15000);let r;
+ try{r=await fetch(url,{headers:{'Api-Key':key},signal:c.signal,cache:'no-store'})}
+ catch(e){throw e.name==='AbortError'?new Error('زمان پاسخ سرویس تمام شد'):new Error('اتصال به سرویس نشان برقرار نشد (اینترنت، فیلتر یا محدودیت کلید)')}
+ finally{clearTimeout(t)}
+ let j=null;try{j=await r.json()}catch(_){}
+ if(r.status===401||r.status===403)throw new Error('کلید نشان نامعتبر است یا اجازه‌ی این سرویس را ندارد');
+ if(r.status===429)throw new Error('سقف تعداد درخواست کلید نشان پر شده است');
+ if(!r.ok)throw new Error('HTTP '+r.status+((j&&j.message)?' — '+j.message:''));
+ return nsParse(j,a)}
+(()=>{const el=$('rtKey');if(!el)return;
+ try{el.value=localStorage.getItem('rn_neshan_key')||''}catch(e){}
+ el.onchange=()=>{try{const v=el.value.trim();if(v)localStorage.setItem('rn_neshan_key',v);else localStorage.removeItem('rn_neshan_key');toast(v?'کلید نشان ذخیره شد':'کلید نشان پاک شد',2500)}catch(e){toast('ذخیره‌ی کلید ممکن نشد')}}})();
 /* offline: Dijkstra on the line layers currently visible */
 function hav(x1,y1,x2,y2){const r=Math.PI/180,dl=(y2-y1)*r,dn=(x2-x1)*r,a=Math.sin(dl/2)**2+Math.cos(y1*r)*Math.cos(y2*r)*Math.sin(dn/2)**2;return 12742000*Math.asin(Math.min(1,Math.sqrt(a)))}
 class Heap{constructor(){this.a=[]}get size(){return this.a.length}
@@ -3561,8 +3608,9 @@ function rtShow(res,notes){
  rtAnimStart(res,st,ll);
  rt.res=res;
  try{map.fitBounds(rt.line.getBounds(),{paddingTopLeft:[30,70],paddingBottomRight:[30,Math.round(innerHeight*.5)]})}catch(e){}
- $('rtInfo').innerHTML=`<span style="font-size:15px">${(RT_ST[res.kind]||RT_ST.car).ico} <b>${(RT_ST[res.kind]||RT_ST.car).nm}</b></span><br>طول مسیر: <b style="font-size:20px">${fmtD(res.len)}</b>`+(res.dur?` | زمان تقریبی: <b>${fmtDur(res.dur)}</b>`:'')
+ $('rtInfo').innerHTML=`<span style="font-size:15px">${(RT_ST[res.kind]||RT_ST.car).ico} <b>${(RT_ST[res.kind]||RT_ST.car).nm}</b></span><br>طول مسیر: <b style="font-size:20px">${fmtD(res.len)}</b>`+(res.dur?` | ${res.traffic?'زمان با ترافیک':'زمان تقریبی (بدون ترافیک)'}: <b>${fmtDur(res.dur)}</b>`:'')
   +`<br><span style="font-size:12px;color:#555">روش: ${esc(res.method)}</span>`
+  +(res.traffic?`<br><span style="font-size:12px;color:#1b5e20">🚦 ترافیک لحظه‌ای لحاظ شده (محاسبه در ساعت ${new Date(res.stamp||Date.now()).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})}؛ با تغییر ترافیک دوباره محاسبه کنید)</span>`:((res.kind==='car'||res.kind==='moto')&&res.dur?`<br><span style="font-size:12px;color:#8a5a00">⚠ این زمان بدون ترافیک است. برای زمان واقعی در «تنظیمات ← مسیریابی و ترافیک» سرویس نشان و کلید آن را وارد کنید.</span>`:''))
   +(res.note?`<br><span style="font-size:12px;color:#555">${esc(res.note)}</span>`:'')
   +(res.warn?`<br><span style="font-size:12px;color:#a5281b">${esc(res.warn)}</span>`:'')
   +(notes.length?`<br><span style="font-size:11px;color:#888">${notes.map(esc).join(' | ')}</span>`:'')}
@@ -3576,7 +3624,12 @@ async function rtCalc(){
  else if(mode==='net')res=await tryR('شبکه خطی',async()=>rtNet());
  else{
   const prof=(mode==='auto'||mode==='moto')?'car':mode;
-  if(navigator.onLine){res=await tryR('سرویس آنلاین',()=>rtOnline(prof));if(res)res.kind=mode==='moto'?'moto':prof}else notes.push('دستگاه آفلاین است');
+  if(navigator.onLine){
+   const wantNs=prof==='car'&&S.rtProv==='neshan';
+   if(wantNs&&!nsKey())notes.push('کلید نشان وارد نشده است (تنظیمات ← مسیریابی و ترافیک)');
+   if(wantNs&&nsKey())res=await tryR('نشان',()=>rtNeshan());
+   if(!res){res=await tryR('سرویس آنلاین',()=>rtOnline(prof));if(res&&wantNs)res.warn='ترافیک لحاظ نشد؛ مسیر با OSRM (بدون ترافیک) محاسبه شد'}
+   if(res)res.kind=mode==='moto'?'moto':prof}else notes.push('دستگاه آفلاین است');
   if(!res&&mode==='auto')res=await tryR('شبکه خطی',async()=>rtNet());
   if(!res&&mode==='auto'){res=rtLine();res.warn='مسیر جاده‌ای پیدا نشد؛ فقط فاصله هوایی نمایش داده شد'}}
  if(tk!==rt.tk)return;
@@ -3599,7 +3652,7 @@ $('bkMake').onclick=async()=>{
   const refs=new Set();all.forEach(l=>l.geo.features.forEach(f=>{const q=f.properties;if(q)for(const k in q)if(PH.isRef(q[k]))refs.add(q[k])}));
    const photos=[];for(const r of refs){const d=await PH.dataUrl(r);if(d)photos.push({id:r.slice(6),data:d})}
    const o={app:'webgis-pwa',schema:2,created:greg(),created_fa:jalali(),count:all.length,settings:st,photos,layers:all};
-  await saveBlob('avand-backup-'+stampNow()+'.json',new Blob([JSON.stringify(o)],{type:'application/json'}),['text/plain','application/json'],$('bkShare').checked);
+  await saveBlob('rahnegar-backup-'+stampNow()+'.json',new Blob([JSON.stringify(o)],{type:'application/json'}),['text/plain','application/json'],$('bkShare').checked);
   toast('پشتیبان '+all.length+' لایه و '+photos.length+' عکس آماده شد',4000)
  }catch(e){toast('پشتیبان‌گیری ناموفق: '+e.message,7000)}};
 function removeLayerObj(L_,dbDel){
@@ -3612,7 +3665,7 @@ $('bkFile').onchange=async e=>{
  try{
   if(f.size>300*1024*1024)throw new Error('حجم فایل بیش از ۳۰۰ مگابایت است');
   let o;try{o=JSON.parse(await f.text())}catch(_){throw new Error('فایل JSON معتبر نیست')}
-  if(!o||o.app!=='webgis-pwa'||!Array.isArray(o.layers))throw new Error('این فایل، پشتیبان آوند نیست');
+  if(!o||o.app!=='webgis-pwa'||!Array.isArray(o.layers))throw new Error('این فایل، پشتیبان رهنگار نیست');
   const good=[];let bad=0;
   o.layers.forEach(l=>{try{
    if(!l||!l.geo||l.geo.type!=='FeatureCollection'||!Array.isArray(l.geo.features))throw 0;
@@ -3794,7 +3847,7 @@ function fxNode(c,p){
  c.splice(best.i,0,[p[0],p[1]]);return true}
 
 /* ---------- Settings (user-defined options; other menus only operate) ---------- */
-const SET_DEF={theme:'light',user:'',cp:'ll',geoBias:'gilan',geoTap:true,geoUrl:'',obs:['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'],
+const SET_DEF={theme:'light',user:'',cp:'ll',geoBias:'gilan',geoTap:true,geoUrl:'',rtProv:'osrm',obs:['درخت','ساختمان / دیوار','جاده / معبر','رودخانه / کانال','تأسیسات موجود','حصار / گیت','شیب / ناهمواری','سایر'],
  tkAcc:30,tkStep:4,tkWake:true,fxEnd:1,fxPt:2,
  prxDist:30,prxMode:'enter',prxSound:'two',prxVol:.8,prxVib:true,prxHold:60,prxWake:true};
 const S=(()=>{let o={};try{o=JSON.parse(localStorage.getItem('webgis_settings'))||{}}catch(e){}return Object.assign({},SET_DEF,o,{obs:Array.isArray(o.obs)&&o.obs.length?o.obs:SET_DEF.obs})})();
@@ -4092,8 +4145,8 @@ function uiBuild(){
  ['bR','bE','bFx','bS','bB','bPx','bSet','bGd'].forEach(id=>{const b=$(id);if(b){b.classList.add('tile');grid.appendChild(b)}});
  ['bL','bMk','bI','bT'].forEach(id=>bar.appendChild($(id)));
  bar.appendChild($('bMore'))}
-const APP_VER='1.05.36'; /* major.minor.counter — the last number grows by 1 with every change */
-$('verLbl').textContent='نسخه سامانه : '+APP_VER.replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+const APP_VER='1.05.37'; /* major.minor.counter — the last number grows by 1 with every change */
+$('verLbl').textContent='رهنگار — نسخه '+APP_VER.replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
 $('bMore').onclick=()=>openSheet('sMore');
 $('bFx').onclick=()=>openSheet('sFix');$('bPx').onclick=()=>openSheet('sPrx');$('bSet').onclick=()=>openSheet('sSet');$('bGd').onclick=()=>openSheet('sGuide');
 uiBuild();
